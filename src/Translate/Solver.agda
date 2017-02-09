@@ -1,0 +1,516 @@
+-- TODO: Clean this up and integrate into new AST design
+--
+-- open import Level renaming (zero to Lzero; suc to Lzuc)
+-- open import Algebra
+-- open import Data.Vec
+-- import Data.List as L
+-- open import Data.Nat as N using (ℕ)
+-- import Data.Nat.Properties.Simple as NPS
+-- open import Data.Fin as F using (Fin)
+-- open import Data.Product
+-- import Relation.Binary.PropositionalEquality as P
+-- import Data.Bool as B
+-- 
+-- 
+-- open import Function
+-- import Relation.Binary.Reflection as Reflection
+-- open import Relation.Binary
+-- open import Relation.Nullary
+-- 
+-- module SemiringSolver2 {ℓ₁ ℓ₂}
+--                        (cs : CommutativeSemiring ℓ₁ ℓ₂)
+--                        (_≟0 : ∀ x → Dec ((CommutativeSemiring._≈_ cs) x (CommutativeSemiring.0# cs))) where
+-- 
+-- open CommutativeSemiring cs
+-- import Relation.Binary.EqReasoning as EqR; open EqR setoid
+-- 
+-- infixl 8 _:*_
+-- infixl 7 _:+_
+-- 
+-- ------------------------------------------------------------------------
+-- -- Polynomial
+-- 
+-- data Polynomial : (n : ℕ) → Set ℓ₁ where
+--   con : ∀ {n} → Carrier → Polynomial n
+--   var : ∀ {n} → (Fin n) → Polynomial n
+--   _:+_ : ∀ {n} → Polynomial n → Polynomial n → Polynomial n
+--   _:*_ : ∀ {n} → Polynomial n → Polynomial n → Polynomial n
+-- 
+-- ⟦_⟧ : ∀ {n} → Polynomial n → Vec Carrier n → Carrier
+-- ⟦ con x ⟧ ρ = x
+-- ⟦ var x ⟧ ρ = lookup x ρ
+-- ⟦ x :+ y ⟧ ρ = ⟦ x ⟧ ρ + ⟦ y ⟧ ρ
+-- ⟦ x :* y ⟧ ρ = ⟦ x ⟧ ρ * ⟦ y ⟧ ρ
+-- 
+-- ------------------------------------------------------------------------
+-- -- Expansion
+-- 
+-- data Monomial : (n : ℕ) → Set ℓ₁ where
+--   con : ∀ {n} → Carrier → Monomial n
+--   var : ∀ {n} → (Fin n) → Monomial n
+--   _:*_ : ∀ {n} → Monomial n → Monomial n → Monomial n
+-- 
+-- data SumOfMonomials : (n : ℕ) → Set ℓ₁ where
+--   mon : ∀ {n} → Monomial n → SumOfMonomials n
+--   _:+_ : ∀ {n} → SumOfMonomials n → SumOfMonomials n → SumOfMonomials n
+-- 
+-- ⟦_⟧M : ∀ {n} → Monomial n → Vec Carrier n → Carrier
+-- ⟦ con x ⟧M ρ = x
+-- ⟦ var x ⟧M ρ = lookup x ρ
+-- ⟦ x :* y ⟧M ρ = ⟦ x ⟧M ρ * ⟦ y ⟧M ρ
+-- 
+-- ⟦_⟧SM : ∀ {n} → SumOfMonomials n → Vec Carrier n → Carrier
+-- ⟦ mon x ⟧SM ρ = ⟦ x ⟧M ρ
+-- ⟦ x :+ y ⟧SM ρ = ⟦ x ⟧SM ρ + ⟦ y ⟧SM ρ
+-- 
+-- *-expand : ∀ {n} → SumOfMonomials n -> SumOfMonomials n → SumOfMonomials n
+-- *-expand (mon l) (mon r) = mon (l :* r)
+-- *-expand (mon l) (r₁ :+ r₂) = *-expand (mon l) r₁ :+ *-expand (mon l) r₂
+-- *-expand (l₁ :+ l₂) (mon r) = *-expand l₁ (mon r) :+ *-expand l₂ (mon r)
+-- *-expand (l₁ :+ l₂) (r₁ :+ r₂) = *-expand l₁ r₁ :+ *-expand l₁ r₂ :+ *-expand l₂ r₁ :+ *-expand l₂ r₂
+-- 
+-- *-expand-correct : ∀ {n} ρ → (p : SumOfMonomials n) → (q : SumOfMonomials n) → ⟦ p ⟧SM ρ * ⟦ q ⟧SM ρ ≈ ⟦ *-expand p q ⟧SM ρ
+-- *-expand-correct ρ (mon l) (mon r) = refl
+-- *-expand-correct ρ (mon l) (r₁ :+ r₂) =
+--   begin
+--     ⟦ l ⟧M ρ * (⟦ r₁ ⟧SM ρ + ⟦ r₂ ⟧SM ρ)
+--   ≈⟨ proj₁ distrib _ _ _ ⟩
+--     (⟦ l ⟧M ρ) * (⟦ r₁ ⟧SM ρ) + (⟦ l ⟧M ρ) * (⟦ r₂ ⟧SM ρ)
+--   ≡⟨⟩
+--     (⟦ mon l ⟧SM ρ) * (⟦ r₁ ⟧SM ρ) + (⟦ mon l ⟧SM ρ) * (⟦ r₂ ⟧SM ρ)
+--   ≈⟨ +-cong (*-expand-correct ρ (mon l) r₁) (*-expand-correct ρ (mon l) r₂) ⟩
+--     (⟦ *-expand (mon l) r₁ ⟧SM ρ) + (⟦ *-expand (mon l) r₂ ⟧SM ρ)
+--   ∎
+-- *-expand-correct ρ (l₁ :+ l₂) (mon r) =
+--   begin
+--     (⟦ l₁ ⟧SM ρ + ⟦ l₂ ⟧SM ρ) * ⟦ r ⟧M ρ
+--   ≈⟨ proj₂ distrib _ _ _ ⟩
+--     ⟦ l₁ ⟧SM ρ * ⟦ r ⟧M ρ + ⟦ l₂ ⟧SM ρ * ⟦ r ⟧M ρ
+--   ≡⟨⟩
+--     ⟦ l₁ ⟧SM ρ * ⟦ mon r ⟧SM ρ + ⟦ l₂ ⟧SM ρ * ⟦ mon r ⟧SM ρ
+--   ≈⟨ +-cong (*-expand-correct ρ l₁ (mon r)) (*-expand-correct ρ l₂ (mon r)) ⟩
+--     (⟦ *-expand l₁ (mon r) ⟧SM ρ) + (⟦ *-expand l₂ (mon r) ⟧SM ρ)
+--   ∎
+-- *-expand-correct ρ (l₁ :+ l₂) (r₁ :+ r₂) =
+--   begin
+--     (⟦ l₁ ⟧SM ρ + ⟦ l₂ ⟧SM ρ) * (⟦ r₁ ⟧SM ρ + ⟦ r₂ ⟧SM ρ)
+--   ≈⟨ proj₂ distrib _ _ _ ⟩
+--     ⟦ l₁ ⟧SM ρ * (⟦ r₁ ⟧SM ρ + ⟦ r₂ ⟧SM ρ) + ⟦ l₂ ⟧SM ρ * (⟦ r₁ ⟧SM ρ + ⟦ r₂ ⟧SM ρ)
+--   ≈⟨ +-cong (proj₁ distrib _ _ _) (proj₁ distrib _ _ _) ⟩
+--     (⟦ l₁ ⟧SM ρ * ⟦ r₁ ⟧SM ρ + ⟦ l₁ ⟧SM ρ * ⟦ r₂ ⟧SM ρ) + (⟦ l₂ ⟧SM ρ * ⟦ r₁ ⟧SM ρ + ⟦ l₂ ⟧SM ρ * ⟦ r₂ ⟧SM ρ)
+--   ≈⟨ +-cong (+-cong (*-expand-correct ρ l₁ r₁) (*-expand-correct ρ l₁ r₂)) (+-cong (*-expand-correct ρ l₂ r₁) (*-expand-correct ρ l₂ r₂)) ⟩
+--     (⟦ *-expand l₁ r₁ ⟧SM ρ + ⟦ *-expand l₁ r₂ ⟧SM ρ) + (⟦ *-expand l₂ r₁ ⟧SM ρ + ⟦ *-expand l₂ r₂ ⟧SM ρ)
+--   ≈⟨ sym (+-assoc (⟦ *-expand l₁ r₁ ⟧SM ρ + ⟦ *-expand l₁ r₂ ⟧SM ρ) (⟦ *-expand l₂ r₁ ⟧SM ρ) (⟦ *-expand l₂ r₂ ⟧SM ρ)) ⟩
+--     ((⟦ *-expand l₁ r₁ ⟧SM ρ + ⟦ *-expand l₁ r₂ ⟧SM ρ) + ⟦ *-expand l₂ r₁ ⟧SM ρ) + ⟦ *-expand l₂ r₂ ⟧SM ρ
+--   ∎
+-- 
+-- expand : ∀ {n} → Polynomial n → SumOfMonomials n
+-- expand (con x) = mon (con x)
+-- expand (var x) = mon (var x)
+-- expand (l :+ r) = expand l :+ expand r
+-- expand (l :* r) = *-expand (expand l) (expand r)
+-- 
+-- expand-correct : ∀ {n} → (ρ : Vec Carrier n) → (p : Polynomial n) → ⟦ p ⟧ ρ ≈ ⟦ expand p ⟧SM ρ
+-- expand-correct ρ (con x) = refl
+-- expand-correct ρ (var x) = refl
+-- expand-correct ρ (p :+ p₁) = +-cong (expand-correct ρ p) (expand-correct ρ p₁)
+-- expand-correct ρ (p :* p₁) =
+--   begin
+--     ⟦ p ⟧ ρ * ⟦ p₁ ⟧ ρ
+--   ≈⟨ *-cong (expand-correct ρ p) (expand-correct ρ p₁) ⟩
+--     ⟦ expand p ⟧SM ρ * ⟦ expand p₁ ⟧SM ρ
+--   ≈⟨ *-expand-correct ρ (expand p) (expand p₁) ⟩
+--     ⟦ *-expand (expand p) (expand p₁) ⟧SM ρ
+--   ∎
+-- 
+-- ------------------------------------------------------------------------
+-- -- Right leaning
+-- 
+-- data RightLeaningSumOfMonomials : (n : ℕ) → Set ℓ₁ where
+--   nil : ∀ {n} → RightLeaningSumOfMonomials n
+--   _:+_ : ∀ {n} → Monomial n → RightLeaningSumOfMonomials n → RightLeaningSumOfMonomials n
+-- 
+-- ⟦_⟧RLSM : ∀ {n} → RightLeaningSumOfMonomials n → Vec Carrier n → Carrier
+-- ⟦ nil ⟧RLSM ρ = 0#
+-- ⟦ l :+ r ⟧RLSM ρ = ⟦ l ⟧M ρ + ⟦ r ⟧RLSM ρ
+-- 
+-- combine-lean-right : ∀ {n} → RightLeaningSumOfMonomials n → RightLeaningSumOfMonomials n → RightLeaningSumOfMonomials n
+-- combine-lean-right nil r = r
+-- combine-lean-right (x :+ l) r = x :+ (combine-lean-right l r)
+-- 
+-- combine-lean-right-correct : ∀ {n} → (ρ : Vec Carrier n) → (p q : RightLeaningSumOfMonomials n) → ⟦ p ⟧RLSM ρ + ⟦ q ⟧RLSM ρ ≈ ⟦ combine-lean-right p q ⟧RLSM ρ
+-- combine-lean-right-correct ρ nil r = proj₁ +-identity _
+-- combine-lean-right-correct ρ (x :+ l) r =
+--   begin
+--     (⟦ x ⟧M ρ + ⟦ l ⟧RLSM ρ) + ⟦ r ⟧RLSM ρ
+--   ≈⟨ +-assoc (⟦ x ⟧M ρ) (⟦ l ⟧RLSM ρ) (⟦ r ⟧RLSM ρ) ⟩
+--     ⟦ x ⟧M ρ + (⟦ l ⟧RLSM ρ + ⟦ r ⟧RLSM ρ)
+--   ≈⟨ +-cong refl (combine-lean-right-correct ρ l r) ⟩
+--     ⟦ x ⟧M ρ + ⟦ combine-lean-right l r ⟧RLSM ρ
+--   ∎
+-- 
+-- lean-right : ∀ {n} → SumOfMonomials n → RightLeaningSumOfMonomials n
+-- lean-right (mon x) = x :+ nil
+-- lean-right (mon x :+ r) = x :+ lean-right r
+-- lean-right ((l₁ :+ l₂) :+ r) = combine-lean-right (lean-right l₁) (lean-right (l₂ :+ r))
+-- 
+-- lean-right-correct : ∀ {n} → (ρ : Vec Carrier n) → (p : SumOfMonomials n) → ⟦ p ⟧SM ρ ≈ ⟦ lean-right p ⟧RLSM ρ
+-- lean-right-correct ρ (mon x) = sym (proj₂ +-identity _)
+-- lean-right-correct ρ (mon x :+ r) = +-cong refl (lean-right-correct ρ r)
+-- lean-right-correct ρ ((l₁ :+ l₂) :+ r) =
+--   begin
+--     (⟦ l₁ ⟧SM ρ + ⟦ l₂ ⟧SM ρ) + ⟦ r ⟧SM ρ
+--   ≈⟨ +-assoc _ _ _ ⟩
+--     ⟦ l₁ ⟧SM ρ + (⟦ l₂ ⟧SM ρ + ⟦ r ⟧SM ρ)
+--   ≡⟨⟩
+--     ⟦ l₁ ⟧SM ρ + (⟦ l₂ :+ r ⟧SM ρ)
+--   ≈⟨ +-cong (lean-right-correct ρ l₁) (lean-right-correct ρ (l₂ :+ r)) ⟩
+--     ⟦ lean-right l₁ ⟧RLSM ρ + ⟦ lean-right (l₂ :+ r) ⟧RLSM ρ
+--   ≈⟨ combine-lean-right-correct ρ (lean-right l₁) (lean-right (l₂ :+ r)) ⟩
+--     ⟦ combine-lean-right (lean-right l₁) (lean-right (l₂ :+ r)) ⟧RLSM ρ
+--   ∎
+-- 
+-- ------------------------------------------------------------------------
+-- -- Monomial normalization
+-- 
+-- VarProduct : ℕ → Set
+-- VarProduct n = Vec ℕ n
+-- 
+-- ⟦_⟧VP_ : ∀ {n} → VarProduct n → Vec Carrier n → Carrier
+-- ⟦ [] ⟧VP ρ = 1#
+-- ⟦ N.zero ∷ xs ⟧VP (ρ₁ ∷ ρ) = ⟦ xs ⟧VP ρ
+-- ⟦ N.suc x ∷ xs ⟧VP (ρ₁ ∷ ρ) = ρ₁ * ⟦ x ∷ xs ⟧VP (ρ₁ ∷ ρ)
+-- 
+-- varProduct-none : ∀ {n} → VarProduct n
+-- varProduct-none {n} = replicate 0
+-- 
+-- varProduct-none-correct : ∀ {n} → (ρ : Vec Carrier n) → ⟦ varProduct-none {n} ⟧VP ρ ≈ 1#
+-- varProduct-none-correct {N.zero} ρ = refl
+-- varProduct-none-correct {N.suc n} (ρ₁ ∷ ρ) = varProduct-none-correct ρ
+-- 
+-- varProduct-one : ∀ {n} → Fin n → VarProduct n
+-- varProduct-one Fin.zero = 1 ∷ varProduct-none
+-- varProduct-one (Fin.suc i) = 0 ∷ varProduct-one i
+-- 
+-- varProduct-one-correct : ∀ {n} → (ρ : Vec Carrier n) → (f : Fin n) → ⟦ varProduct-one {n} f ⟧VP ρ ≈ lookup f ρ
+-- varProduct-one-correct {N.suc n} (ρ₁ ∷ ρ) Fin.zero =
+--   begin
+--     ⟦ varProduct-one {N.suc n} Fin.zero ⟧VP (ρ₁ ∷ ρ)
+--   ≡⟨⟩
+--     ⟦ 1 ∷ varProduct-none ⟧VP (ρ₁ ∷ ρ)
+--   ≡⟨⟩
+--     ρ₁ * ⟦ varProduct-none {n} ⟧VP ρ
+--   ≈⟨ *-cong refl (varProduct-none-correct ρ) ⟩
+--     ρ₁ * 1#
+--   ≈⟨ proj₂ *-identity ρ₁ ⟩
+--     lookup Fin.zero (ρ₁ ∷ ρ)
+--   ∎
+-- varProduct-one-correct (ρ₁ ∷ ρ) (Fin.suc f) = varProduct-one-correct ρ f
+-- 
+-- varProduct-mul : ∀ {n} → VarProduct n → VarProduct n → VarProduct n
+-- varProduct-mul [] [] = []
+-- varProduct-mul (x ∷ l) (x₁ ∷ r) = (x N.+ x₁) ∷ varProduct-mul l r
+-- 
+-- varProduct-mul-correct : ∀ {n} → (ρ : Vec Carrier n) → (l : VarProduct n) → (r : VarProduct n) → ⟦ l ⟧VP ρ * ⟦ r ⟧VP ρ ≈ ⟦ varProduct-mul l r ⟧VP ρ
+-- varProduct-mul-correct ρ [] [] = proj₁ *-identity 1#
+-- varProduct-mul-correct (ρ ∷ ρ₁) (N.zero ∷ l) (N.zero ∷ r) = varProduct-mul-correct ρ₁ l r
+-- varProduct-mul-correct (ρ ∷ ρ₁) (N.zero ∷ l) (N.suc x ∷ r) =
+--   begin
+--     ⟦ N.zero ∷ l ⟧VP (ρ ∷ ρ₁) * ⟦ N.suc x ∷ r ⟧VP (ρ ∷ ρ₁)
+--   ≡⟨⟩
+--     ⟦ N.zero ∷ l ⟧VP (ρ ∷ ρ₁) * (ρ * ⟦ x ∷ r ⟧VP (ρ ∷ ρ₁))
+--   ≈⟨ *-cong refl (*-comm _ _) ⟩
+--     ⟦ N.zero ∷ l ⟧VP (ρ ∷ ρ₁) * (⟦ x ∷ r ⟧VP (ρ ∷ ρ₁) * ρ)
+--   ≈⟨ sym (*-assoc _ _ _) ⟩
+--     (⟦ N.zero ∷ l ⟧VP (ρ ∷ ρ₁) * ⟦ x ∷ r ⟧VP (ρ ∷ ρ₁)) * ρ
+--   ≈⟨ *-comm _ _ ⟩
+--     ρ * (⟦ N.zero ∷ l ⟧VP (ρ ∷ ρ₁) * ⟦ x ∷ r ⟧VP (ρ ∷ ρ₁))
+--   ≈⟨ *-cong refl (varProduct-mul-correct (ρ ∷ ρ₁) (N.zero ∷ l) (x ∷ r)) ⟩
+--     ρ * ⟦ varProduct-mul (N.zero ∷ l) (x ∷ r) ⟧VP (ρ ∷ ρ₁)
+--   ≡⟨⟩
+--     ρ * ⟦ (N.zero N.+ x) ∷ varProduct-mul l r ⟧VP (ρ ∷ ρ₁)
+--   ≡⟨⟩
+--     ρ * ⟦ x ∷ varProduct-mul l r ⟧VP (ρ ∷ ρ₁)
+--   ≡⟨⟩
+--     ⟦ (N.suc x) ∷ varProduct-mul l r ⟧VP (ρ ∷ ρ₁)
+--   ≡⟨⟩
+--     ⟦ (N.zero N.+ N.suc x) ∷ varProduct-mul l r ⟧VP (ρ ∷ ρ₁)
+--   ≡⟨⟩
+--     ⟦ varProduct-mul (N.zero ∷ l) (N.suc x ∷ r) ⟧VP (ρ ∷ ρ₁)
+--   ∎
+-- varProduct-mul-correct (ρ ∷ ρ₁) (N.suc x ∷ l) (x₁ ∷ r) =
+--   begin
+--     ⟦ (N.suc x ∷ l) ⟧VP (ρ ∷ ρ₁) * ⟦ x₁ ∷ r ⟧VP (ρ ∷ ρ₁)
+--   ≡⟨⟩
+--     (ρ * ⟦ (x ∷ l) ⟧VP (ρ ∷ ρ₁)) * ⟦ x₁ ∷ r ⟧VP (ρ ∷ ρ₁)
+--   ≈⟨ *-assoc _ _ _ ⟩
+--     ρ * (⟦ (x ∷ l) ⟧VP (ρ ∷ ρ₁) * ⟦ x₁ ∷ r ⟧VP (ρ ∷ ρ₁))
+--   ≈⟨ *-cong refl (varProduct-mul-correct (ρ ∷ ρ₁) (x ∷ l) (x₁ ∷ r)) ⟩
+--     ρ * ⟦ varProduct-mul (x ∷ l) (x₁ ∷ r) ⟧VP (ρ ∷ ρ₁)
+--   ≡⟨⟩
+--     ρ * ⟦ (x N.+ x₁) ∷ varProduct-mul l r ⟧VP (ρ ∷ ρ₁)
+--   ≡⟨⟩
+--     ⟦ (N.suc (x N.+ x₁)) ∷ varProduct-mul l r ⟧VP (ρ ∷ ρ₁)
+--   ≡⟨⟩
+--     ⟦ (N.suc x N.+ x₁) ∷ varProduct-mul l r ⟧VP (ρ ∷ ρ₁)
+--   ≡⟨⟩
+--     ⟦ varProduct-mul (N.suc x ∷ l) (x₁ ∷ r) ⟧VP (ρ ∷ ρ₁)
+--   ∎
+-- 
+-- data NormalizedMonomial : ℕ → Set ℓ₁ where
+--   _:*_ : ∀ {n} → Carrier → VarProduct n → NormalizedMonomial n
+-- 
+-- ⟦_⟧NM : ∀ {n} → NormalizedMonomial n → Vec Carrier n → Carrier
+-- ⟦ x :* x₁ ⟧NM ρ = x * ⟦ x₁ ⟧VP ρ
+-- 
+-- combine-normalized-monomial : ∀ {n} → NormalizedMonomial n → NormalizedMonomial n → NormalizedMonomial n
+-- combine-normalized-monomial (cₗ :* xₗ) (cᵣ :* xᵣ) = (cₗ * cᵣ) :* (varProduct-mul xₗ xᵣ) -- XXX: How can we normalize cₗ * cᵣ???
+-- 
+-- combine-normalized-monomial-correct : ∀ {n} (ρ : Vec Carrier n) → (p : NormalizedMonomial n) → (q : NormalizedMonomial n) → ⟦ p ⟧NM ρ * ⟦ q ⟧NM ρ ≈ ⟦ combine-normalized-monomial p q ⟧NM ρ
+-- combine-normalized-monomial-correct ρ (x :* x₁) (x₂ :* x₃) =
+--   begin
+--     (x * ⟦ x₁ ⟧VP ρ) * (x₂ * (⟦ x₃ ⟧VP ρ))
+--   ≈⟨ *-assoc _ _ _ ⟩
+--     x * (⟦ x₁ ⟧VP ρ * (x₂ * (⟦ x₃ ⟧VP ρ)))
+--   ≈⟨ *-cong refl (sym (*-assoc _ _ _)) ⟩
+--     x * ((⟦ x₁ ⟧VP ρ * x₂) * (⟦ x₃ ⟧VP ρ))
+--   ≈⟨ *-cong refl (*-cong (*-comm _ _) refl) ⟩
+--     x * ((x₂ * ⟦ x₁ ⟧VP ρ) * (⟦ x₃ ⟧VP ρ))
+--   ≈⟨ sym (*-assoc _ _ _) ⟩
+--     (x * (x₂ * ⟦ x₁ ⟧VP ρ)) * (⟦ x₃ ⟧VP ρ)
+--   ≈⟨ *-cong (sym (*-assoc _ _ _)) refl ⟩
+--     ((x * x₂) * ⟦ x₁ ⟧VP ρ) * (⟦ x₃ ⟧VP ρ)
+--   ≈⟨ *-assoc _ _ _ ⟩
+--     (x * x₂) * (⟦ x₁ ⟧VP ρ * ⟦ x₃ ⟧VP ρ)
+--   ≈⟨ *-cong refl (varProduct-mul-correct ρ x₁ x₃) ⟩
+--     (x * x₂) * (⟦ varProduct-mul x₁ x₃ ⟧VP ρ)
+--   ∎
+-- 
+-- normalize-monomial : ∀ {n} → Monomial n → NormalizedMonomial n
+-- normalize-monomial (con x) = x :* varProduct-none
+-- normalize-monomial (var x) = 1# :* varProduct-one x
+-- normalize-monomial (l :* r) = combine-normalized-monomial (normalize-monomial l) (normalize-monomial r)
+-- 
+-- normalize-monomial-correct : ∀ {n} → (ρ : Vec Carrier n) → (p : Monomial n) → ⟦ p ⟧M ρ ≈ ⟦ normalize-monomial p ⟧NM ρ
+-- normalize-monomial-correct {n} ρ (con x) =
+--   begin
+--     x
+--   ≈⟨ sym (proj₂ *-identity x) ⟩
+--     x * 1#
+--   ≈⟨ *-cong refl (sym (varProduct-none-correct {n} ρ)) ⟩
+--     x * ⟦ varProduct-none {n} ⟧VP ρ
+--   ∎
+-- normalize-monomial-correct ρ (var x) =
+--   begin
+--     lookup x ρ
+--   ≈⟨ sym (proj₁ *-identity _) ⟩
+--     1# * lookup x ρ
+--   ≈⟨ *-cong refl (sym (varProduct-one-correct ρ x)) ⟩
+--     1# * (⟦ varProduct-one x ⟧VP ρ)
+--   ∎
+-- normalize-monomial-correct ρ (l :* r) =
+--   begin
+--     ⟦ l ⟧M ρ * ⟦ r ⟧M ρ
+--   ≈⟨ *-cong (normalize-monomial-correct ρ l) (normalize-monomial-correct ρ r) ⟩
+--     ⟦ normalize-monomial l ⟧NM ρ * ⟦ normalize-monomial r ⟧NM ρ
+--   ≈⟨ combine-normalized-monomial-correct ρ (normalize-monomial l) (normalize-monomial r) ⟩
+--     ⟦ combine-normalized-monomial (normalize-monomial l) (normalize-monomial r) ⟧NM ρ
+--   ∎
+-- 
+-- data RightLeaningSumOfNormalizedMonomials : (n : ℕ) → Set ℓ₁ where
+--   nil : ∀ {n} → RightLeaningSumOfNormalizedMonomials n
+--   _:+_ : ∀ {n} → NormalizedMonomial n → RightLeaningSumOfNormalizedMonomials n → RightLeaningSumOfNormalizedMonomials n
+-- 
+-- ⟦_⟧RLSNM : ∀ {n} → RightLeaningSumOfNormalizedMonomials n → Vec Carrier n → Carrier
+-- ⟦ nil ⟧RLSNM ρ = 0#
+-- ⟦ x :+ x₁ ⟧RLSNM ρ = ⟦ x ⟧NM ρ + ⟦ x₁ ⟧RLSNM ρ
+-- 
+-- normalize-monomials : ∀ {n} → RightLeaningSumOfMonomials n → RightLeaningSumOfNormalizedMonomials n
+-- normalize-monomials nil = nil
+-- normalize-monomials (x :+ p) = normalize-monomial x :+ normalize-monomials p
+-- 
+-- normalize-monomials-correct : ∀ {n} → (ρ : Vec Carrier n) → (p : RightLeaningSumOfMonomials n) → ⟦ p ⟧RLSM ρ ≈ ⟦ normalize-monomials p ⟧RLSNM ρ
+-- normalize-monomials-correct ρ nil = refl
+-- normalize-monomials-correct ρ (x :+ xs) = +-cong (normalize-monomial-correct ρ x) (normalize-monomials-correct ρ xs)
+-- 
+-- ------------------------------------------------------------------------
+-- -- Throw out zero monomials
+-- 
+-- mutual
+--   no-zeros' : ∀ {n} → (c : Carrier) → Dec (c ≈ 0#) → VarProduct n → RightLeaningSumOfNormalizedMonomials n → L.List (NormalizedMonomial n)
+--   no-zeros' c (yes prf) x p = no-zeros p
+--   no-zeros' c (no ¬prf) x p = (c :* x) L.∷ no-zeros p
+-- 
+--   no-zeros : ∀ {n} → RightLeaningSumOfNormalizedMonomials n → L.List (NormalizedMonomial n)
+--   no-zeros nil = L.[]
+--   no-zeros (c :* x :+ p) = no-zeros' c (c ≟0) x p
+-- 
+-- to-sum : ∀ {n} → L.List (NormalizedMonomial n) → RightLeaningSumOfNormalizedMonomials n
+-- to-sum L.[] = nil
+-- to-sum (x L.∷ xs) = x :+ to-sum xs
+-- 
+-- throw-out-zeros : ∀ {n} → RightLeaningSumOfNormalizedMonomials n → RightLeaningSumOfNormalizedMonomials n
+-- throw-out-zeros p = to-sum (no-zeros p)
+-- 
+-- mutual
+--   throw-out-zeros-correct' : ∀ {n}
+--                           → (ρ : Vec Carrier n)
+--                           → (c : Carrier)
+--                           → (d : Dec (c ≈ 0#))
+--                           → ((c ≟0) P.≡ d)
+--                           → (x : VarProduct n)
+--                           → (p : RightLeaningSumOfNormalizedMonomials n)
+--                           → ⟦ (c :* x) :+ p ⟧RLSNM ρ ≈ ⟦ throw-out-zeros ((c :* x) :+ p) ⟧RLSNM ρ
+--   throw-out-zeros-correct' ρ c (yes prf) prf2 x p rewrite prf2 =
+--     begin
+--       c * (⟦ x ⟧VP ρ) + ⟦ p ⟧RLSNM ρ
+--     ≈⟨ +-cong (*-cong prf refl) refl ⟩
+--       0# * (⟦ x ⟧VP ρ) + ⟦ p ⟧RLSNM ρ
+--     ≈⟨ +-cong (proj₁ zero _) refl ⟩
+--       0# + ⟦ p ⟧RLSNM ρ
+--     ≈⟨ proj₁ +-identity _ ⟩
+--       ⟦ p ⟧RLSNM ρ
+--     ≈⟨ throw-out-zeros-correct ρ p ⟩
+--       ⟦ to-sum (no-zeros p) ⟧RLSNM ρ
+--     ∎
+--   throw-out-zeros-correct' ρ c (no ¬prf) prf2 x p rewrite prf2 =
+--     begin
+--       c * (⟦ x ⟧VP ρ) + ⟦ p ⟧RLSNM ρ
+--     ≈⟨ +-cong refl (throw-out-zeros-correct ρ p) ⟩
+--       c * (⟦ x ⟧VP ρ) + ⟦ to-sum (no-zeros p) ⟧RLSNM ρ
+--     ∎
+-- 
+--   throw-out-zeros-correct : ∀ {n} → (ρ : Vec Carrier n) → (p : RightLeaningSumOfNormalizedMonomials n) → ⟦ p ⟧RLSNM ρ ≈ ⟦ throw-out-zeros p ⟧RLSNM ρ
+--   throw-out-zeros-correct ρ nil = refl
+--   throw-out-zeros-correct ρ (c :* x :+ p) = throw-out-zeros-correct' ρ c (c ≟0) P.refl x p
+-- 
+-- ------------------------------------------------------------------------
+-- -- Sorting
+-- 
+-- module VarProductComparison where
+-- 
+--   open import Data.Vec.Properties
+-- 
+--   data Ordering : Set where
+--     less : Ordering
+--     equal : Ordering
+--     greater : Ordering
+-- 
+--   compare : ∀ {n} → VarProduct n → VarProduct n → Ordering
+--   compare [] [] = equal
+--   compare (x ∷ xs) (y ∷ ys) with N.compare x y
+--   compare (m ∷ xs) (.(N.suc (m N.+ k)) ∷ ys) | N.less .m k = less
+--   compare (m ∷ xs) (.m ∷ ys) | N.equal .m = compare xs ys
+--   compare (.(N.suc (m N.+ k)) ∷ xs) (m ∷ ys) | N.greater .m k = greater
+-- 
+--   decEq : ∀ {n} → (x : VarProduct n) → (y : VarProduct n) → Dec (x P.≡ y)
+--   decEq [] [] = yes P.refl
+--   decEq (x ∷ xs) (y ∷ ys) with x N.≟ y | decEq xs ys
+--   decEq (x ∷ xs) (.x ∷ ys) | yes P.refl | yes p₁ = yes (P.cong (λ t → x ∷ t) p₁)
+--   decEq (x ∷ xs) (y ∷ ys) | yes p | no ¬p = no (λ t → ¬p (proj₂ (∷-injective t)))
+--   decEq (x ∷ xs) (y ∷ ys) | no ¬p | _ = no (λ t → ¬p (proj₁ (∷-injective t)))
+-- 
+-- insert : ∀ {n} → NormalizedMonomial n → RightLeaningSumOfNormalizedMonomials n → RightLeaningSumOfNormalizedMonomials n
+-- insert y nil = y :+ nil
+-- insert (c₁ :* x₁) (c₂ :* x₂ :+ xs) with VarProductComparison.compare x₁ x₂
+-- insert (c₁ :* x₁) (c₂ :* x₂ :+ xs) | VarProductComparison.less = c₁ :* x₁ :+ (c₂ :* x₂ :+ xs)
+-- insert (c₁ :* x₁) (c₂ :* x₂ :+ xs) | VarProductComparison.equal = c₁ :* x₁ :+ (c₂ :* x₂ :+ xs)
+-- insert (c₁ :* x₁) (c₂ :* x₂ :+ xs) | VarProductComparison.greater = c₂ :* x₂ :+ insert (c₁ :* x₁) xs
+-- 
+-- insert-correct : ∀ {n} → (ρ : Vec Carrier n) → (x : NormalizedMonomial n) → (xs : RightLeaningSumOfNormalizedMonomials n) → ⟦ x ⟧NM ρ + ⟦ xs ⟧RLSNM ρ ≈ ⟦ insert x xs ⟧RLSNM ρ
+-- insert-correct ρ y nil = refl
+-- insert-correct ρ (c₁ :* x₁) (c₂ :* x₂ :+ xs) with VarProductComparison.compare x₁ x₂
+-- insert-correct ρ (c₁ :* x₁) (c₂ :* x₂ :+ xs) | VarProductComparison.less = refl
+-- insert-correct ρ (c₁ :* x₁) (c₂ :* x₂ :+ xs) | VarProductComparison.equal = refl
+-- insert-correct ρ (c₁ :* x₁) (c₂ :* x₂ :+ xs) | VarProductComparison.greater =
+--   begin
+--     c₁ * ⟦ x₁ ⟧VP ρ + (c₂ * ⟦ x₂ ⟧VP ρ + ⟦ xs ⟧RLSNM ρ)
+--   ≈⟨ sym (+-assoc _ _ _) ⟩
+--     (c₁ * ⟦ x₁ ⟧VP ρ + c₂ * ⟦ x₂ ⟧VP ρ) + ⟦ xs ⟧RLSNM ρ
+--   ≈⟨ +-cong (+-comm _ _) refl ⟩
+--     (c₂ * ⟦ x₂ ⟧VP ρ + c₁ * ⟦ x₁ ⟧VP ρ) + ⟦ xs ⟧RLSNM ρ
+--   ≈⟨ +-assoc _ _ _ ⟩
+--     c₂ * ⟦ x₂ ⟧VP ρ + (c₁ * ⟦ x₁ ⟧VP ρ + ⟦ xs ⟧RLSNM ρ)
+--   ≡⟨⟩
+--     c₂ * (⟦ x₂ ⟧VP ρ) + (⟦ (c₁ :* x₁) ⟧NM ρ + ⟦ xs ⟧RLSNM ρ)
+--   ≈⟨ +-cong refl (insert-correct ρ (c₁ :* x₁) xs) ⟩
+--     c₂ * (⟦ x₂ ⟧VP ρ) + ⟦ insert (c₁ :* x₁) xs ⟧RLSNM ρ
+--   ∎
+-- 
+-- sort : ∀ {n} → RightLeaningSumOfNormalizedMonomials n → RightLeaningSumOfNormalizedMonomials n
+-- sort nil = nil
+-- sort (x :+ xs) = insert x (sort xs)
+-- 
+-- sort-correct : ∀ {n} → (ρ : Vec Carrier n) → (p : RightLeaningSumOfNormalizedMonomials n) → ⟦ p ⟧RLSNM ρ ≈ ⟦ sort p ⟧RLSNM ρ
+-- sort-correct ρ nil = refl
+-- sort-correct ρ (x :+ xs) =
+--   begin
+--     ⟦ x ⟧NM ρ + ⟦ xs ⟧RLSNM ρ
+--   ≈⟨ +-cong refl (sort-correct ρ xs) ⟩
+--     ⟦ x ⟧NM ρ + ⟦ sort xs ⟧RLSNM ρ
+--   ≈⟨ insert-correct ρ x (sort xs) ⟩
+--     ⟦ insert x (sort xs) ⟧RLSNM ρ
+--   ∎
+-- 
+-- ------------------------------------------------------------------------
+-- -- Squashing
+-- 
+-- squash' : ∀ {n} → Carrier → VarProduct n → RightLeaningSumOfNormalizedMonomials n → RightLeaningSumOfNormalizedMonomials n
+-- squash' c x nil = c :* x :+ nil
+-- squash' c₁ x₁ (c₂ :* x₂ :+ xs) with VarProductComparison.decEq x₁ x₂
+-- ... | yes p = squash' (c₁ + c₂) x₁ xs  -- XXX: How can we normalize c₁ + c₂???
+-- ... | no ¬p = c₁ :* x₁ :+ squash' c₂ x₂ xs
+-- 
+-- squash'-correct : ∀ {n} → (ρ : Vec Carrier n) → (c : Carrier) → (x : VarProduct n) → (xs : RightLeaningSumOfNormalizedMonomials n) → c * ⟦ x ⟧VP ρ + ⟦ xs ⟧RLSNM ρ ≈ ⟦ squash' c x xs ⟧RLSNM ρ
+-- squash'-correct ρ c x nil = refl
+-- squash'-correct ρ c₁ x₁ (c₂ :* x₂ :+ xs) with VarProductComparison.decEq x₁ x₂
+-- squash'-correct ρ c₁ x₁ (c₂ :* .x₁ :+ xs) | yes P.refl =
+--   begin
+--     c₁ * ⟦ x₁ ⟧VP ρ + (c₂ * ⟦ x₁ ⟧VP ρ + ⟦ xs ⟧RLSNM ρ)
+--   ≈⟨ sym (+-assoc _ _ _) ⟩
+--     (c₁ * ⟦ x₁ ⟧VP ρ + c₂ * ⟦ x₁ ⟧VP ρ) + ⟦ xs ⟧RLSNM ρ
+--   ≈⟨ +-cong (sym (proj₂ distrib _ _ _)) refl ⟩
+--     (c₁ + c₂) * ⟦ x₁ ⟧VP ρ + ⟦ xs ⟧RLSNM ρ
+--   ≈⟨ squash'-correct ρ (c₁ + c₂) x₁ xs ⟩
+--     ⟦ squash' (c₁ + c₂) x₁ xs ⟧RLSNM ρ
+--   ∎
+-- ... | no ¬p = +-cong refl (squash'-correct ρ c₂ x₂ xs)
+-- 
+-- squash : ∀ {n} → RightLeaningSumOfNormalizedMonomials n → RightLeaningSumOfNormalizedMonomials n
+-- squash nil = nil
+-- squash (x :* x₁ :+ xs) = squash' x x₁ xs
+-- 
+-- squash-correct : ∀ {n} → (ρ : Vec Carrier n) → (xs : RightLeaningSumOfNormalizedMonomials n) → ⟦ xs ⟧RLSNM ρ ≈ ⟦ squash xs ⟧RLSNM ρ
+-- squash-correct ρ nil = refl
+-- squash-correct ρ (c :* x :+ xs) = squash'-correct ρ c x xs
+-- 
+-- ------------------------------------------------------------------------
+-- -- Normalization
+-- 
+-- ⟦_⇓⟧ : ∀ {n} → Polynomial n → Vec Carrier n → Carrier
+-- ⟦ p ⇓⟧ ρ = ⟦ squash $ sort $ throw-out-zeros $ normalize-monomials $ lean-right $ expand p ⟧RLSNM ρ
+-- 
+-- correct : ∀ {n} (e : Polynomial n) ρ → ⟦ e ⇓⟧ ρ ≈ ⟦ e ⟧ ρ
+-- correct e ρ =
+--   begin
+--     ⟦ e ⇓⟧ ρ
+--   ≡⟨⟩
+--     ⟦ squash (sort (throw-out-zeros (normalize-monomials (lean-right (expand e))))) ⟧RLSNM ρ
+--   ≈⟨ sym (squash-correct ρ (sort (throw-out-zeros (normalize-monomials (lean-right (expand e)))))) ⟩
+--     ⟦ sort (throw-out-zeros (normalize-monomials (lean-right (expand e)))) ⟧RLSNM ρ
+--   ≈⟨ sym (sort-correct ρ (throw-out-zeros (normalize-monomials (lean-right (expand e))))) ⟩
+--     ⟦ throw-out-zeros (normalize-monomials (lean-right (expand e))) ⟧RLSNM ρ
+--   ≈⟨ sym (throw-out-zeros-correct ρ (normalize-monomials (lean-right (expand e)))) ⟩
+--     ⟦ normalize-monomials (lean-right (expand e)) ⟧RLSNM ρ
+--   ≈⟨ sym (normalize-monomials-correct ρ (lean-right (expand e))) ⟩
+--     ⟦ lean-right (expand e) ⟧RLSM ρ
+--   ≈⟨ sym (lean-right-correct ρ (expand e)) ⟩
+--     ⟦ expand e ⟧SM ρ
+--   ≈⟨ sym (expand-correct ρ e) ⟩
+--     ⟦ e ⟧ ρ
+--   ∎
+-- 
+-- 
+-- open Reflection setoid var ⟦_⟧ ⟦_⇓⟧ correct public
+--   using (prove; solve) renaming (_⊜_ to _:=_)
+

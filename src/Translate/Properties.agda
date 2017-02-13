@@ -8,6 +8,8 @@ module Translate.Properties where
 
 open import Translate.Axioms
 open import Translate.Base
+open import Translate.Types
+open import Translate.Semiring
 open import Relation.Binary
 open import Algebra
 

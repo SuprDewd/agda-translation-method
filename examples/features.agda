@@ -11,24 +11,20 @@ open import Translate.Bijection using (getTo)
 
 -- Vanilla proof
 
--- TODO
 ex1 : ∀ a b c → a + (b + c) ≡ c + (b + a)
-ex1 = {!!}
-
+ex1 a b c = trans +-comm (trans (+-cong +-comm refl) +-assoc)
 
 -- Proof using EqReasoning
 
 ex2 : ∀ a b c → a + (b + c) ≡ c + (b + a)
-ex2 a b c =
-  begin
-    a + (b + c)
-    ≈⟨ +-comm ⟩
-    (b + c) + a
-    ≈⟨ +-cong +-comm refl ⟩
-    (c + b) + a
-    ≈⟨ +-assoc ⟩
-    c + (b + a)
-    ∎
+ex2 a b c = begin
+  a + (b + c)
+  ≈⟨ +-comm ⟩
+  (b + c) + a
+  ≈⟨ +-cong +-comm refl ⟩
+  (c + b) + a
+  ≈⟨ +-assoc ⟩
+  c + (b + a) ∎
 
 -- Proof using solver
 

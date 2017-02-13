@@ -9,94 +9,14 @@ module Translate.Base where
 open import Function
 open import Coinduction
 open import Translate.Support
+open import Translate.Types
 
-infixl 6 _*_ _:*_
-infixl 5 _+_ _:+_
 infix 4 _≡_
 
 ------------------------------------------------------------------------
 -- Expressions
 
--- An expression
-record Expr : Set₁ where
-  field
-    value : ∞ ℕ
-    lift : ∞ Set
 
--- An environment with n variables
-Env : ∀ n → Set₁
-Env n = Vec Expr n
-
--- An expression on n variables
-record :Expr (n : ℕ) : Set₁ where
-  field
-    :value : (Γ : Env n) → ∞ ℕ
-    :lift : (Γ : Env n) → ∞ Set
-
-value : Expr → ℕ
-value e = ♭ $ Expr.value e
-
-lift : Expr → Set
-lift e = ♭ $ Expr.lift e
-
-:value : ∀ {n} → :Expr n → Env n → ℕ
-:value e Γ = ♭ $ :Expr.:value e Γ
-
-:lift : ∀ {n} → :Expr n → Env n → Set
-:lift e Γ = ♭ $ :Expr.:lift e Γ
-
--- Helpers for converting between Expr and :Expr 0
-
-drop: : :Expr ℕzero → Expr
-drop: x = record
-  { value = ♯ :value x []
-  ; lift = ♯ :lift x []
-  }
-
-add: : Expr → :Expr ℕzero
-add: x = record
-  { :value = λ Γ → ♯ value x
-  ; :lift = λ Γ → ♯ lift x
-  }
-
-------------------------------------------------------------------------
--- Main building blocks for expressions
-
-:zero : ∀ {n} → :Expr n
-:zero = record
-  { :value = λ Γ → ♯ ℕzero
-  ; :lift = λ Γ → ♯ Fin (ℕzero)
-  }
-
-zero : Expr
-zero = drop: :zero
-
-:suc : ∀ {n} → :Expr n → :Expr n
-:suc a = record
-  { :value = λ Γ → ♯ ℕsuc (:value a Γ)
-  ; :lift = λ Γ → ♯ Maybe (:lift a Γ)
-  }
-
-suc : Expr → Expr
-suc n = drop: (:suc (add: n))
-
-_:+_ : ∀ {n} → :Expr n → :Expr n → :Expr n
-a :+ b = record
-  { :value = λ Γ → ♯ (:value a Γ ℕ+ :value b Γ)
-  ; :lift = λ Γ → ♯ (:lift a Γ ⊎ :lift b Γ)
-  }
-
-_+_ : Expr → Expr → Expr
-a + b = drop: ((add: a) :+ (add: b))
-
-_:*_ : ∀ {n} → :Expr n → :Expr n → :Expr n
-a :* b = record
-  { :value = λ Γ → ♯ (:value a Γ ℕ* :value b Γ)
-  ; :lift = λ Γ → ♯ (:lift a Γ × :lift b Γ)
-  }
-
-_*_ : Expr → Expr → Expr
-a * b = drop: ((add: a) :* (add: b))
 
 ------------------------------------------------------------------------
 -- Equivalence of expressions

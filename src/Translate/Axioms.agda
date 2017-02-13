@@ -4,6 +4,7 @@
 -- A set of axioms for reasoning with expressions
 ------------------------------------------------------------------------
 
+-- TODO: Should these be called something else? Laws?
 module Translate.Axioms where
 
 import Data.Nat.Properties.Simple as NPS
@@ -37,9 +38,10 @@ module NP where
     m * n + o * m ≡⟨ cong (λ x → m * n + x) (*-comm o m) ⟩
     m * n + m * o ∎
 
-
-open import Translate.Base -- TODO: Should this be Translate?
+open import Translate.Base
 open import Translate.Support
+open import Translate.Types
+open import Translate.Semiring
 
 +-assoc : ∀ {a b c} → (a + b) + c ≡ a + (b + c)
 +-assoc {a} {b} {c} = axiom (NPS.+-assoc (value a) (value b) (value c)) (mkBij to from)

@@ -9,6 +9,7 @@ module Translate where
 -- TODO: Re-export imports that make sense, and clean up commented-out imports
 
 open import Translate.Base public
+open import Translate.Semiring public
 -- open import Translate.Bijection as B public
 -- open import Translate.Bijection public
 -- open import Translate.Bijection using (_≡_) public

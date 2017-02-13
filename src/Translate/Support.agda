@@ -44,9 +44,16 @@ open import Relation.Binary.PropositionalEquality public
            )
 
 open import Data.Vec public
-  using ( Vec
-        ; []
-        )
+  using (Vec)
+  renaming ( [] to V[]
+           ; _∷_ to _V∷_
+           )
+
+open import Data.List public
+  using (List)
+  renaming ( [] to L[]
+           ; _∷_ to _L∷_
+           )
 
 open import Data.Fin public
   using (Fin)
@@ -68,4 +75,6 @@ open import Coinduction public
   using ( ♯_
         ; ♭
         )
+
+open import Data.Bool public
 

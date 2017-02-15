@@ -755,8 +755,50 @@ squash-correct : ∀ {n} → (Γ : Env n) → (xs : RightLeaningSumOfNormalizedM
 squash-correct Γ nil = refl
 squash-correct Γ (mon c x f :+ xs) = squash'-correct Γ c x f xs
 
+private
+
+  decNull :  ∀ {a} {A : Set a} → (xs : List A) → Dec (xs P≡ [])
+  decNull [] = yes Prefl
+  decNull (x ∷ xs) = no (λ ())
 
 mutual
+
+  uncon : ∀ {n} → :Expr n → NormalizedConstant × :Expr n
+  uncon x with normalize' x
+  uncon x | nil = :zero , :zero
+  uncon x | mon x₁ vs fs :+ p with decNull vs | decNull fs
+  uncon x | mon x₁ .[] .[] :+ p₂ | yes Prefl | yes Prefl = x₁ , :⟦ p₂ ⟧RLSNM
+  uncon x | mon x₁ vs fs :+ p₁ | yes p | no ¬p = :zero , :⟦ mon x₁ vs fs :+ p₁ ⟧RLSNM
+  uncon x | mon x₁ vs fs :+ p₁ | no ¬p | yes p = :zero , :⟦ mon x₁ vs fs :+ p₁ ⟧RLSNM
+  uncon x | mon x₁ vs fs :+ p | no ¬p | no ¬p₁ = :zero , :⟦ mon x₁ vs fs :+ p ⟧RLSNM
+
+  uncon-correct : ∀ {n} → (Γ : Env n) → (x : :Expr n) → ⟦ proj₁ (uncon x) ⟧NC Γ + ⟦ proj₂ (uncon x) ⟧ Γ ≡ ⟦ x ⟧ Γ
+  uncon-correct Γ x with normalize' x | normalize'-correct Γ x
+  uncon-correct Γ x | nil | qc =
+    begin
+      zero + zero
+    ≈⟨ +-right-identity ⟩
+      zero
+    ≈⟨ qc ⟩
+      ⟦ x ⟧ Γ
+    ∎
+  uncon-correct Γ x | mon x₁ vs fs :+ p | qc with decNull vs | decNull fs
+  uncon-correct Γ x | mon x₁ .[] .[] :+ p₂ | qc | yes Prefl | yes Prefl =
+    begin
+      ⟦ :⟦ x₁ ⟧NC ⟧ Γ + ⟦ :⟦ p₂ ⟧RLSNM ⟧ Γ
+    ≈⟨ +-cong (sym *-right-identity) refl ⟩
+      ⟦ :⟦ x₁ ⟧NC ⟧ Γ * suc zero + ⟦ :⟦ p₂ ⟧RLSNM ⟧ Γ
+    ≈⟨ +-cong (sym *-right-identity) refl ⟩
+      (⟦ :⟦ x₁ ⟧NC ⟧ Γ * suc zero) * suc zero + ⟦ :⟦ p₂ ⟧RLSNM ⟧ Γ
+    ≈⟨ +-cong *-assoc refl ⟩
+      ⟦ :⟦ x₁ ⟧NC ⟧ Γ * (suc zero * suc zero) + ⟦ :⟦ p₂ ⟧RLSNM ⟧ Γ
+    ≈⟨ qc ⟩
+      ⟦ x ⟧ Γ
+    ∎
+  uncon-correct Γ x | mon x₁ vs fs :+ p₁ | qc | yes p | no ¬p = {!!}
+  uncon-correct Γ x | mon x₁ vs fs :+ p₁ | qc | no ¬p | yes p = {!!}
+  uncon-correct Γ x | mon x₁ vs fs :+ p | qc | no ¬p | no ¬p₁ = {!!}
+
   ------------------------------------------------------------------------
   -- Function expansion
 
@@ -780,25 +822,32 @@ mutual
   ------------------------------------------------------------------------
   -- Normalization
 
+  normalize' : ∀ {n} → :Expr n → RightLeaningSumOfNormalizedMonomials n
+  normalize' = squash ∘ sort ∘ throw-out-zeros ∘ normalize-monomials ∘ lean-right ∘ distrib ∘ expand-funs
+
+  normalize'-correct : ∀ {n} → (Γ : Env n) → (x : :Expr n) → ⟦ normalize' x ⟧RLSNM Γ ≡ ⟦ x ⟧ Γ
+  normalize'-correct Γ p =
+     begin
+       ⟦ squash $ sort $ throw-out-zeros $ normalize-monomials $ lean-right $ distrib $ expand-funs $ p ⟧RLSNM Γ
+     ≈⟨ squash-correct Γ (sort $ throw-out-zeros $ normalize-monomials $ lean-right $ distrib $ expand-funs $ p) ⟩
+       ⟦ sort $ throw-out-zeros $ normalize-monomials $ lean-right $ distrib $ expand-funs $ p ⟧RLSNM Γ
+     ≈⟨ sort-correct Γ (throw-out-zeros $ normalize-monomials $ lean-right $ distrib $ expand-funs $ p) ⟩
+       ⟦ throw-out-zeros $ normalize-monomials $ lean-right $ distrib $ expand-funs $ p ⟧RLSNM Γ
+     ≈⟨ throw-out-zeros-correct Γ (normalize-monomials $ lean-right $ distrib $ expand-funs $ p) ⟩
+       ⟦ normalize-monomials $ lean-right $ distrib $ expand-funs $ p ⟧RLSNM Γ
+     ≈⟨ normalize-monomials-correct Γ (lean-right $ distrib $ expand-funs $ p) ⟩
+       ⟦ lean-right $ distrib $ expand-funs $ p ⟧RLSM Γ
+     ≈⟨ lean-right-correct Γ (distrib $ expand-funs $ p) ⟩
+       ⟦ distrib $ expand-funs $ p ⟧SM Γ
+     ≈⟨ distrib-correct Γ (expand-funs $ p) ⟩
+       ⟦ expand-funs $ p ⟧ Γ
+     ≈⟨ expand-funs-correct Γ p ⟩
+       ⟦ p ⟧ Γ
+     ∎
+
   normalize : ∀ {n} → CorrectTransform n
-  normalize = (λ x → :⟦ squash $ sort $ throw-out-zeros $ normalize-monomials $ lean-right $ distrib $ expand-funs $ x ⟧RLSNM)
-            , (λ Γ p → begin
-                        ⟦ squash $ sort $ throw-out-zeros $ normalize-monomials $ lean-right $ distrib $ expand-funs $ p ⟧RLSNM Γ
-                      ≈⟨ squash-correct Γ (sort $ throw-out-zeros $ normalize-monomials $ lean-right $ distrib $ expand-funs $ p) ⟩
-                        ⟦ sort $ throw-out-zeros $ normalize-monomials $ lean-right $ distrib $ expand-funs $ p ⟧RLSNM Γ
-                      ≈⟨ sort-correct Γ (throw-out-zeros $ normalize-monomials $ lean-right $ distrib $ expand-funs $ p) ⟩
-                        ⟦ throw-out-zeros $ normalize-monomials $ lean-right $ distrib $ expand-funs $ p ⟧RLSNM Γ
-                      ≈⟨ throw-out-zeros-correct Γ (normalize-monomials $ lean-right $ distrib $ expand-funs $ p) ⟩
-                        ⟦ normalize-monomials $ lean-right $ distrib $ expand-funs $ p ⟧RLSNM Γ
-                      ≈⟨ normalize-monomials-correct Γ (lean-right $ distrib $ expand-funs $ p) ⟩
-                        ⟦ lean-right $ distrib $ expand-funs $ p ⟧RLSM Γ
-                      ≈⟨ lean-right-correct Γ (distrib $ expand-funs $ p) ⟩
-                        ⟦ distrib $ expand-funs $ p ⟧SM Γ
-                      ≈⟨ distrib-correct Γ (expand-funs $ p) ⟩
-                        ⟦ expand-funs $ p ⟧ Γ
-                      ≈⟨ expand-funs-correct Γ p ⟩
-                        ⟦ p ⟧ Γ
-                      ∎)
+  normalize = (λ x → :⟦ normalize' x ⟧RLSNM)
+            , (λ Γ p → normalize'-correct Γ p)
 
 ⟦_⇓⟧ : ∀ {n} → :Expr n → Env n → Expr
 ⟦ p ⇓⟧ Γ = ⟦ (proj₁ normalize) p ⟧ Γ

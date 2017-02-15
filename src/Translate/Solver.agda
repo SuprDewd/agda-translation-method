@@ -951,14 +951,16 @@ data RightLeaningSumOfNormalizedMonomials : (n : ℕ) → Set ℓ₁ where
 -- TODO: Apply this
 normalize-monomials : ∀ {n} → RightLeaningSumOfMonomials n → RightLeaningSumOfNormalizedMonomials n
 normalize-monomials nil = nil
-normalize-monomials (x :+ p) = normalize-constants (snormalize-monomial x) :+ normalize-monomials p
+normalize-monomials (x :+ p) = normalize-constants (sort-snormalized-monomial (snormalize-monomial x)) :+ normalize-monomials p
 
 normalize-monomials-correct : ∀ {n} → (Γ : Env n) → (p : RightLeaningSumOfMonomials n) → ⟦ normalize-monomials p ⟧RLSNM Γ ≡ ⟦ p ⟧RLSM Γ
 normalize-monomials-correct Γ nil = refl
 normalize-monomials-correct Γ (x :+ x₁) =
   begin
-    ⟦ normalize-constants (snormalize-monomial x) ⟧NM Γ + ⟦ normalize-monomials x₁ ⟧RLSNM Γ
-  ≈⟨ +-cong (normalize-constants-correct Γ (snormalize-monomial x)) (normalize-monomials-correct Γ x₁) ⟩
+    ⟦ normalize-constants (sort-snormalized-monomial (snormalize-monomial x)) ⟧NM Γ + ⟦ normalize-monomials x₁ ⟧RLSNM Γ
+  ≈⟨ +-cong (normalize-constants-correct Γ (sort-snormalized-monomial (snormalize-monomial x))) (normalize-monomials-correct Γ x₁) ⟩
+    ⟦ sort-snormalized-monomial (snormalize-monomial x) ⟧SNM Γ + ⟦ x₁ ⟧RLSM Γ
+  ≈⟨ +-cong (sort-snormalized-monomial-correct Γ (snormalize-monomial x)) refl ⟩
     ⟦ snormalize-monomial x ⟧SNM Γ + ⟦ x₁ ⟧RLSM Γ
   ≈⟨ +-cong (snormalize-monomial-correct Γ x) refl ⟩
     ⟦ x ⟧M Γ + ⟦ x₁ ⟧RLSM Γ

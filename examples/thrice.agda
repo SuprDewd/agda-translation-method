@@ -3,7 +3,9 @@ module thrice where
 open import Function
 
 open import Translate
-open import Translate.Fibonacci
+open import Translate.Solver
+-- open import Translate.Fibonacci
+open import Translate.Combinatorics
 open import Translate.Support
 open import Translate.EqReasoning
 open import Translate.Axioms
@@ -12,6 +14,11 @@ open import Translate.Bijection using (getTo)
 one = suc zero
 two = suc one
 three = suc two
+
+:one :two :three : ∀ {n} → :Expr n
+:one = :suc :zero
+:two = :suc :one
+:three = :suc :two
 
 -- TODO: This should not be part of the library. Perhaps put it in an examples dir?
 thrice : ∀ {n} → three * fib (ℕsuc (ℕsuc n)) ≡ fib (ℕsuc (ℕsuc (ℕsuc (ℕsuc n)))) + fib n
@@ -82,43 +89,57 @@ thrice {ℕsuc (ℕsuc n)} =
     fib (6 ℕ+ n) + fib (2 ℕ+ n)
   ∎
 
+fin : ℕ → Expr
+fin ℕzero = zero
+fin (ℕsuc n) = suc (fin n)
+
+fin-value : ∀ {n} → value (fin n) P≡ n
+fin-value {ℕzero} = Prefl
+fin-value {ℕsuc n} rewrite fin-value {n} = Prefl
+
+lemma : ∀ {n} → three * (fib (ℕsuc n) + fib n) ≡ (fib (ℕsuc n) + fib n + fib (ℕsuc n) + (fib (ℕsuc n) + fib n) + fib n)
+lemma {n} rewrite Psym (fin-value {n}) =
+  solve 1 (λ n → :three :* (:fib (:suc n) :+ :fib n) :=
+                (:fib (:suc n) :+ :fib n :+ :fib (:suc n) :+ (:fib (:suc n) :+ :fib n) :+ :fib n)) refl (fin n)
+
 thrice' : ∀ {n} → three * fib (ℕsuc (ℕsuc n)) ≡ fib (ℕsuc (ℕsuc (ℕsuc (ℕsuc n)))) + fib n
 thrice' {n} =
   begin
     three * fib (ℕsuc (ℕsuc n))
   ≈⟨ *-cong refl fib-def  ⟩
     three * (fib (ℕsuc n) + fib n)
-  ≈⟨ distribˡ-*-+ ⟩
-    three * fib (ℕsuc n) + three * fib n
-  ≈⟨ +-cong *-comm  *-comm ⟩
-    fib (ℕsuc n) * three + fib n * three
-  ≈⟨ +-cong +-*-suc +-*-suc ⟩
-    (fib (ℕsuc n) + fib (ℕsuc n) * two) + (fib n + fib n * two)
-  ≈⟨ +-cong (+-cong refl +-*-suc) (+-cong refl +-*-suc) ⟩
-    (fib (ℕsuc n) + (fib (ℕsuc n) + fib (ℕsuc n) * one)) + (fib n + (fib n + fib n * one))
-  ≈⟨ +-cong (+-cong refl (+-cong refl *-right-identity)) (+-cong refl (+-cong refl *-right-identity)) ⟩
-    (fib (ℕsuc n) + (fib (ℕsuc n) + fib (ℕsuc n))) + (fib n + (fib n + fib n))
-  ≈⟨ +-assoc ⟩
-    fib (ℕsuc n) + ((fib (ℕsuc n) + fib (ℕsuc n)) + (fib n + (fib n + fib n)))
-  ≈⟨ +-cong refl (+-assoc) ⟩
-    fib (ℕsuc n) + (fib (ℕsuc n) + (fib (ℕsuc n) + (fib n + (fib n + fib n))))
-  ≈⟨ +-cong refl (+-cong refl (sym +-assoc)) ⟩
-    fib (ℕsuc n) + (fib (ℕsuc n) + ((fib (ℕsuc n) + fib n) + (fib n + fib n)))
-  ≈⟨ +-cong refl (+-cong refl (sym +-assoc)) ⟩
-    fib (ℕsuc n) + (fib (ℕsuc n) + (((fib (ℕsuc n) + fib n) + fib n) + fib n))
-  ≈⟨ +-cong refl (sym +-assoc) ⟩
-    fib (ℕsuc n) + ((fib (ℕsuc n) + ((fib (ℕsuc n) + fib n) + fib n)) + fib n)
-  ≈⟨ sym +-assoc ⟩
-    (fib (ℕsuc n) + (fib (ℕsuc n) + ((fib (ℕsuc n) + fib n) + fib n))) + fib n
-  ≈⟨ +-comm ⟩
-    fib n + (fib (ℕsuc n) + (fib (ℕsuc n) + ((fib (ℕsuc n) + fib n) + fib n)))
-  ≈⟨ sym +-assoc ⟩
-    (fib n + fib (ℕsuc n)) + (fib (ℕsuc n) + ((fib (ℕsuc n) + fib n) + fib n))
-  ≈⟨ +-cong +-comm refl ⟩
-    (fib (ℕsuc n) + fib n) + (fib (ℕsuc n) + ((fib (ℕsuc n) + fib n) + fib n))
-  ≈⟨ sym +-assoc ⟩
-    ((fib (ℕsuc n) + fib n) + fib (ℕsuc n)) + ((fib (ℕsuc n) + fib n) + fib n)
-  ≈⟨ sym +-assoc ⟩
+  -- ≈⟨ distribˡ-*-+ ⟩
+  --   three * fib (ℕsuc n) + three * fib n
+  -- ≈⟨ +-cong *-comm  *-comm ⟩
+  --   fib (ℕsuc n) * three + fib n * three
+  -- ≈⟨ +-cong +-*-suc +-*-suc ⟩
+  --   (fib (ℕsuc n) + fib (ℕsuc n) * two) + (fib n + fib n * two)
+  -- ≈⟨ +-cong (+-cong refl +-*-suc) (+-cong refl +-*-suc) ⟩
+  --   (fib (ℕsuc n) + (fib (ℕsuc n) + fib (ℕsuc n) * one)) + (fib n + (fib n + fib n * one))
+  -- ≈⟨ +-cong (+-cong refl (+-cong refl *-right-identity)) (+-cong refl (+-cong refl *-right-identity)) ⟩
+  --   (fib (ℕsuc n) + (fib (ℕsuc n) + fib (ℕsuc n))) + (fib n + (fib n + fib n))
+  -- ≈⟨ +-assoc ⟩
+  --   fib (ℕsuc n) + ((fib (ℕsuc n) + fib (ℕsuc n)) + (fib n + (fib n + fib n)))
+  -- ≈⟨ +-cong refl (+-assoc) ⟩
+  --   fib (ℕsuc n) + (fib (ℕsuc n) + (fib (ℕsuc n) + (fib n + (fib n + fib n))))
+  -- ≈⟨ +-cong refl (+-cong refl (sym +-assoc)) ⟩
+  --   fib (ℕsuc n) + (fib (ℕsuc n) + ((fib (ℕsuc n) + fib n) + (fib n + fib n)))
+  -- ≈⟨ +-cong refl (+-cong refl (sym +-assoc)) ⟩
+  --   fib (ℕsuc n) + (fib (ℕsuc n) + (((fib (ℕsuc n) + fib n) + fib n) + fib n))
+  -- ≈⟨ +-cong refl (sym +-assoc) ⟩
+  --   fib (ℕsuc n) + ((fib (ℕsuc n) + ((fib (ℕsuc n) + fib n) + fib n)) + fib n)
+  -- ≈⟨ sym +-assoc ⟩
+  --   (fib (ℕsuc n) + (fib (ℕsuc n) + ((fib (ℕsuc n) + fib n) + fib n))) + fib n
+  -- ≈⟨ +-comm ⟩
+  --   fib n + (fib (ℕsuc n) + (fib (ℕsuc n) + ((fib (ℕsuc n) + fib n) + fib n)))
+  -- ≈⟨ sym +-assoc ⟩
+  --   (fib n + fib (ℕsuc n)) + (fib (ℕsuc n) + ((fib (ℕsuc n) + fib n) + fib n))
+  -- ≈⟨ +-cong +-comm refl ⟩
+  --   (fib (ℕsuc n) + fib n) + (fib (ℕsuc n) + ((fib (ℕsuc n) + fib n) + fib n))
+  -- ≈⟨ sym +-assoc ⟩
+  --   ((fib (ℕsuc n) + fib n) + fib (ℕsuc n)) + ((fib (ℕsuc n) + fib n) + fib n)
+  -- ≈⟨ sym +-assoc ⟩
+  ≈⟨ lemma ⟩
     (((fib (ℕsuc n) + fib n) + fib (ℕsuc n)) + (fib (ℕsuc n) + fib n)) + fib n
   ≈⟨ +-cong (+-cong (+-cong (sym fib-def) refl) refl) refl ⟩
     ((fib (ℕsuc (ℕsuc n)) + fib (ℕsuc n)) + (fib (ℕsuc n) + fib n)) + fib n

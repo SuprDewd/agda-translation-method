@@ -43,16 +43,16 @@ import Data.Fin as F
 
 -- Axioms
 
--- fib-def : ∀ {n} → fib (ℕsuc (ℕsuc n)) ≡ fib (ℕsuc n) + fib n
--- fib-def {n} = axiom Prefl (mkBij to from)
---   where
---     to : lift (fib (ℕsuc (ℕsuc n))) → lift (fib (ℕsuc n) + fib n)
---     to (xs ∷1) = inj₁ xs
---     to (xs ∷2) = inj₂ xs
+fib-def : ∀ {n} → fib (ℕsuc (ℕsuc n)) ≡ fib (ℕsuc n) + fib n
+fib-def {n} = axiom Prefl (mkBij to from)
+  where
+    to : lift (fib (ℕsuc (ℕsuc n))) → lift (fib (ℕsuc n) + fib n)
+    to (xs ∷1) = inj₁ xs
+    to (xs ∷2) = inj₂ xs
 
---     from : lift (fib (ℕsuc n) + fib n) → lift (fib (ℕsuc (ℕsuc n)))
---     from (inj₁ xs) = xs ∷1
---     from (inj₂ xs) = xs ∷2
+    from : lift (fib (ℕsuc n) + fib n) → lift (fib (ℕsuc (ℕsuc n)))
+    from (inj₁ xs) = xs ∷1
+    from (inj₂ xs) = xs ∷2
 
 ------------------------------------------------------------------------
 -- Binary strings

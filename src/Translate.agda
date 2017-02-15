@@ -10,6 +10,7 @@ module Translate where
 
 open import Translate.Base public
 open import Translate.Semiring public
+open import Translate.Types public
 -- open import Translate.Bijection as B public
 -- open import Translate.Bijection public
 -- open import Translate.Bijection using (_≡_) public

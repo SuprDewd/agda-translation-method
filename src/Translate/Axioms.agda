@@ -238,3 +238,13 @@ cancel {a} {b} {c} {d} a+c≡b+d c≡d = lemma (toEquality a+c≡b+d) (toEqualit
 
 -- TODO: Implement rest of cancellation algorithms
 
+
+------------------------------------------------------------------------
+-- ???
+
+fib-cong : ∀ {a b} → a P≡ b → (fib a) ≡ (fib b)
+fib-cong Prefl = refl
+
+2^-cong : ∀ {a b} → a P≡ b → (2^ a) ≡ (2^ b)
+2^-cong Prefl = refl
+

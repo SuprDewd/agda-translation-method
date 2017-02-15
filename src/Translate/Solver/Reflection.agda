@@ -34,6 +34,11 @@ _∧_ : Bool → Bool → Bool
 true ∧ true = true
 _ ∧ _ = false
 
+isLt : ∀ {n} → Vec Bool n → Vec Bool n → Bool
+isLt [] [] = false
+isLt (true ∷ xs) (_ ∷ ys) = isLt xs ys
+isLt (false ∷ xs) (y ∷ ys) = y
+
 mutual
 
   absTermEq : Abs Term → Abs Term → Bool
@@ -120,11 +125,6 @@ mutual
   visibilityEq hidden hidden = true
   visibilityEq instance′ instance′ = true
   visibilityEq _ _ = false
-
-isLt : ∀ {n} → Vec Bool n → Vec Bool n → Bool
-isLt [] [] = false
-isLt (true ∷ xs) (_ ∷ ys) = isLt xs ys
-isLt (false ∷ xs) (y ∷ ys) = y
 
 mutual
 

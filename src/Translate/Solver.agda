@@ -10,88 +10,32 @@ open import Translate.Axioms
 open import Translate.Semiring
 open import Translate.Properties
 
-open import Translate.Solver.Types
 open import Translate.Solver.Semiring
+open import Translate.Solver.Reflection
+open import Translate.Solver.Types public
+open import Translate.Solver.Combinatorics
 
 open import Data.Vec as V
 open import Data.List as L
-open import Data.Nat
-  using ()
-  renaming ( compare to ℕcompare
-           ; less to ℕless
-           ; equal to ℕequal
-           ; greater to ℕgreater
-           )
 
 open import Relation.Nullary
 open import Function
 import Data.Fin as F
 open import Data.Product
+open import Data.Fin.Properties using () renaming (_≟_ to _F≟_)
+open import Data.List.Properties
 
--- meow : :Expr 3
--- meow = quoteGoal x in {!x!}
-
-open import Translate.Solver.Reflection
-open import Translate.Solver.Types public
-open import Translate.Solver.Combinatorics
+import Relation.Binary.Reflection as Reflection
 
 -- TODO: Can I combine function definitions and correctness proofs using something like CorrectTransform?
 
 -- TODO: Clean this up and integrate into new AST design
---
--- open import Level renaming (zero to Lzero; suc to Lzuc)
--- open import Algebra
--- open import Data.Vec
--- open import Data.Nat as N using (ℕ)
--- import Data.Nat.Properties.Simple as NPS
--- open import Data.Fin as F using (Fin)
--- open import Data.Product
--- import Relation.Binary.PropositionalEquality as P
--- import Data.Bool as B
--- 
--- 
-import Relation.Binary.Reflection as Reflection
--- open import Relation.Binary
--- open import Relation.Nullary
--- 
--- module SemiringSolver2 {ℓ₁ ℓ₂}
---                        (cs : CommutativeSemiring ℓ₁ ℓ₂)
---                        (_≟0 : ∀ x → Dec ((CommutativeSemiring._≡_ cs) x (CommutativeSemiring.0# cs))) where
--- 
--- open CommutativeSemiring cs
--- import Relation.Binary.EqReasoning as EqR; open EqR setoid
--- 
 
 infixl 6 _C*_
 infixl 5 _C+_
 
-------------------------------------------------------------------------
--- :Expr
-
--- data :Expr : (n : ℕ) → Set ℓ₁ where
---   con : ∀ {n} → Expr → :Expr n
---   var : ∀ {n} → (Fin n) → :Expr n
---   _:+_ : ∀ {n} → :Expr n → :Expr n → :Expr n
---   _:*_ : ∀ {n} → :Expr n → :Expr n → :Expr n
-
--- _≟0 : (e : Expr) → Dec (e ≡ zero)
--- _≟0 = {!!}
-
--- ⟦_⟧ : ∀ {n} → :Expr n → Env n → Expr
--- -- ⟦ :var x ⟧ Γ = lookup x Γ
--- ⟦ :zero ⟧ Γ = zero
--- ⟦ :suc x ⟧ Γ = suc (⟦ x ⟧ Γ)
--- ⟦ l :+ r ⟧ Γ = ⟦ l ⟧ Γ + ⟦ r ⟧ Γ
--- ⟦ l :* r ⟧ Γ = ⟦ l ⟧ Γ * ⟦ r ⟧ Γ
-
-import Level as L
-ℓ₁ : L.Level
-ℓ₁ = L.suc L.zero
 
 private
-
-  -- distribˡ-*-+ : ∀ {a b c} → a * (b + c) ≡ a * b + a * c
-  -- distribˡ-*-+ = ?
 
   suc-distrib : ∀ {x} → suc x ≡ suc zero + x
   suc-distrib {x} = axiom Prefl (mkBij to from)
@@ -150,13 +94,13 @@ data Constant : Set where
   _:+_ : Constant → Constant → Constant
   _:*_ : Constant → Constant → Constant
 
-data Monomial (n : ℕ) : Set ℓ₁ where
+data Monomial (n : ℕ) : Set₂ where
   con : Constant → Monomial n
   var : (Fin n) → Monomial n
   fun : :Fun n → Monomial n
   _:*_ : Monomial n → Monomial n → Monomial n
 
-data SumOfMonomials (n : ℕ) : Set ℓ₁ where
+data SumOfMonomials (n : ℕ) : Set₂ where
   mon : Monomial n → SumOfMonomials n
   _:+_ : SumOfMonomials n → SumOfMonomials n → SumOfMonomials n
 
@@ -211,7 +155,7 @@ data SumOfMonomials (n : ℕ) : Set ℓ₁ where
 *-distrib-correct Γ (l₁ :+ l₂) (r₁ :+ r₂) =
   begin
     ((⟦ *-distrib l₁ r₁ ⟧SM Γ + ⟦ *-distrib l₁ r₂ ⟧SM Γ) + ⟦ *-distrib l₂ r₁ ⟧SM Γ) + ⟦ *-distrib l₂ r₂ ⟧SM Γ
-  ≈⟨ +-assoc ⟩ -- (⟦ *-distrib l₁ r₁ ⟧SM Γ + ⟦ *-distrib l₁ r₂ ⟧SM Γ) (⟦ *-distrib l₂ r₁ ⟧SM Γ) (⟦ *-distrib l₂ r₂ ⟧SM Γ)
+  ≈⟨ +-assoc ⟩
     (⟦ *-distrib l₁ r₁ ⟧SM Γ + ⟦ *-distrib l₁ r₂ ⟧SM Γ) + (⟦ *-distrib l₂ r₁ ⟧SM Γ + ⟦ *-distrib l₂ r₂ ⟧SM Γ)
   ≈⟨ +-cong (+-cong (*-distrib-correct Γ l₁ r₁) (*-distrib-correct Γ l₁ r₂)) (+-cong (*-distrib-correct Γ l₂ r₁) (*-distrib-correct Γ l₂ r₂)) ⟩
     (⟦ l₁ ⟧SM Γ * ⟦ r₁ ⟧SM Γ + ⟦ l₁ ⟧SM Γ * ⟦ r₂ ⟧SM Γ) + (⟦ l₂ ⟧SM Γ * ⟦ r₁ ⟧SM Γ + ⟦ l₂ ⟧SM Γ * ⟦ r₂ ⟧SM Γ)
@@ -222,7 +166,6 @@ data SumOfMonomials (n : ℕ) : Set ℓ₁ where
   ∎
 
 -- TODO: Make sure this is correct
--- TODO: Apply this
 distrib : ∀ {n} → :Expr n → SumOfMonomials n
 distrib (:var x) = mon (var x)
 distrib :zero = mon (con :zero)
@@ -231,13 +174,7 @@ distrib (l :+ r) = distrib l :+ distrib r
 distrib (l :* r) = *-distrib (distrib l) (distrib r)
 distrib (:fun f) = mon (fun f)
 
--- distrib (con x) = mon (con x)
--- distrib (var x) = mon (var x)
--- distrib (l :+ r) = distrib l :+ distrib r
--- distrib (l :* r) = *-distrib (distrib l) (distrib r)
-
 distrib-correct : ∀ {n} → (Γ : Env n) → (p : :Expr n) → ⟦ distrib p ⟧SM Γ ≡ ⟦ p ⟧ Γ
--- distrib-correct Γ (:var x) = refl
 distrib-correct Γ :zero = refl
 distrib-correct Γ (:suc x) =
   begin
@@ -258,22 +195,11 @@ distrib-correct Γ (l :* r) =
   ∎
 distrib-correct Γ (:var x) = refl
 distrib-correct Γ (:fun f) = refl
--- distrib-correct Γ (con x) = refl
--- distrib-correct Γ (var x) = refl
--- distrib-correct Γ (p :+ p₁) = +-cong (distrib-correct Γ p) (distrib-correct Γ p₁)
--- distrib-correct Γ (p :* p₁) =
---   begin
---     ⟦ p ⟧ Γ * ⟦ p₁ ⟧ Γ
---   ≡⟨ *-cong (distrib-correct Γ p) (distrib-correct Γ p₁) ⟩
---     ⟦ distrib p ⟧SM Γ * ⟦ distrib p₁ ⟧SM Γ
---   ≡⟨ *-distrib-correct Γ (distrib p) (distrib p₁) ⟩
---     ⟦ *-distrib (distrib p) (distrib p₁) ⟧SM Γ
---   ∎
 
 ------------------------------------------------------------------------
 -- Right leaning
 
-data RightLeaningSumOfMonomials (n : ℕ) : Set ℓ₁ where
+data RightLeaningSumOfMonomials (n : ℕ) : Set₂ where
   nil : RightLeaningSumOfMonomials n
   _:+_ : Monomial n → RightLeaningSumOfMonomials n → RightLeaningSumOfMonomials n
 
@@ -296,7 +222,6 @@ combine-lean-right-correct Γ (x :+ l) r =
     (⟦ x ⟧M Γ + ⟦ l ⟧RLSM Γ) + ⟦ r ⟧RLSM Γ
   ∎
 
--- TODO: Apply this
 lean-right : ∀ {n} → SumOfMonomials n → RightLeaningSumOfMonomials n
 lean-right (mon x) = x :+ nil
 lean-right (mon x :+ r) = x :+ lean-right r
@@ -321,102 +246,8 @@ lean-right-correct Γ ((l₁ :+ l₂) :+ r) =
 ------------------------------------------------------------------------
 -- Monomial normalization
 
--- VarProduct : ℕ → Set
--- VarProduct n = Vec ℕ n
-
--- ⟦_⟧VP_ : ∀ {n} → VarProduct n → Env n → Expr
--- ⟦ [] ⟧VP Γ = suc zero
--- ⟦ ℕzero ∷ xs ⟧VP (Γ₁ ∷ Γ) = ⟦ xs ⟧VP Γ
--- ⟦ ℕsuc x ∷ xs ⟧VP (Γ₁ ∷ Γ) = Γ₁ * ⟦ x ∷ xs ⟧VP (Γ₁ ∷ Γ)
-
--- varProduct-none : ∀ {n} → VarProduct n
--- varProduct-none {n} = replicate 0
-
--- varProduct-none-correct : ∀ {n} → (Γ : Env n) → ⟦ varProduct-none {n} ⟧VP Γ ≡ suc zero
--- varProduct-none-correct {ℕzero} Γ = refl
--- varProduct-none-correct {ℕsuc n} (Γ₁ ∷ Γ) = varProduct-none-correct Γ
-
--- varProduct-one : ∀ {n} → Fin n → VarProduct n
--- varProduct-one Fin.zero = 1 ∷ varProduct-none
--- varProduct-one (Fin.suc i) = 0 ∷ varProduct-one i
-
--- varProduct-one-correct : ∀ {n} → (Γ : Env n) → (f : Fin n) → ⟦ varProduct-one {n} f ⟧VP Γ ≡ lookup f Γ
--- varProduct-one-correct {ℕsuc n} (Γ₁ ∷ Γ) Fin.zero =
---   begin
---     ⟦ varProduct-one {ℕsuc n} Fin.zero ⟧VP (Γ₁ ∷ Γ)
---   ≡⟨⟩
---     ⟦ 1 ∷ varProduct-none ⟧VP (Γ₁ ∷ Γ)
---   ≡⟨⟩
---     Γ₁ * ⟦ varProduct-none {n} ⟧VP Γ
---   ≈⟨ *-cong refl (varProduct-none-correct Γ) ⟩
---     Γ₁ * (suc zero)
---   ≈⟨ *-right-identity ⟩
---     lookup Fin.zero (Γ₁ ∷ Γ)
---   ∎
--- varProduct-one-correct (Γ₁ ∷ Γ) (Fin.suc f) = varProduct-one-correct Γ f
-
--- varProduct-mul : ∀ {n} → VarProduct n → VarProduct n → VarProduct n
--- varProduct-mul [] [] = []
--- varProduct-mul (x ∷ l) (x₁ ∷ r) = (x ℕ+ x₁) ∷ varProduct-mul l r
-
--- varProduct-mul-correct : ∀ {n} → (Γ : Env n) → (l : VarProduct n) → (r : VarProduct n) → ⟦ l ⟧VP Γ * ⟦ r ⟧VP Γ ≡ ⟦ varProduct-mul l r ⟧VP Γ
--- varProduct-mul-correct Γ [] [] = trans *-comm *-right-identity
--- varProduct-mul-correct (Γ ∷ Γ₁) (ℕzero ∷ l) (ℕzero ∷ r) = varProduct-mul-correct Γ₁ l r
--- varProduct-mul-correct (Γ ∷ Γ₁) (ℕzero ∷ l) (ℕsuc x ∷ r) =
---   begin
---     ⟦ ℕzero ∷ l ⟧VP (Γ ∷ Γ₁) * ⟦ ℕsuc x ∷ r ⟧VP (Γ ∷ Γ₁)
---   ≡⟨⟩
---     ⟦ ℕzero ∷ l ⟧VP (Γ ∷ Γ₁) * (Γ * ⟦ x ∷ r ⟧VP (Γ ∷ Γ₁))
---   ≈⟨ *-cong refl *-comm ⟩
---     ⟦ ℕzero ∷ l ⟧VP (Γ ∷ Γ₁) * (⟦ x ∷ r ⟧VP (Γ ∷ Γ₁) * Γ)
---   ≈⟨ sym *-assoc ⟩
---     (⟦ ℕzero ∷ l ⟧VP (Γ ∷ Γ₁) * ⟦ x ∷ r ⟧VP (Γ ∷ Γ₁)) * Γ
---   ≈⟨ *-comm ⟩
---     Γ * (⟦ ℕzero ∷ l ⟧VP (Γ ∷ Γ₁) * ⟦ x ∷ r ⟧VP (Γ ∷ Γ₁))
---   ≈⟨ *-cong refl (varProduct-mul-correct (Γ ∷ Γ₁) (ℕzero ∷ l) (x ∷ r)) ⟩
---     Γ * ⟦ varProduct-mul (ℕzero ∷ l) (x ∷ r) ⟧VP (Γ ∷ Γ₁)
---   ≡⟨⟩
---     Γ * ⟦ (ℕzero ℕ+ x) ∷ varProduct-mul l r ⟧VP (Γ ∷ Γ₁)
---   ≡⟨⟩
---     Γ * ⟦ x ∷ varProduct-mul l r ⟧VP (Γ ∷ Γ₁)
---   ≡⟨⟩
---     ⟦ (ℕsuc x) ∷ varProduct-mul l r ⟧VP (Γ ∷ Γ₁)
---   ≡⟨⟩
---     ⟦ (ℕzero ℕ+ ℕsuc x) ∷ varProduct-mul l r ⟧VP (Γ ∷ Γ₁)
---   ≡⟨⟩
---     ⟦ varProduct-mul (ℕzero ∷ l) (ℕsuc x ∷ r) ⟧VP (Γ ∷ Γ₁)
---   ∎
--- varProduct-mul-correct (Γ ∷ Γ₁) (ℕsuc x ∷ l) (x₁ ∷ r) =
---   begin
---     ⟦ (ℕsuc x ∷ l) ⟧VP (Γ ∷ Γ₁) * ⟦ x₁ ∷ r ⟧VP (Γ ∷ Γ₁)
---   ≡⟨⟩
---     (Γ * ⟦ (x ∷ l) ⟧VP (Γ ∷ Γ₁)) * ⟦ x₁ ∷ r ⟧VP (Γ ∷ Γ₁)
---   ≈⟨ *-assoc ⟩
---     Γ * (⟦ (x ∷ l) ⟧VP (Γ ∷ Γ₁) * ⟦ x₁ ∷ r ⟧VP (Γ ∷ Γ₁))
---   ≈⟨ *-cong refl (varProduct-mul-correct (Γ ∷ Γ₁) (x ∷ l) (x₁ ∷ r)) ⟩
---     Γ * ⟦ varProduct-mul (x ∷ l) (x₁ ∷ r) ⟧VP (Γ ∷ Γ₁)
---   ≡⟨⟩
---     Γ * ⟦ (x ℕ+ x₁) ∷ varProduct-mul l r ⟧VP (Γ ∷ Γ₁)
---   ≡⟨⟩
---     ⟦ (ℕsuc (x ℕ+ x₁)) ∷ varProduct-mul l r ⟧VP (Γ ∷ Γ₁)
---   ≡⟨⟩
---     ⟦ (ℕsuc x ℕ+ x₁) ∷ varProduct-mul l r ⟧VP (Γ ∷ Γ₁)
---   ≡⟨⟩
---     ⟦ varProduct-mul (ℕsuc x ∷ l) (x₁ ∷ r) ⟧VP (Γ ∷ Γ₁)
---   ∎
-
-
--- data SemiNormalizedMonomial (n : ℕ) : Set ℓ₁ where
---   con : Constant → SemiNormalizedMonomial n
---   var : Fin n → SemiNormalizedMonomial n
---   fun : :Fun n → SemiNormalizedMonomial n
---   _:*_ : :Expr n → SemiNormalizedMonomial n → SemiNormalizedMonomial n
-data SnormalizedMonomial (n : ℕ) : Set ℓ₁ where
+data SnormalizedMonomial (n : ℕ) : Set₂ where
   mon : Constant → (vs : List (Fin n)) → (fs : List (:Fun n)) → SnormalizedMonomial n
-
--- ⟦_⟧LC : ∀ {n} → (cs : List Constant) → (Γ : Env n) → Expr
--- ⟦ [] ⟧LC Γ = suc zero
--- ⟦ x ∷ x₁ ⟧LC Γ = ⟦ x ⟧C * ⟦ x₁ ⟧LC Γ
 
 :⟦_⟧LV : ∀ {n} → (cs : List (Fin n)) → :Expr n
 :⟦ [] ⟧LV = :suc :zero
@@ -515,190 +346,6 @@ sort-lf-correct Γ (x ∷ xs) =
     fun (⟦ x ⟧F Γ) * ⟦ xs ⟧LF Γ
   ∎
 
--- simplify : ∀ {n a} → (A : Set a) → (A → Env n → Expr) →
-
--- ⟦ mon [] [] [] ⟧NM Γ = suc zero
--- ⟦ mon [] [] (f ∷ fs) ⟧NM Γ = ⟦ :fun f ⟧ Γ * ⟦ mon [] [] fs ⟧NM Γ
--- ⟦ mon [] (v ∷ vs) fs ⟧NM Γ = ⟦ :var v ⟧ Γ * ⟦ mon [] vs fs ⟧NM Γ
--- ⟦ mon (c ∷ cs) vs fs ⟧NM Γ = ⟦ c ⟧C * ⟦ mon cs vs fs ⟧NM Γ
-
--- ⟦ con x ⟧NM Γ = ⟦ x ⟧C
--- ⟦ l :* r ⟧NM Γ = ⟦ l ⟧ Γ * ⟦ r ⟧NM Γ
--- ⟦ var x ⟧NM Γ = ⟦ :var x ⟧ Γ
--- ⟦ fun f ⟧NM Γ = ⟦ :fun f ⟧ Γ
-
--- data NormalizedMonomial : ℕ → Set ℓ₁ where
---   _:*_ : ∀ {n} → Constant → VarProduct n → NormalizedMonomial n
-
--- ⟦_⟧NM : ∀ {n} → NormalizedMonomial n → Env n → Expr
--- ⟦ x :* x₁ ⟧NM Γ = ⟦ x ⟧C * ⟦ x₁ ⟧VP Γ
-
--- combine-normalized-monomial : ∀ {n} → NormalizedMonomial n → NormalizedMonomial n → NormalizedMonomial n
--- combine-normalized-monomial (cₗ :* xₗ) (cᵣ :* xᵣ) = (cₗ :* cᵣ) :* (varProduct-mul xₗ xᵣ) -- XXX: How can we normalize cₗ * cᵣ???
-
--- combine-normalized-monomial-correct : ∀ {n} (Γ : Env n) → (p : NormalizedMonomial n) → (q : NormalizedMonomial n) → ⟦ p ⟧NM Γ * ⟦ q ⟧NM Γ ≡ ⟦ combine-normalized-monomial p q ⟧NM Γ
--- combine-normalized-monomial-correct Γ (x :* x₁) (x₂ :* x₃) = ?
---   -- begin
---   --   (⟦ x ⟧C * ⟦ x₁ ⟧VP Γ) * (⟦ x₂ ⟧C * (⟦ x₃ ⟧VP Γ))
---   -- ≈⟨ *-assoc ⟩
---   --   ⟦ x ⟧C * (⟦ x₁ ⟧VP Γ * (⟦ x₂ ⟧C * (⟦ x₃ ⟧VP Γ)))
---   -- ≈⟨ *-cong refl (sym *-assoc) ⟩
---   --   ⟦ x ⟧C * ((⟦ x₁ ⟧VP Γ * ⟦ x₂ ⟧C) * (⟦ x₃ ⟧VP Γ))
---   -- ≈⟨ *-cong refl (*-cong *-comm refl) ⟩
---   --   ⟦ x ⟧C * ((⟦ x₂ ⟧C * ⟦ x₁ ⟧VP Γ) * (⟦ x₃ ⟧VP Γ))
---   -- ≈⟨ sym *-assoc ⟩
---   --   (⟦ x ⟧C * (⟦ x₂ ⟧C * ⟦ x₁ ⟧VP Γ)) * (⟦ x₃ ⟧VP Γ)
---   -- ≈⟨ *-cong (sym *-assoc) refl ⟩
---   --   ((⟦ x ⟧C * ⟦ x₂ ⟧C) * ⟦ x₁ ⟧VP Γ) * (⟦ x₃ ⟧VP Γ)
---   -- ≈⟨ *-assoc ⟩
---   --   (⟦ x ⟧C * ⟦ x₂ ⟧C) * (⟦ x₁ ⟧VP Γ * ⟦ x₃ ⟧VP Γ)
---   -- ≈⟨ *-cong refl (varProduct-mul-correct Γ x₁ x₃) ⟩
---   --   (⟦ x ⟧C * ⟦ x₂ ⟧C) * (⟦ varProduct-mul x₁ x₃ ⟧VP Γ)
---   -- ∎
-
--- combine-normalized-monomial : ∀ {n} → SemiNormalizedMonomial n → SemiNormalizedMonomial n → SemiNormalizedMonomial n
--- -- combine-normalized-monomial (con x) (con x₁) = con (x :* x₁)
--- -- combine-normalized-monomial (con x) (x₁ :* r) = x₁ :* combine-normalized-monomial (con x) r
--- -- combine-normalized-monomial (x :* l) r = x :* combine-normalized-monomial l r
--- combine-normalized-monomial (con x) (con x₁) = ?
--- combine-normalized-monomial (con x) (var x₁) = ?
--- combine-normalized-monomial (con x) (fun x₁) = ?
--- combine-normalized-monomial (con x) (x₁ :* b) = ?
--- combine-normalized-monomial (var x) (con x₁) = ?
--- combine-normalized-monomial (var x) (var x₁) = ?
--- combine-normalized-monomial (var x) (fun x₁) = ?
--- combine-normalized-monomial (var x) (x₁ :* b) = ?
--- combine-normalized-monomial (fun x) (con x₁) = ?
--- combine-normalized-monomial (fun x) (var x₁) = ?
--- combine-normalized-monomial (fun x) (fun x₁) = ?
--- combine-normalized-monomial (fun x) (x₁ :* b) = ?
--- combine-normalized-monomial (x :* a) (con x₁) = ?
--- combine-normalized-monomial (x :* a) (var x₁) = ?
--- combine-normalized-monomial (x :* a) (fun x₁) = ?
--- combine-normalized-monomial (x :* a) (x₁ :* b) = ?
-
--- combine-normalized-monomial-correct : ∀ {n} → (Γ : Env n) → (p q : SemiNormalizedMonomial n) → ⟦ p ⟧SNM Γ * ⟦ q ⟧SNM Γ ≡ ⟦ combine-normalized-monomial p q ⟧SNM Γ
--- combine-normalized-monomial-correct Γ (con x) (con x₁) = refl
--- combine-normalized-monomial-correct Γ (con x) (x₁ :* r) =
---   begin
---     ⟦ x ⟧C * (⟦ x₁ ⟧ Γ * ⟦ r ⟧SNM Γ)
---   ≈⟨ sym *-assoc ⟩
---     (⟦ x ⟧C * ⟦ x₁ ⟧ Γ) * ⟦ r ⟧SNM Γ
---   ≈⟨ *-cong *-comm refl ⟩
---     (⟦ x₁ ⟧ Γ * ⟦ x ⟧C) * ⟦ r ⟧SNM Γ
---   ≈⟨ *-assoc ⟩
---     ⟦ x₁ ⟧ Γ * (⟦ x ⟧C * ⟦ r ⟧SNM Γ)
---   ≈⟨ *-cong refl (combine-normalized-monomial-correct Γ (con x) r) ⟩
---     ⟦ x₁ ⟧ Γ * ⟦ combine-normalized-monomial (con x) r ⟧SNM Γ
---   ∎
--- combine-normalized-monomial-correct Γ (x :* l) r =
---   begin
---     ⟦ x ⟧ Γ * ⟦ l ⟧SNM Γ * ⟦ r ⟧SNM Γ
---   ≈⟨ *-assoc ⟩
---     ⟦ x ⟧ Γ * (⟦ l ⟧SNM Γ * ⟦ r ⟧SNM Γ)
---   ≈⟨ *-cong refl (combine-normalized-monomial-correct Γ l r) ⟩
---     ⟦ x ⟧ Γ * ⟦ combine-normalized-monomial l r ⟧SNM Γ
---   ∎
--- combine-normalized-monomial-correct Γ a b = {!!}
-
--- normalize-monomial : ∀ {n} → Monomial n → SemiNormalizedMonomial n
--- normalize-monomial (con x) = con x
--- normalize-monomial (var x) = {!!}
--- normalize-monomial (fun f) = {!!}
--- normalize-monomial (l :* r) = combine-normalized-monomial (normalize-monomial l) (normalize-monomial r)
-
--- normalize-monomial-correct : ∀ {n} → (Γ : Env n) → (p : Monomial n) → ⟦ p ⟧M Γ ≡ ⟦ normalize-monomial p ⟧SNM Γ
--- normalize-monomial-correct Γ (var x) = {!!}
--- normalize-monomial-correct Γ (fun f) = {!!}
--- normalize-monomial-correct Γ (con x) = refl
--- normalize-monomial-correct Γ (x :* x₁) =
---   begin
---     ⟦ x ⟧M Γ * ⟦ x₁ ⟧M Γ
---   ≈⟨ *-cong (normalize-monomial-correct Γ x) (normalize-monomial-correct Γ x₁) ⟩
---     ⟦ normalize-monomial x ⟧SNM Γ * ⟦ normalize-monomial x₁ ⟧SNM Γ
---   ≈⟨ combine-normalized-monomial-correct Γ (normalize-monomial x) (normalize-monomial x₁) ⟩
---     ⟦ combine-normalized-monomial (normalize-monomial x) (normalize-monomial x₁) ⟧SNM Γ
---   ∎
-
--- insert-normalized-monomial : ∀ {n} → :Expr n → SemiNormalizedMonomial n → SemiNormalizedMonomial n
--- insert-normalized-monomial x (con x₁) = x :* (con x₁)
--- insert-normalized-monomial x (x₁ :* xs) with termLt (quoteTerm x) (quoteTerm x₁)
--- insert-normalized-monomial x (x₁ :* xs) | true = x :* (x₁ :* xs)
--- insert-normalized-monomial x (x₁ :* xs) | false = x₁ :* insert-normalized-monomial x xs
--- insert-normalized-monomial x xs = {!!}
-
--- insert-normalized-monomial-correct : ∀ {n} → (Γ : Env n) → (p : :Expr n) → (q : SemiNormalizedMonomial n) → (⟦ p ⟧ Γ) * ⟦ q ⟧SNM Γ ≡ ⟦ insert-normalized-monomial p q ⟧SNM Γ
--- insert-normalized-monomial-correct Γ p (con x) = refl
--- insert-normalized-monomial-correct Γ p (x :* q) =
---   begin
---     ⟦ p ⟧ Γ * (⟦ x ⟧ Γ * ⟦ q ⟧SNM Γ)
---   ≈⟨ sym *-assoc ⟩
---     (⟦ p ⟧ Γ * ⟦ x ⟧ Γ) * ⟦ q ⟧SNM Γ
---   ≈⟨ *-cong *-comm refl ⟩
---     (⟦ x ⟧ Γ * ⟦ p ⟧ Γ) * ⟦ q ⟧SNM Γ
---   ≈⟨ *-assoc ⟩
---     ⟦ x ⟧ Γ * (⟦ p ⟧ Γ * ⟦ q ⟧SNM Γ)
---   ≈⟨ *-cong refl (insert-normalized-monomial-correct Γ p q) ⟩
---     ⟦ x ⟧ Γ * ⟦ insert-normalized-monomial p q ⟧SNM Γ
---   ∎
--- insert-normalized-monomial-correct Γ p ps = {!!}
-
--- sort-normalized-monomial : ∀ {n} → SemiNormalizedMonomial n → SemiNormalizedMonomial n
--- sort-normalized-monomial (con x) = con x
--- sort-normalized-monomial (var x) = var x
--- sort-normalized-monomial (fun f) = fun f
--- sort-normalized-monomial (x :* x₁) = insert-normalized-monomial x (sort-normalized-monomial x₁)
-
--- sort-normalized-monomial-correct : ∀ {n} → (Γ : Env n) → (p : SemiNormalizedMonomial n) → ⟦ p ⟧SNM Γ ≡ ⟦ sort-normalized-monomial p ⟧SNM Γ
--- sort-normalized-monomial-correct Γ (con x) = refl
--- sort-normalized-monomial-correct Γ (var x) = refl
--- sort-normalized-monomial-correct Γ (fun f) = refl
--- sort-normalized-monomial-correct Γ (x :* x₁) =
---   begin
---     ⟦ x ⟧ Γ * ⟦ x₁ ⟧SNM Γ
---   ≈⟨ *-cong refl (sort-normalized-monomial-correct Γ x₁) ⟩
---     ⟦ x ⟧ Γ * ⟦ sort-normalized-monomial x₁ ⟧SNM Γ
---   ≈⟨ insert-normalized-monomial-correct Γ x (sort-normalized-monomial x₁) ⟩
---     ⟦ insert-normalized-monomial x (sort-normalized-monomial x₁) ⟧SNM Γ
---   ∎
-
--- squash-normalized-monomial : ∀ {n} → NormalizedMonomial n → NormalizedMonomial n
--- squash-normalized-monomial (con x) = con x
--- squash-normalized-monomial (x :* con x₁) = x :* con x₁
--- squash-normalized-monomial (x :* (x₁ :* xs)) with termEq (quoteTerm x) (quoteTerm x₁)
--- ... | 
-
--- normalize-monomial : ∀ {n} → Monomial n → NormalizedMonomial n
--- normalize-monomial (con x) = x :* varProduct-none
--- normalize-monomial (var x) = (:suc :zero) :* varProduct-one x
--- normalize-monomial (l :* r) = combine-normalized-monomial (normalize-monomial l) (normalize-monomial r)
-
--- normalize-monomial-correct : ∀ {n} → (Γ : Env n) → (p : Monomial n) → ⟦ p ⟧M Γ ≡ ⟦ normalize-monomial p ⟧NM Γ
--- normalize-monomial-correct {n} Γ (con x) = ?
---   -- begin
---   --   x
---   -- ≈⟨ sym *-right-identity ⟩
---   --   x * (suc zero)
---   -- ≈⟨ *-cong refl (sym (varProduct-none-correct {n} Γ)) ⟩
---   --   x * ⟦ varProduct-none {n} ⟧VP Γ
---   -- ∎
--- normalize-monomial-correct Γ (var x) = ?
---   -- begin
---   --   lookup x Γ
---   -- ≈⟨ sym (trans *-comm *-right-identity) ⟩
---   --   (suc zero) * lookup x Γ
---   -- ≈⟨ *-cong refl (sym (varProduct-one-correct Γ x)) ⟩
---   --   (suc zero) * (⟦ varProduct-one x ⟧VP Γ)
---   -- ∎
--- normalize-monomial-correct Γ (l :* r) =
---   begin
---     ⟦ l ⟧M Γ * ⟦ r ⟧M Γ
---   ≈⟨ *-cong (normalize-monomial-correct Γ l) (normalize-monomial-correct Γ r) ⟩
---     ⟦ normalize-monomial l ⟧NM Γ * ⟦ normalize-monomial r ⟧NM Γ
---   ≈⟨ combine-normalized-monomial-correct Γ (normalize-monomial l) (normalize-monomial r) ⟩
---     ⟦ combine-normalized-monomial (normalize-monomial l) (normalize-monomial r) ⟧NM Γ
---   ∎
-
 combine-snormalized-monomials : ∀ {n} → SnormalizedMonomial n → SnormalizedMonomial n → SnormalizedMonomial n
 combine-snormalized-monomials (mon x [] []) (mon x₁ vs fs) = mon (x :* x₁) vs fs
 combine-snormalized-monomials (mon x [] (x₁ ∷ fs)) (mon x₂ vs fs₁) = combine-snormalized-monomials (mon x [] fs) (mon x₂ vs (x₁ ∷ fs₁))
@@ -768,7 +415,6 @@ combine-snormalized-monomials-correct Γ (mon x (x₁ ∷ vs) fs) (mon x₂ vs�
     (⟦ x ⟧C * ((lookup x₁ Γ * ⟦ vs ⟧LV Γ) * ⟦ fs ⟧LF Γ)) * (⟦ x₂ ⟧C * (⟦ vs₁ ⟧LV Γ * ⟦ fs₁ ⟧LF Γ))
   ∎
 
--- TODO: Apply this
 snormalize-monomial : ∀ {n} → Monomial n → SnormalizedMonomial n
 snormalize-monomial (con x) = mon x [] []
 snormalize-monomial (var x) = mon (:suc :zero) (x ∷ []) []
@@ -819,7 +465,6 @@ snormalize-monomial-correct Γ (x :* x₁) =
     ⟦ x ⟧M Γ * ⟦ x₁ ⟧M Γ
   ∎
 
--- TODO: Apply this
 sort-snormalized-monomial : ∀ {n} → SnormalizedMonomial n → SnormalizedMonomial n
 sort-snormalized-monomial (mon x vs fs) = mon x (sort-lv vs) (sort-lf fs)
 
@@ -839,8 +484,6 @@ data NormalizedConstant : Set where
 
 ⟦_⟧NC : ∀ {n} → NormalizedConstant → Env n → Expr
 ⟦ x ⟧NC = ⟦ :⟦ x ⟧NC ⟧
--- ⟦ :zero ⟧NC Γ = zero
--- ⟦ :suc x ⟧NC Γ = suc ⟦ x ⟧NC Γ
 
 _C+_ : NormalizedConstant → NormalizedConstant → NormalizedConstant
 _C+_ :zero y = y
@@ -888,10 +531,7 @@ C*-correct Γ (:suc x) y =
     suc (⟦ x ⟧NC Γ) * ⟦ y ⟧NC Γ
   ∎
 
--- data NormalizedMonomial (n : ℕ) : Set ℓ₁ where
---   con : NormalizedConstant → NormalizedMonomial n
---   _:*_ : :Expr n → NormalizedMonomial n → NormalizedMonomial n
-data NormalizedMonomial (n : ℕ) : Set ℓ₁ where
+data NormalizedMonomial (n : ℕ) : Set₂ where
   mon : NormalizedConstant → (vs : List (Fin n)) → (fs : List (:Fun n)) → NormalizedMonomial n
 
 :⟦_⟧NM : ∀ {n} → NormalizedMonomial n → :Expr n
@@ -931,12 +571,8 @@ normalize-constants (mon x vs fs) = mon (normalize-constant x) vs fs
 
 normalize-constants-correct : ∀ {n} → (Γ : Env n) → (p : SnormalizedMonomial n) → ⟦ normalize-constants p ⟧NM Γ ≡ ⟦ p ⟧SNM Γ
 normalize-constants-correct Γ (mon x vs fs) = *-cong (normalize-constant-correct Γ x) refl
--- normalize-constants-correct Γ (con x) = normalize-constant-correct x
--- normalize-constants-correct Γ (var x) = {!!}
--- normalize-constants-correct Γ (fun f) = {!!}
--- normalize-constants-correct Γ (x :* p) = *-cong refl (normalize-constants-correct Γ p)
 
-data RightLeaningSumOfNormalizedMonomials : (n : ℕ) → Set ℓ₁ where
+data RightLeaningSumOfNormalizedMonomials : (n : ℕ) → Set₂ where
   nil : ∀ {n} → RightLeaningSumOfNormalizedMonomials n
   _:+_ : ∀ {n} → NormalizedMonomial n → RightLeaningSumOfNormalizedMonomials n → RightLeaningSumOfNormalizedMonomials n
 
@@ -948,7 +584,6 @@ data RightLeaningSumOfNormalizedMonomials : (n : ℕ) → Set ℓ₁ where
 ⟦_⟧RLSNM : ∀ {n} → RightLeaningSumOfNormalizedMonomials n → Env n → Expr
 ⟦ x ⟧RLSNM = ⟦ :⟦ x ⟧RLSNM ⟧
 
--- TODO: Apply this
 normalize-monomials : ∀ {n} → RightLeaningSumOfMonomials n → RightLeaningSumOfNormalizedMonomials n
 normalize-monomials nil = nil
 normalize-monomials (x :+ p) = normalize-constants (sort-snormalized-monomial (snormalize-monomial x)) :+ normalize-monomials p
@@ -966,17 +601,6 @@ normalize-monomials-correct Γ (x :+ x₁) =
     ⟦ x ⟧M Γ + ⟦ x₁ ⟧RLSM Γ
   ∎
 
--- normalize-monomials-correct Γ nil = refl
--- normalize-monomials-correct Γ (x :+ xs) =
---   begin
---     ⟦ x ⟧M Γ + ⟦ xs ⟧RLSM Γ
---   ≈⟨ +-cong (normalize-monomial-correct Γ x) (normalize-monomials-correct Γ xs) ⟩
---     ⟦ normalize-monomial x ⟧SNM Γ + ⟦ normalize-monomials xs ⟧RLSNM Γ
---   ≈⟨ +-cong (normalize-constants-correct Γ (normalize-monomial x)) refl ⟩
---     ⟦ normalize-constants (normalize-monomial x) ⟧NM Γ + ⟦ normalize-monomials xs ⟧RLSNM Γ
---   ∎
--- +-cong (normalize-monomial-correct Γ x) (normalize-monomials-correct Γ xs)
-
 ------------------------------------------------------------------------
 -- Throw out zero monomials
 
@@ -989,19 +613,7 @@ is-zero? (mon :zero vs fs) = just (λ Γ → begin
   ≈⟨ *-right-zero ⟩
     zero
   ∎)
--- is-zero (con :zero) = just (λ Γ → refl)
--- is-zero (con (:suc x)) = nothing
--- is-zero (x :* p) with is-zero p
--- is-zero (x :* p) | just prf = just (λ Γ → begin
---     ⟦ x ⟧ Γ * ⟦ p ⟧NM Γ
---   ≈⟨ *-cong refl (prf Γ) ⟩
---     ⟦ x ⟧ Γ * zero
---   ≈⟨ *-right-zero ⟩
---     zero
---   ∎)
--- is-zero (x :* p) | nothing = nothing
 
--- TODO: Apply this!
 throw-out-zeros : ∀ {n} → RightLeaningSumOfNormalizedMonomials n → RightLeaningSumOfNormalizedMonomials n
 throw-out-zeros nil = nil
 throw-out-zeros (x :+ x₁) with is-zero? x
@@ -1027,132 +639,8 @@ throw-out-zeros-correct Γ (x :+ p) | just prf =
   ∎
 throw-out-zeros-correct Γ (x :+ p) | nothing = +-cong refl (throw-out-zeros-correct Γ p)
 
--- mutual
---   no-zeros' : ∀ {n} → (c : Expr) → Dec (c ≡ zero) → VarProduct n → RightLeaningSumOfNormalizedMonomials n → L.List (NormalizedMonomial n)
---   no-zeros' c (yes prf) x p = no-zeros p
---   no-zeros' c (no ¬prf) x p = ? -- (c :* x) L.∷ no-zeros p
-
---   no-zeros : ∀ {n} → RightLeaningSumOfNormalizedMonomials n → L.List (NormalizedMonomial n)
---   no-zeros nil = L.[]
---   no-zeros (c :* x :+ p) = ? -- no-zeros' c (c ≟0) x p
-
--- to-sum : ∀ {n} → L.List (NormalizedMonomial n) → RightLeaningSumOfNormalizedMonomials n
--- to-sum L.[] = nil
--- to-sum (x L.∷ xs) = x :+ to-sum xs
-
--- throw-out-zeros : ∀ {n} → RightLeaningSumOfNormalizedMonomials n → RightLeaningSumOfNormalizedMonomials n
--- throw-out-zeros p = to-sum (no-zeros p)
-
--- mutual
---   throw-out-zeros-correct' : ∀ {n}
---                           → (Γ : Env n)
---                           → (c : Constant)
---                           → (d : Dec (c P≡ :zero))
---                           → ((c ≟0) P≡ d)
---                           → (x : VarProduct n)
---                           → (p : RightLeaningSumOfNormalizedMonomials n)
---                           → ⟦ (c :* x) :+ p ⟧RLSNM Γ ≡ ⟦ throw-out-zeros ((c :* x) :+ p) ⟧RLSNM Γ
---   throw-out-zeros-correct' Γ c (yes prf) prf2 x p rewrite prf2 =
---     begin
---       c * (⟦ x ⟧VP Γ) + ⟦ p ⟧RLSNM Γ
---     ≈⟨ +-cong (*-cong prf refl) refl ⟩
---       zero * (⟦ x ⟧VP Γ) + ⟦ p ⟧RLSNM Γ
---     ≈⟨ +-cong *-comm refl ⟩
---       (⟦ x ⟧VP Γ) * zero + ⟦ p ⟧RLSNM Γ
---     ≈⟨ +-cong *-right-zero refl ⟩
---       zero + ⟦ p ⟧RLSNM Γ
---     ≈⟨ +-comm ⟩
---       ⟦ p ⟧RLSNM Γ + zero
---     ≈⟨ +-right-identity ⟩
---       ⟦ p ⟧RLSNM Γ
---     ≈⟨ throw-out-zeros-correct Γ p ⟩
---       ⟦ to-sum (no-zeros p) ⟧RLSNM Γ
---     ∎
---   throw-out-zeros-correct' Γ c (no ¬prf) prf2 x p rewrite prf2 =
---     begin
---       c * (⟦ x ⟧VP Γ) + ⟦ p ⟧RLSNM Γ
---     ≈⟨ +-cong refl (throw-out-zeros-correct Γ p) ⟩
---       c * (⟦ x ⟧VP Γ) + ⟦ to-sum (no-zeros p) ⟧RLSNM Γ
---     ∎
-
---   throw-out-zeros-correct : ∀ {n} → (Γ : Env n) → (p : RightLeaningSumOfNormalizedMonomials n) → ⟦ p ⟧RLSNM Γ ≡ ⟦ throw-out-zeros p ⟧RLSNM Γ
---   throw-out-zeros-correct Γ nil = refl
---   throw-out-zeros-correct Γ (c :* x :+ p) = throw-out-zeros-correct' Γ c (c ≟0) Prefl x p
-
 ------------------------------------------------------------------------
 -- Sorting
-
--- infixr 6 _∧_
--- _∧_ : Bool → Bool → Bool
--- true ∧ true = true
--- _ ∧ _ = false
-
--- exprEq : ∀ {n} → :Expr n → :Expr n → Bool
--- exprEq a b = termEq (quoteTerm a) (quoteTerm b)
-
--- exprLt : ∀ {n} → :Expr n → :Expr n → Bool
--- exprLt a b = termLt (quoteTerm a) (quoteTerm b)
-
--- -- (Mostly) generated using https://github.com/SuprDewd/generate-agda-comparators
-
--- mutual
-
---   -- normalizedConstantEq : NormalizedConstant → NormalizedConstant → Bool
---   -- normalizedConstantEq :zero :zero = true
---   -- normalizedConstantEq (:suc l1) (:suc r1) = normalizedConstantEq l1 r1
---   -- normalizedConstantEq _ _ = false
-
---   normalizedMonomialEq : ∀ {n} → NormalizedMonomial n → NormalizedMonomial n → Bool
---   -- normalizedMonomialEq (con l1) (con r1) = normalizedConstantEq l1 r1
---   normalizedMonomialEq (con l1) (con r1) = true -- Monomials are equal if everything but their constants are equal
---   normalizedMonomialEq (_:*_ l1 l2) (_:*_ r1 r2) = exprEq l1 r1 Translate.Solver.Reflection.∧ normalizedMonomialEq l2 r2
---   normalizedMonomialEq _ _ = false
-
--- isLt : ∀ {n} → Vec Bool n → Vec Bool n → Bool
--- isLt [] [] = false
--- isLt (true ∷ xs) (_ ∷ ys) = isLt xs ys
--- isLt (false ∷ xs) (y ∷ ys) = y
-
--- mutual
-
---   -- normalizedConstantLt : NormalizedConstant → NormalizedConstant → Bool
---   -- normalizedConstantLt :zero :zero = false
---   -- normalizedConstantLt (:suc l1) (:suc r1) = isLt (normalizedConstantEq l1 r1 ∷ []) (normalizedConstantLt l1 r1 ∷ [])
---   -- normalizedConstantLt :zero (:suc _) = true
---   -- normalizedConstantLt _ _ = false
-
---   normalizedMonomialLt : ∀ {n} → NormalizedMonomial n → NormalizedMonomial n → Bool
---   normalizedMonomialLt (con l1) (con r1) = false -- isLt (normalizedConstantEq l1 r1 ∷ []) (normalizedConstantLt l1 r1 ∷ [])
---   normalizedMonomialLt (_:*_ l1 l2) (_:*_ r1 r2) = isLt (exprEq l1 r1 ∷ normalizedMonomialEq l2 r2 ∷ []) (exprLt l1 r1 ∷ normalizedMonomialLt l2 r2 ∷ [])
---   normalizedMonomialLt (con _) (_:*_ _ _) = true
---   normalizedMonomialLt _ _ = false
-
-
--- module VarProductComparison where
-
---   open import Data.Vec.Properties
-
---   data Ordering : Set where
---     less : Ordering
---     equal : Ordering
---     greater : Ordering
-
---   compare : ∀ {n} → VarProduct n → VarProduct n → Ordering
---   compare [] [] = equal
---   compare (x ∷ xs) (y ∷ ys) with ℕcompare x y
---   compare (m ∷ xs) (.(ℕsuc (m ℕ+ k)) ∷ ys) | ℕless .m k = less
---   compare (m ∷ xs) (.m ∷ ys) | ℕequal .m = compare xs ys
---   compare (.(ℕsuc (m ℕ+ k)) ∷ xs) (m ∷ ys) | ℕgreater .m k = greater
-
---   decEq : ∀ {n} → (x : VarProduct n) → (y : VarProduct n) → Dec (x P≡ y)
---   decEq [] [] = yes Prefl
---   decEq (x ∷ xs) (y ∷ ys) with x ℕ≟ y | decEq xs ys
---   decEq (x ∷ xs) (.x ∷ ys) | yes Prefl | yes p₁ = yes (Pcong (λ t → x ∷ t) p₁)
---   decEq (x ∷ xs) (y ∷ ys) | yes p | no ¬p = no (λ t → ¬p (proj₂ (∷-injective t)))
---   decEq (x ∷ xs) (y ∷ ys) | no ¬p | _ = no (λ t → ¬p (proj₁ (∷-injective t)))
-
-open import Data.Fin.Properties using () renaming (_≟_ to _F≟_)
-open import Data.List.Properties
 
 lv-eq : ∀ {n} → (p q : List (Fin n)) → Dec (p P≡ q)
 lv-eq [] [] = yes Prefl
@@ -1216,26 +704,6 @@ insert-correct Γ x (x₁ :+ xs) | false =
     ⟦ x ⟧NM Γ + (⟦ x₁ ⟧NM Γ + ⟦ xs ⟧RLSNM Γ)
   ∎
 
--- -- insert-correct Γ y nil = refl
--- -- insert-correct Γ (c₁ :* x₁) (c₂ :* x₂ :+ xs) with VarProductComparison.compare x₁ x₂
--- -- insert-correct Γ (c₁ :* x₁) (c₂ :* x₂ :+ xs) | VarProductComparison.less = refl
--- -- insert-correct Γ (c₁ :* x₁) (c₂ :* x₂ :+ xs) | VarProductComparison.equal = refl
--- -- insert-correct Γ (c₁ :* x₁) (c₂ :* x₂ :+ xs) | VarProductComparison.greater =
--- --   begin
--- --     c₁ * ⟦ x₁ ⟧VP Γ + (c₂ * ⟦ x₂ ⟧VP Γ + ⟦ xs ⟧RLSNM Γ)
--- --   ≈⟨ sym +-assoc ⟩
--- --     (c₁ * ⟦ x₁ ⟧VP Γ + c₂ * ⟦ x₂ ⟧VP Γ) + ⟦ xs ⟧RLSNM Γ
--- --   ≈⟨ +-cong +-comm refl ⟩
--- --     (c₂ * ⟦ x₂ ⟧VP Γ + c₁ * ⟦ x₁ ⟧VP Γ) + ⟦ xs ⟧RLSNM Γ
--- --   ≈⟨ +-assoc ⟩
--- --     c₂ * ⟦ x₂ ⟧VP Γ + (c₁ * ⟦ x₁ ⟧VP Γ + ⟦ xs ⟧RLSNM Γ)
--- --   ≡⟨⟩
--- --     c₂ * (⟦ x₂ ⟧VP Γ) + (⟦ (c₁ :* x₁) ⟧NM Γ + ⟦ xs ⟧RLSNM Γ)
--- --   ≈⟨ +-cong refl (insert-correct Γ (c₁ :* x₁) xs) ⟩
--- --     c₂ * (⟦ x₂ ⟧VP Γ) + ⟦ insert (c₁ :* x₁) xs ⟧RLSNM Γ
--- --   ∎
-
--- TODO: Apply this
 sort : ∀ {n} → RightLeaningSumOfNormalizedMonomials n → RightLeaningSumOfNormalizedMonomials n
 sort nil = nil
 sort (x :+ xs) = insert x (sort xs)
@@ -1255,15 +723,11 @@ sort-correct Γ (x :+ xs) =
 -- Squashing
 
 squash' : ∀ {n} → NormalizedConstant → List (Fin n) → List (:Fun n) → RightLeaningSumOfNormalizedMonomials n → RightLeaningSumOfNormalizedMonomials n
-squash' c x f nil = mon c x f :+ nil -- c :* x :+ nil
+squash' c x f nil = mon c x f :+ nil
 squash' c₁ x₁ f₁ (mon c₂ x₂ f₂ :+ xs) with lv-eq x₁ x₂ | lf-eq f₁ f₂
 squash' c₁ x₁ f₁ (mon c₂ x₂ f₂ :+ xs) | yes p | yes p₁ = squash' (c₁ C+ c₂) x₁ f₁ xs
 squash' c₁ x₁ f₁ (mon c₂ x₂ f₂ :+ xs) | yes p | no ¬p = mon c₁ x₁ f₁ :+ squash' c₂ x₂ f₂ xs
 squash' c₁ x₁ f₁ (mon c₂ x₂ f₂ :+ xs) | no ¬p | b = mon c₁ x₁ f₁ :+ squash' c₂ x₂ f₂ xs
-
--- {!!} -- with VarProductComparison.decEq x₁ x₂
--- ... | yes p = squash' (c₁ + c₂) x₁ xs  -- XXX: How can we normalize c₁ + c₂???
--- ... | no ¬p = c₁ :* x₁ :+ squash' c₂ x₂ xs
 
 squash'-correct : ∀ {n} → (Γ : Env n) → (c : NormalizedConstant) → (x : List (Fin n)) → (f : List (:Fun n)) → (xs : RightLeaningSumOfNormalizedMonomials n) → ⟦ squash' c x f xs ⟧RLSNM Γ ≡ ⟦ c ⟧NC Γ * (⟦ x ⟧LV Γ * ⟦ f ⟧LF Γ) + ⟦ xs ⟧RLSNM Γ
 squash'-correct Γ c x f nil = refl
@@ -1283,39 +747,9 @@ squash'-correct Γ c₁ x₁ f₁ (mon c₂ .x₁ .f₁ :+ xs) | yes Prefl | yes
 squash'-correct Γ c₁ x₁ f₁ (mon c₂ x₂ f₂ :+ xs) | yes p | no ¬p = +-cong refl (squash'-correct Γ c₂ x₂ f₂ xs)
 squash'-correct Γ c₁ x₁ f₁ (mon c₂ x₂ f₂ :+ xs) | no ¬p | b = +-cong refl (squash'-correct Γ c₂ x₂ f₂ xs)
 
--- TODO: Apply this
 squash : ∀ {n} → RightLeaningSumOfNormalizedMonomials n → RightLeaningSumOfNormalizedMonomials n
 squash nil = nil
 squash (mon c x f :+ xs) = squash' c x f xs
-
--- open import Translate.Support
--- open import Data.Product
-
--- postulate
---   -- XXX: THIS MAY NOT BE TRUE WHEN COINDUCTION IS INVOLVED!
---   quote-correct : ∀ {n} {x y : :Expr n} → quoteTerm x P≡ quoteTerm y → x P≡ y
-
--- exprEq' : ∀ {n} → (x y : :Expr n) → Maybe (x P≡ y)
--- exprEq' {n} x y with (quoteTerm x) Term≟ (quoteTerm y)
--- exprEq' x y | yes p = {!!}
--- exprEq' x y | no ¬p = {!!}
-
--- try-combine : ∀ {n} → (l r : NormalizedMonomial n) → Maybe (Σ (NormalizedMonomial n) (λ p → (∀ Γ → ⟦ l ⟧NM Γ + ⟦ r ⟧NM Γ ≡ ⟦ p ⟧NM Γ)))
--- try-combine (con x) (con x₁) = just (con (x C+ x₁) , (λ Γ → C+-correct x x₁))
--- try-combine (x₁ :* l) (x₂ :* r) with (quoteTerm x₁) Term≟ (quoteTerm x₂) | try-combine l r
--- try-combine {n} (x₁ :* l) (x₂ :* r) | yes eq | just (xs , prf) = just (x₁ :* xs , (λ Γ → begin
---       ⟦ x₁ ⟧ Γ * ⟦ l ⟧NM Γ + ⟦ x₂ ⟧ Γ * ⟦ r ⟧NM Γ
---     ≈⟨ +-cong refl {!quote-correct {n} {x₁} {x₂} eq !} ⟩
---       ⟦ x₁ ⟧ Γ * ⟦ l ⟧NM Γ + ⟦ x₁ ⟧ Γ * ⟦ r ⟧NM Γ
---     ≈⟨ sym (distribˡ-*-+) ⟩
---       ⟦ x₁ ⟧ Γ * (⟦ l ⟧NM Γ + ⟦ r ⟧NM Γ)
---     ≈⟨ *-cong refl (prf Γ) ⟩
---       ⟦ x₁ ⟧ Γ * ⟦ xs ⟧NM Γ
---     ∎
---   ))
--- try-combine (x :* l) (x₁ :* r) | _ | nothing = nothing
--- try-combine (x₁ :* l) (x₂ :* r) | no _ | _ = nothing
--- try-combine _ _ = nothing
 
 squash-correct : ∀ {n} → (Γ : Env n) → (xs : RightLeaningSumOfNormalizedMonomials n) → ⟦ squash xs ⟧RLSNM Γ ≡ ⟦ xs ⟧RLSNM Γ
 squash-correct Γ nil = refl
@@ -1371,24 +805,6 @@ mutual
 
 correct : ∀ {n} (e : :Expr n) Γ → ⟦ e ⇓⟧ Γ ≡ ⟦ e ⟧ Γ
 correct e Γ = (proj₂ normalize) Γ e
---   begin
---     ⟦ e ⇓⟧ Γ
---   ≡⟨⟩
---     ⟦ squash (sort (throw-out-zeros (normalize-monomials (lean-right (distrib e))))) ⟧RLSNM Γ
---   ≈⟨ sym (squash-correct Γ (sort (throw-out-zeros (normalize-monomials (lean-right (distrib e)))))) ⟩
---     ⟦ sort (throw-out-zeros (normalize-monomials (lean-right (distrib e)))) ⟧RLSNM Γ
---   ≈⟨ sym (sort-correct Γ (throw-out-zeros (normalize-monomials (lean-right (distrib e))))) ⟩
---     ⟦ throw-out-zeros (normalize-monomials (lean-right (distrib e))) ⟧RLSNM Γ
---   ≈⟨ sym (throw-out-zeros-correct Γ (normalize-monomials (lean-right (distrib e)))) ⟩
---     ⟦ normalize-monomials (lean-right (distrib e)) ⟧RLSNM Γ
---   ≈⟨ sym (normalize-monomials-correct Γ (lean-right (distrib e))) ⟩
---     ⟦ lean-right (distrib e) ⟧RLSM Γ
---   ≈⟨ sym (lean-right-correct Γ (distrib e)) ⟩
---     ⟦ distrib e ⟧SM Γ
---   ≈⟨ sym (distrib-correct Γ e) ⟩
---     ⟦ e ⟧ Γ
---   ∎
-
 
 open Reflection ≡-setoid :var ⟦_⟧ ⟦_⇓⟧ correct public
   using (prove; solve) renaming (_⊜_ to _:=_)

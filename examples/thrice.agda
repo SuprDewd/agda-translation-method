@@ -28,7 +28,6 @@ fin-value : ∀ {n} → value (fin n) P≡ n
 fin-value {ℕzero} = Prefl
 fin-value {ℕsuc n} rewrite fin-value {n} = Prefl
 
--- TODO: This should not be part of the library. Perhaps put it in an examples dir?
 thrice : ∀ {n} → three * fib (ℕsuc (ℕsuc n)) ≡ fib (ℕsuc (ℕsuc (ℕsuc (ℕsuc n)))) + fib n
 thrice {n} rewrite Psym (fin-value {n}) = solve 1 (λ x → :three :* :fib (:suc (:suc x)) := :fib (:suc (:suc (:suc (:suc x)))) :+ :fib x) refl (fin n)
 -- thrice {0} = axiom Prefl (mkBij to from)

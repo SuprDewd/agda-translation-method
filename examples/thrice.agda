@@ -20,75 +20,6 @@ three = suc two
 :two = :suc :one
 :three = :suc :two
 
--- TODO: This should not be part of the library. Perhaps put it in an examples dir?
-thrice : ∀ {n} → three * fib (ℕsuc (ℕsuc n)) ≡ fib (ℕsuc (ℕsuc (ℕsuc (ℕsuc n)))) + fib n
-thrice {0} = axiom Prefl (mkBij to from)
-  where
-    to : lift (three * fib 2) → lift (fib 4 + fib 0)
-    to (nothing             , [] ∷1 ∷1) = inj₁ ([] ∷1 ∷1 ∷1 ∷1)
-    to (nothing             , [] ∷2)    = inj₁ ([] ∷1 ∷1 ∷2)
-    to (just nothing        , [] ∷1 ∷1) = inj₁ ([] ∷2 ∷1 ∷1)
-    to (just nothing        , [] ∷2)    = inj₁ ([] ∷2 ∷2)
-    to (just (just nothing) , [] ∷1 ∷1) = inj₁ ([] ∷1 ∷2 ∷1)
-    to (just (just nothing) , [] ∷2)    = inj₂ []
-    to (just (just (just ())) , _)
-
-    from : lift (fib 4 + fib 0) → lift (three * fib 2)
-    from (inj₁ ([] ∷1 ∷1 ∷1 ∷1)) = nothing             , [] ∷1 ∷1
-    from (inj₁ ([] ∷1 ∷1 ∷2))    = nothing             , [] ∷2
-    from (inj₁ ([] ∷2 ∷1 ∷1))    = just nothing        , [] ∷1 ∷1
-    from (inj₁ ([] ∷2 ∷2))       = just nothing        , [] ∷2
-    from (inj₁ ([] ∷1 ∷2 ∷1))    = just (just nothing) , [] ∷1 ∷1
-    from (inj₂ [])               = just (just nothing) , [] ∷2
-
-thrice {1} = axiom Prefl (mkBij to from)
-  where
-    to : lift (three * fib 3) → lift (fib 5 + fib 1)
-    to (nothing             , [] ∷1 ∷1 ∷1) = inj₁ ([] ∷1 ∷1 ∷1 ∷1 ∷1)
-    to (nothing             , [] ∷1 ∷2)    = inj₁ ([] ∷1 ∷1 ∷1 ∷2)
-    to (nothing             , [] ∷2 ∷1)    = inj₁ ([] ∷1 ∷1 ∷2 ∷1)
-    to (just nothing        , [] ∷1 ∷1 ∷1) = inj₁ ([] ∷2 ∷1 ∷1 ∷1)
-    to (just nothing        , [] ∷1 ∷2)    = inj₁ ([] ∷2 ∷1 ∷2)
-    to (just nothing        , [] ∷2 ∷1)    = inj₁ ([] ∷2 ∷2 ∷1)
-    to (just (just nothing) , [] ∷1 ∷1 ∷1) = inj₁ ([] ∷1 ∷2 ∷1 ∷1)
-    to (just (just nothing) , [] ∷1 ∷2)    = inj₁ ([] ∷1 ∷2 ∷2)
-    to (just (just nothing) , [] ∷2 ∷1)    = inj₂ ([] ∷1)
-    to (just (just (just ())) , _)
-
-    from : lift (fib 5 + fib 1) → lift (three * fib 3)
-    from (inj₁ ([] ∷1 ∷1 ∷1 ∷1 ∷1)) = nothing             , [] ∷1 ∷1 ∷1
-    from (inj₁ ([] ∷1 ∷1 ∷1 ∷2))    = nothing             , [] ∷1 ∷2
-    from (inj₁ ([] ∷1 ∷1 ∷2 ∷1))    = nothing             , [] ∷2 ∷1
-    from (inj₁ ([] ∷2 ∷1 ∷1 ∷1))    = just nothing        , [] ∷1 ∷1 ∷1
-    from (inj₁ ([] ∷2 ∷1 ∷2))       = just nothing        , [] ∷1 ∷2
-    from (inj₁ ([] ∷2 ∷2 ∷1))       = just nothing        , [] ∷2 ∷1
-    from (inj₁ ([] ∷1 ∷2 ∷1 ∷1))    = just (just nothing) , [] ∷1 ∷1 ∷1
-    from (inj₁ ([] ∷1 ∷2 ∷2))       = just (just nothing) , [] ∷1 ∷2
-    from (inj₂ ([] ∷1))             = just (just nothing) , [] ∷2 ∷1
-
-thrice {ℕsuc (ℕsuc n)} =
-  begin
-    three * fib (4 ℕ+ n)
-  ≈⟨ *-cong refl fib-def ⟩
-    three * (fib (3 ℕ+ n) + fib (2 ℕ+ n))
-  ≈⟨ distribˡ-*-+ ⟩
-    three * fib (3 ℕ+ n) + three * fib (2 ℕ+ n)
-  ≈⟨ +-cong thrice thrice ⟩
-    (fib (5 ℕ+ n) + fib (1 ℕ+ n)) + (fib (4 ℕ+ n) + fib n)
-  ≈⟨ +-assoc ⟩
-    fib (5 ℕ+ n) + (fib (1 ℕ+ n) + (fib (4 ℕ+ n) + fib n))
-  ≈⟨ +-cong refl +-comm ⟩
-    fib (5 ℕ+ n) + ((fib (4 ℕ+ n) + fib n) + fib (1 ℕ+ n))
-  ≈⟨ +-cong refl +-assoc ⟩
-    fib (5 ℕ+ n) + (fib (4 ℕ+ n) + (fib n + fib (1 ℕ+ n)))
-  ≈⟨ +-cong refl (+-cong refl +-comm) ⟩
-    fib (5 ℕ+ n) + (fib (4 ℕ+ n) + (fib (1 ℕ+ n) + fib n))
-  ≈⟨ sym +-assoc ⟩
-    (fib (5 ℕ+ n) + fib (4 ℕ+ n)) + (fib (1 ℕ+ n) + fib n)
-  ≈⟨ +-cong (sym fib-def) (sym fib-def) ⟩
-    fib (6 ℕ+ n) + fib (2 ℕ+ n)
-  ∎
-
 fin : ℕ → Expr
 fin ℕzero = zero
 fin (ℕsuc n) = suc (fin n)
@@ -96,6 +27,76 @@ fin (ℕsuc n) = suc (fin n)
 fin-value : ∀ {n} → value (fin n) P≡ n
 fin-value {ℕzero} = Prefl
 fin-value {ℕsuc n} rewrite fin-value {n} = Prefl
+
+-- TODO: This should not be part of the library. Perhaps put it in an examples dir?
+thrice : ∀ {n} → three * fib (ℕsuc (ℕsuc n)) ≡ fib (ℕsuc (ℕsuc (ℕsuc (ℕsuc n)))) + fib n
+thrice {n} rewrite Psym (fin-value {n}) = solve 1 (λ x → :three :* :fib (:suc (:suc x)) := :fib (:suc (:suc (:suc (:suc x)))) :+ :fib x) refl (fin n)
+-- thrice {0} = axiom Prefl (mkBij to from)
+--   where
+--     to : lift (three * fib 2) → lift (fib 4 + fib 0)
+--     to (nothing             , [] ∷1 ∷1) = inj₁ ([] ∷1 ∷1 ∷1 ∷1)
+--     to (nothing             , [] ∷2)    = inj₁ ([] ∷1 ∷1 ∷2)
+--     to (just nothing        , [] ∷1 ∷1) = inj₁ ([] ∷2 ∷1 ∷1)
+--     to (just nothing        , [] ∷2)    = inj₁ ([] ∷2 ∷2)
+--     to (just (just nothing) , [] ∷1 ∷1) = inj₁ ([] ∷1 ∷2 ∷1)
+--     to (just (just nothing) , [] ∷2)    = inj₂ []
+--     to (just (just (just ())) , _)
+
+--     from : lift (fib 4 + fib 0) → lift (three * fib 2)
+--     from (inj₁ ([] ∷1 ∷1 ∷1 ∷1)) = nothing             , [] ∷1 ∷1
+--     from (inj₁ ([] ∷1 ∷1 ∷2))    = nothing             , [] ∷2
+--     from (inj₁ ([] ∷2 ∷1 ∷1))    = just nothing        , [] ∷1 ∷1
+--     from (inj₁ ([] ∷2 ∷2))       = just nothing        , [] ∷2
+--     from (inj₁ ([] ∷1 ∷2 ∷1))    = just (just nothing) , [] ∷1 ∷1
+--     from (inj₂ [])               = just (just nothing) , [] ∷2
+
+-- thrice {1} = axiom Prefl (mkBij to from)
+--   where
+--     to : lift (three * fib 3) → lift (fib 5 + fib 1)
+--     to (nothing             , [] ∷1 ∷1 ∷1) = inj₁ ([] ∷1 ∷1 ∷1 ∷1 ∷1)
+--     to (nothing             , [] ∷1 ∷2)    = inj₁ ([] ∷1 ∷1 ∷1 ∷2)
+--     to (nothing             , [] ∷2 ∷1)    = inj₁ ([] ∷1 ∷1 ∷2 ∷1)
+--     to (just nothing        , [] ∷1 ∷1 ∷1) = inj₁ ([] ∷2 ∷1 ∷1 ∷1)
+--     to (just nothing        , [] ∷1 ∷2)    = inj₁ ([] ∷2 ∷1 ∷2)
+--     to (just nothing        , [] ∷2 ∷1)    = inj₁ ([] ∷2 ∷2 ∷1)
+--     to (just (just nothing) , [] ∷1 ∷1 ∷1) = inj₁ ([] ∷1 ∷2 ∷1 ∷1)
+--     to (just (just nothing) , [] ∷1 ∷2)    = inj₁ ([] ∷1 ∷2 ∷2)
+--     to (just (just nothing) , [] ∷2 ∷1)    = inj₂ ([] ∷1)
+--     to (just (just (just ())) , _)
+
+--     from : lift (fib 5 + fib 1) → lift (three * fib 3)
+--     from (inj₁ ([] ∷1 ∷1 ∷1 ∷1 ∷1)) = nothing             , [] ∷1 ∷1 ∷1
+--     from (inj₁ ([] ∷1 ∷1 ∷1 ∷2))    = nothing             , [] ∷1 ∷2
+--     from (inj₁ ([] ∷1 ∷1 ∷2 ∷1))    = nothing             , [] ∷2 ∷1
+--     from (inj₁ ([] ∷2 ∷1 ∷1 ∷1))    = just nothing        , [] ∷1 ∷1 ∷1
+--     from (inj₁ ([] ∷2 ∷1 ∷2))       = just nothing        , [] ∷1 ∷2
+--     from (inj₁ ([] ∷2 ∷2 ∷1))       = just nothing        , [] ∷2 ∷1
+--     from (inj₁ ([] ∷1 ∷2 ∷1 ∷1))    = just (just nothing) , [] ∷1 ∷1 ∷1
+--     from (inj₁ ([] ∷1 ∷2 ∷2))       = just (just nothing) , [] ∷1 ∷2
+--     from (inj₂ ([] ∷1))             = just (just nothing) , [] ∷2 ∷1
+
+-- thrice {ℕsuc (ℕsuc n)} rewrite Psym (fin-value {n}) = solve 1 (λ x → :three :* :fib (:suc (:suc (:suc (:suc x)))) := :fib (:suc (:suc (:suc (:suc (:suc (:suc x)))))) :+ :fib (:suc (:suc x))) refl (fin n)
+  -- begin
+  --   three * fib (4 ℕ+ n)
+  -- ≈⟨ *-cong refl fib-def ⟩
+  --   three * (fib (3 ℕ+ n) + fib (2 ℕ+ n))
+  -- ≈⟨ distribˡ-*-+ ⟩
+  --   three * fib (3 ℕ+ n) + three * fib (2 ℕ+ n)
+  -- ≈⟨ +-cong thrice thrice ⟩
+  --   (fib (5 ℕ+ n) + fib (1 ℕ+ n)) + (fib (4 ℕ+ n) + fib n)
+  -- ≈⟨ +-assoc ⟩
+  --   fib (5 ℕ+ n) + (fib (1 ℕ+ n) + (fib (4 ℕ+ n) + fib n))
+  -- ≈⟨ +-cong refl +-comm ⟩
+  --   fib (5 ℕ+ n) + ((fib (4 ℕ+ n) + fib n) + fib (1 ℕ+ n))
+  -- ≈⟨ +-cong refl +-assoc ⟩
+  --   fib (5 ℕ+ n) + (fib (4 ℕ+ n) + (fib n + fib (1 ℕ+ n)))
+  -- ≈⟨ +-cong refl (+-cong refl +-comm) ⟩
+  --   fib (5 ℕ+ n) + (fib (4 ℕ+ n) + (fib (1 ℕ+ n) + fib n))
+  -- ≈⟨ sym +-assoc ⟩
+  --   (fib (5 ℕ+ n) + fib (4 ℕ+ n)) + (fib (1 ℕ+ n) + fib n)
+  -- ≈⟨ +-cong (sym fib-def) (sym fib-def) ⟩
+  --   fib (6 ℕ+ n) + fib (2 ℕ+ n)
+  -- ∎
 
 lemma : ∀ {n} → three * (fib (ℕsuc n) + fib n) ≡ (fib (ℕsuc n) + fib n + fib (ℕsuc n) + (fib (ℕsuc n) + fib n) + fib n)
 lemma {n} rewrite Psym (fin-value {n}) =
@@ -197,7 +198,7 @@ module Runner where
 
   proj : ∀ {n} → (Maybe (Maybe (Maybe (Fin 0))) × FibStr (2 ℕ+ n)) → IO ⊤
   proj {n} (f , fs) =
-    let rs = getTo (toBijection (thrice' {n})) (f , fs)
+    let rs = getTo (toBijection (thrice {n})) (f , fs)
     in putStrLn (ℕshow (toℕ f) S.++ ", " S.++ showFibStr fs S.++ " -> " S.++ ((either (showFibStr {4 ℕ+ n}) (showFibStr {n})) rs))
 
   rec : ℕ → IO ⊤

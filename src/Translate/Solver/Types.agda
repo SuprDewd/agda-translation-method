@@ -46,6 +46,7 @@ mutual
     _:*_ : (l r : :Expr n) → :Expr n
     :fun : (f : :Fun n) → :Expr n
 
+
 Env : ℕ → Set
 Env = Vec Expr
 
@@ -62,11 +63,26 @@ mutual
   ⟦ l :* r ⟧ Γ = ⟦ l ⟧ Γ * ⟦ r ⟧ Γ
   ⟦ :fun f ⟧ Γ = fun (⟦ f ⟧F Γ)
 
-CorrectTransform : ℕ → Set₂
-CorrectTransform n = Σ (:Expr n → :Expr n) (λ f → (Γ : Env n) → (p : :Expr n) → ⟦ f p ⟧ Γ ≡ ⟦ p ⟧ Γ)
 
-CorrectFunTransform : ℕ → Set₂
-CorrectFunTransform n = Σ (:Fun n → :Expr n) (λ f → (Γ : Env n) → (p : :Fun n) → ⟦ f p ⟧ Γ ≡ ⟦ :fun p ⟧ Γ)
+data NormalizedConstant : Set where
+  :zero : NormalizedConstant
+  :suc : NormalizedConstant → NormalizedConstant
+
+:⟦_⟧NC : ∀ {n} → NormalizedConstant → :Expr n
+:⟦ :zero ⟧NC = :zero
+:⟦ :suc x ⟧NC = :suc :⟦ x ⟧NC
+
+⟦_⟧NC : ∀ {n} → NormalizedConstant → Env n → Expr
+⟦ x ⟧NC = ⟦ :⟦ x ⟧NC ⟧
+
+-- CorrectTransform : ℕ → Set₂
+-- CorrectTransform n = Σ (:Expr n → :Expr n) (λ f → (Γ : Env n) → (p : :Expr n) → ⟦ f p ⟧ Γ ≡ ⟦ p ⟧ Γ)
+
+-- CorrectFunTransform : ℕ → Set₂
+-- CorrectFunTransform n = Σ (:Fun n → :Expr n) (λ f → (Γ : Env n) → (p : :Fun n) → ⟦ f p ⟧ Γ ≡ ⟦ :fun p ⟧ Γ)
+
+-- CorrectUncon : ℕ → Set₂
+-- CorrectUncon n = Σ (:Expr n → NormalizedConstant × :Expr n) (λ f → (Γ : Env n) → (x : :Expr n) → ⟦ proj₁ (f x) ⟧NC Γ + ⟦ proj₂ (f x) ⟧ Γ ≡ ⟦ x ⟧ Γ)
 
 -- expand : ∀ {n} → :Fun n → :Expr n
 -- -- TODO: Implement more aggressive expansions
@@ -85,15 +101,16 @@ CorrectFunTransform n = Σ (:Fun n → :Expr n) (λ f → (Γ : Env n) → (p : 
 
 open import Translate.EqReasoning
 
--- NOTE: Please normalize the result
-expand : ∀ {n} → CorrectTransform n → CorrectFunTransform n
-expand (norm , norm-correct)
-  = (λ { (:fib' n) → :fun (:fib' (norm n))
-       ; (:2^' n) → :fun (:2^' (norm n))
-       })
-  , (λ { Γ (:fib' n) → fib-cong (toEquality (norm-correct Γ n))
-       ; Γ (:2^' n) → 2^-cong (toEquality (norm-correct Γ n))
-       })
+-- -- NOTE: Please normalize the result
+-- expand : ∀ {n} → CorrectTransform n → CorrectUncon n → CorrectFunTransform n
+-- expand (norm , norm-correct)
+--        (uncon , uncon-correct)
+--   = (λ { (:fib' n) → :fun (:fib' (norm n))
+--        ; (:2^' n) → :fun (:2^' (norm n))
+--        })
+--   , (λ { Γ (:fib' n) → fib-cong (toEquality (norm-correct Γ n))
+--        ; Γ (:2^' n) → 2^-cong (toEquality (norm-correct Γ n))
+--        })
 
 
 -- fun (fib' (value (⟦ norm n ⟧ Γ)))
@@ -110,7 +127,7 @@ private
   exprVarCtr : ∀ {n} → ∀ {a b : Fin n} → (a P≡ b → ⊥) → :var a P≡ :var b → ⊥
   exprVarCtr f Prefl = f Prefl
 
-  exprSucCtr : ∀ {n} → ∀ {a b : :Expr n} → (a P≡ b → ⊥) → :suc a P≡ :suc b → ⊥
+  exprSucCtr : ∀ {n} → ∀ {a b : :Expr n} → (a P≡ b → ⊥) → :Expr.:suc a P≡ :Expr.:suc b → ⊥
   exprSucCtr f Prefl = f Prefl
 
   expr+Ctr1 : ∀ {n} → ∀ {a b₁ b₂ : :Expr n} → (b₁ P≡ b₂ → ⊥) → a :+ b₁ P≡ a :+ b₂ → ⊥

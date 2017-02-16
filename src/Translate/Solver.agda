@@ -9,6 +9,7 @@ open import Translate.Types
 open import Translate.Axioms
 open import Translate.Semiring
 open import Translate.Properties
+open import Translate.Combinatorics
 
 open import Translate.Solver.Semiring
 open import Translate.Solver.Reflection
@@ -474,17 +475,6 @@ sort-snormalized-monomial-correct Γ (mon x vs fs) = *-cong refl (*-cong (sort-l
 ------------------------------------------------------------------------
 -- Normalize constants
 
-data NormalizedConstant : Set where
-  :zero : NormalizedConstant
-  :suc : NormalizedConstant → NormalizedConstant
-
-:⟦_⟧NC : ∀ {n} → NormalizedConstant → :Expr n
-:⟦ :zero ⟧NC = :zero
-:⟦ :suc x ⟧NC = :suc :⟦ x ⟧NC
-
-⟦_⟧NC : ∀ {n} → NormalizedConstant → Env n → Expr
-⟦ x ⟧NC = ⟦ :⟦ x ⟧NC ⟧
-
 _C+_ : NormalizedConstant → NormalizedConstant → NormalizedConstant
 _C+_ :zero y = y
 _C+_ (:suc x) y = :suc (x C+ y)
@@ -764,16 +754,16 @@ private
 mutual
 
   uncon : ∀ {n} → :Expr n → NormalizedConstant × :Expr n
-  uncon x with normalize' x
+  uncon x with normalize x
   uncon x | nil = :zero , :zero
   uncon x | mon x₁ vs fs :+ p with decNull vs | decNull fs
   uncon x | mon x₁ .[] .[] :+ p₂ | yes Prefl | yes Prefl = x₁ , :⟦ p₂ ⟧RLSNM
-  uncon x | mon x₁ vs fs :+ p₁ | yes p | no ¬p = :zero , :⟦ mon x₁ vs fs :+ p₁ ⟧RLSNM
-  uncon x | mon x₁ vs fs :+ p₁ | no ¬p | yes p = :zero , :⟦ mon x₁ vs fs :+ p₁ ⟧RLSNM
+  uncon x | mon x₁ .[] fs :+ p₁ | yes Prefl | no ¬p = :zero , :⟦ mon x₁ [] fs :+ p₁ ⟧RLSNM
+  uncon x | mon x₁ vs .[] :+ p₁ | no ¬p | yes Prefl = :zero , :⟦ mon x₁ vs [] :+ p₁ ⟧RLSNM
   uncon x | mon x₁ vs fs :+ p | no ¬p | no ¬p₁ = :zero , :⟦ mon x₁ vs fs :+ p ⟧RLSNM
 
   uncon-correct : ∀ {n} → (Γ : Env n) → (x : :Expr n) → ⟦ proj₁ (uncon x) ⟧NC Γ + ⟦ proj₂ (uncon x) ⟧ Γ ≡ ⟦ x ⟧ Γ
-  uncon-correct Γ x with normalize' x | normalize'-correct Γ x
+  uncon-correct Γ x with normalize x | normalize-correct Γ x
   uncon-correct Γ x | nil | qc =
     begin
       zero + zero
@@ -795,9 +785,35 @@ mutual
     ≈⟨ qc ⟩
       ⟦ x ⟧ Γ
     ∎
-  uncon-correct Γ x | mon x₁ vs fs :+ p₁ | qc | yes p | no ¬p = {!!}
-  uncon-correct Γ x | mon x₁ vs fs :+ p₁ | qc | no ¬p | yes p = {!!}
-  uncon-correct Γ x | mon x₁ vs fs :+ p | qc | no ¬p | no ¬p₁ = {!!}
+  uncon-correct Γ x | mon x₁ .[] fs :+ p₁ | qc | yes Prefl | no ¬p = trans +-comm (trans +-right-identity qc)
+  uncon-correct Γ x | mon x₁ vs .[] :+ p₁ | qc | no ¬p | yes Prefl = trans +-comm (trans +-right-identity qc)
+  uncon-correct Γ x | mon x₁ vs fs :+ p | qc | no ¬p | no ¬p₁ = trans +-comm (trans +-right-identity qc)
+
+  -- NOTE: Please normalize the result
+  expand : ∀ {n} → :Fun n → :Expr n
+  expand (:fib' n) with uncon n
+  expand (:fib' n) | :zero , x = :fib :⟦ x ⇓⟧
+  expand (:fib' n) | :suc :zero , x = :fib :⟦ :suc :zero :+ x ⇓⟧
+  expand (:fib' n) | :suc (:suc c) , x = :⟦ :fib (:suc (:⟦ c ⟧NC :+ x)) :+ :fib (:⟦ c ⟧NC :+ x) ⇓⟧
+  expand (:2^' n) = :2^ n -- TODO: Expand
+
+  expand-correct : ∀ {n} → (Γ : Env n) → (f : :Fun n) → ⟦ expand f ⟧ Γ ≡ ⟦ :fun f ⟧ Γ
+  expand-correct Γ (:fib' n) with uncon n | uncon-correct Γ n
+  expand-correct Γ (:fib' n) | :zero , x | p rewrite toEquality (correct x Γ) | toEquality p = refl
+  expand-correct Γ (:fib' n) | :suc :zero , x | p rewrite toEquality (correct (:suc :zero :+ x) Γ) | toEquality p = refl
+  expand-correct Γ (:fib' n) | :suc (:suc c) , x | p =
+    begin
+      ⟦ :⟦ :fib (:suc (:⟦ c ⟧NC :+ x)) :+ :fib (:⟦ c ⟧NC :+ x) ⇓⟧ ⟧ Γ
+    ≈⟨ correct (:fib (:suc (:⟦ c ⟧NC :+ x)) :+ :fib (:⟦ c ⟧NC :+ x)) Γ ⟩
+      ⟦ :fib (:suc (:⟦ c ⟧NC :+ x)) :+ :fib (:⟦ c ⟧NC :+ x) ⟧ Γ
+    ≈⟨ sym fib-def ⟩
+      ⟦ :fib (:suc (:suc (:⟦ c ⟧NC :+ x))) ⟧ Γ
+    ≡⟨⟩
+      fib (ℕsuc (ℕsuc (value (⟦ c ⟧NC Γ) ℕ+ value (⟦ x ⟧ Γ))))
+    ≡⟨ Pcong (λ t → fib t) (toEquality p) ⟩
+      fib (value (⟦ n ⟧ Γ))
+    ∎
+  expand-correct Γ (:2^' n) = refl
 
   ------------------------------------------------------------------------
   -- Function expansion
@@ -809,7 +825,8 @@ mutual
   expand-funs (:suc x) = :suc (expand-funs x)
   expand-funs (x :+ x₁) = expand-funs x :+ expand-funs x₁
   expand-funs (x :* x₁) = expand-funs x :* expand-funs x₁
-  expand-funs (:fun f) = proj₁ (expand normalize) f
+  -- expand-funs (:fun f) = proj₁ (expand normalize (uncon , uncon-correct)) f
+  expand-funs (:fun f) = expand f
 
   expand-funs-correct : ∀ {n} → (Γ : Env n) → (p : :Expr n) → ⟦ expand-funs p ⟧ Γ ≡ ⟦ p ⟧ Γ
   expand-funs-correct Γ (:var x) = refl
@@ -817,16 +834,17 @@ mutual
   expand-funs-correct Γ (:suc x) = suc-cong (expand-funs-correct Γ x)
   expand-funs-correct Γ (x :+ x₁) = +-cong (expand-funs-correct Γ x) (expand-funs-correct Γ x₁)
   expand-funs-correct Γ (x :* x₁) = *-cong (expand-funs-correct Γ x) (expand-funs-correct Γ x₁)
-  expand-funs-correct Γ (:fun f) = proj₂ (expand normalize) Γ f
+  -- expand-funs-correct Γ (:fun f) = proj₂ (expand normalize (uncon , uncon-correct)) Γ f
+  expand-funs-correct Γ (:fun f) = expand-correct Γ f
 
   ------------------------------------------------------------------------
   -- Normalization
 
-  normalize' : ∀ {n} → :Expr n → RightLeaningSumOfNormalizedMonomials n
-  normalize' = squash ∘ sort ∘ throw-out-zeros ∘ normalize-monomials ∘ lean-right ∘ distrib ∘ expand-funs
+  normalize : ∀ {n} → :Expr n → RightLeaningSumOfNormalizedMonomials n
+  normalize = squash ∘ sort ∘ throw-out-zeros ∘ normalize-monomials ∘ lean-right ∘ distrib ∘ expand-funs
 
-  normalize'-correct : ∀ {n} → (Γ : Env n) → (x : :Expr n) → ⟦ normalize' x ⟧RLSNM Γ ≡ ⟦ x ⟧ Γ
-  normalize'-correct Γ p =
+  normalize-correct : ∀ {n} → (Γ : Env n) → (x : :Expr n) → ⟦ normalize x ⟧RLSNM Γ ≡ ⟦ x ⟧ Γ
+  normalize-correct Γ p =
      begin
        ⟦ squash $ sort $ throw-out-zeros $ normalize-monomials $ lean-right $ distrib $ expand-funs $ p ⟧RLSNM Γ
      ≈⟨ squash-correct Γ (sort $ throw-out-zeros $ normalize-monomials $ lean-right $ distrib $ expand-funs $ p) ⟩
@@ -845,15 +863,28 @@ mutual
        ⟦ p ⟧ Γ
      ∎
 
-  normalize : ∀ {n} → CorrectTransform n
-  normalize = (λ x → :⟦ normalize' x ⟧RLSNM)
-            , (λ Γ p → normalize'-correct Γ p)
+  :⟦_⇓⟧ : ∀ {n} → :Expr n → :Expr n
+  :⟦ p ⇓⟧ = :⟦ normalize p ⟧RLSNM
+
+  correct : ∀ {n} (e : :Expr n) Γ → ⟦ :⟦ e ⇓⟧ ⟧ Γ ≡ ⟦ e ⟧ Γ
+  correct e Γ = normalize-correct Γ e
+
+  -- normalize : ∀ {n} → CorrectTransform n
+  -- normalize = (λ x → :⟦ normalize' x ⟧RLSNM)
+  --           , (λ Γ p → normalize'-correct Γ p)
+
+-- normalize : ∀ {n} → :Expr n → :Expr n
+-- normalize e = {!!}
+
+-- normalize-correct : ∀ {n} → (Γ : Env n) → (e : :Expr n) → ⟦ normalize e ⟧ Γ ≡ ⟦ e ⟧ Γ
+-- normalize-correct Γ e = {!!}
+
 
 ⟦_⇓⟧ : ∀ {n} → :Expr n → Env n → Expr
-⟦ p ⇓⟧ Γ = ⟦ (proj₁ normalize) p ⟧ Γ
+⟦ p ⇓⟧ Γ = ⟦ :⟦ p ⇓⟧ ⟧ Γ
 
-correct : ∀ {n} (e : :Expr n) Γ → ⟦ e ⇓⟧ Γ ≡ ⟦ e ⟧ Γ
-correct e Γ = (proj₂ normalize) Γ e
+-- correct : ∀ {n} (e : :Expr n) Γ → ⟦ e ⇓⟧ Γ ≡ ⟦ e ⟧ Γ
+-- correct e Γ = normalize-correct Γ e
 
 open Reflection ≡-setoid :var ⟦_⟧ ⟦_⇓⟧ correct public
   using (prove; solve) renaming (_⊜_ to _:=_)

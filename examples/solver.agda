@@ -3,6 +3,7 @@ module solver where
 
 open import Translate
 open import Translate.Solver
+open import Translate.Bijection using (getTo)
 
 -- open SemiringSolver2 SemiringSolver.≡-commutativeSemiring _≟0
 -- -- open Data.Nat.Properties.SemiringSolver
@@ -74,6 +75,10 @@ meow' = solve 3 (λ x y z → x :+ (y :+ z) := z :+ (y :+ x)) refl
 
 lem2 : (four + six ≡ ten)
 lem2 = solve 0 (:four :+ :six := :ten) refl
+
+open import Translate.Support
+lem2-bij : lift (four + six) → lift (ten)
+lem2-bij = getTo (toBijection lem2)
 
 lem3 : ∀ x → (two * (x + four) ≡ eight + two * x)
 lem3 = solve 1 (λ x’ → :two :* (x’ :+ :four) := :eight :+ :two :* x’) refl

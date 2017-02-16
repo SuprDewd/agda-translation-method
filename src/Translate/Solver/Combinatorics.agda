@@ -6,6 +6,7 @@
 
 module Translate.Solver.Combinatorics where
 
+open import Translate.Base
 open import Translate.Support
 open import Translate.Combinatorics
 open import Translate.Types
@@ -39,4 +40,8 @@ open import Coinduction
 --   }
 
 -- -- TODO: Implement rest of structures from Translate.Combinatorics
+
+
+:fib-def : ∀ {n} → (Γ : Env n) → (e : :Expr n) → ⟦ :fib (:suc (:suc e)) ⟧ Γ ≡ ⟦ :fib (:suc e) :+ :fib e ⟧ Γ
+:fib-def Γ e = fib-def
 

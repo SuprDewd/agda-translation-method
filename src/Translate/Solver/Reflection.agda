@@ -25,19 +25,21 @@ primitive
   primShowMeta     : Meta → String
 
 
+
 open import Data.Vec
 
 -- Generated using https://github.com/SuprDewd/generate-agda-comparators
 
-infixr 6 _∧_
-_∧_ : Bool → Bool → Bool
-true ∧ true = true
-_ ∧ _ = false
+private
+  infixr 6 _∧_
+  _∧_ : Bool → Bool → Bool
+  true ∧ true = true
+  _ ∧ _ = false
 
-isLt : ∀ {n} → Vec Bool n → Vec Bool n → Bool
-isLt [] [] = false
-isLt (true ∷ xs) (_ ∷ ys) = isLt xs ys
-isLt (false ∷ xs) (y ∷ ys) = y
+  isLt : ∀ {n} → Vec Bool n → Vec Bool n → Bool
+  isLt [] [] = false
+  isLt (true ∷ xs) (_ ∷ ys) = isLt xs ys
+  isLt (false ∷ xs) (y ∷ ys) = y
 
 mutual
 
@@ -183,7 +185,7 @@ mutual
 
   literalLt : Literal → Literal → Bool
   literalLt (nat l1) (nat r1) = isLt (natEq l1 r1 ∷ []) (natLt l1 r1 ∷ [])
-  literalLt (float l1) (float r1) = isLt (primFloatEquality l1 r1 ∷ []) (primFloatLess l1 r1 ∷ [])
+  literalLt (float l1) (float r1) = isLt (primFloatEquality l1 r1 ∷ []) (primFloatNumericalLess l1 r1 ∷ [])
   literalLt (char l1) (char r1) = isLt (primCharEquality l1 r1 ∷ []) (primCharLess l1 r1 ∷ [])
   literalLt (string l1) (string r1) = isLt (primStringEquality l1 r1 ∷ []) (primStringLess l1 r1 ∷ [])
   literalLt (name l1) (name r1) = isLt (primQNameEquality l1 r1 ∷ []) (primQNameLess l1 r1 ∷ [])

@@ -311,13 +311,13 @@ sort-lv-correct Γ (x ∷ xs) =
 
 insert-lf : ∀ {n} → :Fun n → List (:Fun n) → List (:Fun n)
 insert-lf x [] = x ∷ []
-insert-lf x (x₁ ∷ xs) with :FunLt x x₁
+insert-lf x (x₁ ∷ xs) with :FunnLt x x₁
 insert-lf x (x₁ ∷ xs) | true = x ∷ (x₁ ∷ xs)
 insert-lf x (x₁ ∷ xs) | false = x₁ ∷ insert-lf x xs
 
 insert-lf-correct : ∀ {n} → (Γ : Env n) → (x : :Fun n) → (xs : List (:Fun n)) → ⟦ insert-lf x xs ⟧LF Γ ≡ ⟦ :fun x ⟧ Γ * ⟦ xs ⟧LF Γ
 insert-lf-correct Γ x [] = refl
-insert-lf-correct Γ x (x₁ ∷ xs) with :FunLt x x₁
+insert-lf-correct Γ x (x₁ ∷ xs) with :FunnLt x x₁
 insert-lf-correct Γ x (x₁ ∷ xs) | true = refl
 insert-lf-correct Γ x (x₁ ∷ xs) | false =
   begin
@@ -646,15 +646,15 @@ lv-lt : ∀ {n} → (p q : List (Fin n)) → Bool
 lv-lt [] [] = false
 lv-lt [] (x ∷ b) = true
 lv-lt (x ∷ a) [] = false
-lv-lt (x ∷ a) (x₁ ∷ b) with finEq x x₁
-lv-lt (x ∷ a) (x₁ ∷ b) | no _ = finLt x x₁
+lv-lt (x ∷ a) (x₁ ∷ b) with finnEq x x₁
+lv-lt (x ∷ a) (x₁ ∷ b) | no _ = finnLt x x₁
 lv-lt (x ∷ a) (x₁ ∷ b) | yes _ = lv-lt a b
 
 lf-eq : ∀ {n} → (p q : List (:Fun n)) → Dec (p P≡ q)
 lf-eq [] [] = yes Prefl
 lf-eq [] (x ∷ q) = no (λ ())
 lf-eq (x ∷ p) [] = no (λ ())
-lf-eq (x ∷ p) (x₁ ∷ q) with :FunEq x x₁ | lf-eq p q
+lf-eq (x ∷ p) (x₁ ∷ q) with :FunnEq x x₁ | lf-eq p q
 lf-eq (x ∷ p) (.x ∷ .p) | yes Prefl | yes Prefl = yes Prefl
 lf-eq (x ∷ p) (.x ∷ q) | yes Prefl | no ¬p = no (λ x₁ → ¬p (proj₂ (∷-injective x₁)))
 lf-eq (x ∷ p) (x₁ ∷ q) | no ¬p | b = no (λ x₂ → ¬p (proj₁ (∷-injective x₂)))
@@ -664,8 +664,8 @@ lf-lt : ∀ {n} → (p q : List (:Fun n)) → Bool
 lf-lt [] [] = false
 lf-lt [] (x ∷ b) = true
 lf-lt (x ∷ a) [] = false
-lf-lt (x ∷ a) (x₁ ∷ b) = isLt (toBool (:FunEq x x₁) ∷ toBool (lf-eq a b) ∷ [])
-                              (:FunLt x x₁ ∷ lf-lt a b ∷ [])
+lf-lt (x ∷ a) (x₁ ∷ b) = isLt (toBool (:FunnEq x x₁) ∷ toBool (lf-eq a b) ∷ [])
+                              (:FunnLt x x₁ ∷ lf-lt a b ∷ [])
 
 normalizedMonomialLt : ∀ {n} → (p q : NormalizedMonomial n) → Bool
 normalizedMonomialLt (mon x vs fs) (mon x₁ vs₁ fs₁) = isLt (toBool (lv-eq vs vs₁) ∷ toBool (lf-eq fs fs₁) ∷ [])

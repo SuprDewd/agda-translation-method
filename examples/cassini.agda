@@ -178,22 +178,26 @@ cassini-even-direct k rewrite NPS.+-comm (2 ℕ* k) 3 | NPS.+-comm (2 ℕ* k) 2 
 
     to2 : ∀ k → (FibStr (ℕsuc (ℕsuc (ℕsuc (ℕsuc (k ℕ+ k)))))) × (FibStr (ℕsuc (ℕsuc (ℕsuc (ℕsuc (k ℕ+ k)))))) → (FibStr (ℕsuc (ℕsuc (ℕsuc (ℕsuc (ℕsuc (k ℕ+ k))))))) × (FibStr (ℕsuc (ℕsuc (ℕsuc (k ℕ+ k))))) ⊎ Maybe ⊥
     -- to2 k (xs ∷1 ∷2 , ys ∷1) = inj₁ (xs ∷2 ∷1 ∷1 , ys)
-    to2 k (xs ∷1 ∷1 , ys ∷2) = inj₁ (xs ∷2 ∷1 , ys ∷1)
+    -- to2 k (xs ∷1 ∷1 , ys ∷2) = inj₁ (xs ∷2 ∷1 , ys ∷1)
     to2 k _ = inj₂ nothing
 
     to : ∀ k → FibStr (ℕsuc (ℕsuc (2 ℕ* k))) × FibStr (ℕsuc (ℕsuc (2 ℕ* k))) → FibStr (ℕsuc (ℕsuc (ℕsuc (2 ℕ* k)))) × FibStr (ℕsuc (2 ℕ* k)) ⊎ Maybe ⊥
 
     -- (xs ::1 , ys ::1) -> (xs ::2 , ys)
-    to k (xs ∷1 , ys ∷1) = inj₁ (xs ∷2 , ys)
+    -- to k (xs ∷1 , ys ∷1) = inj₁ (xs ∷2 , ys)
     -- (xs ::1 , ys ::2)  -> (ys ::2 ::1, xs)
     -- to k (xs ∷1 , ys ∷2) = inj₁ (ys ∷2 ∷1 , xs)
     -- (xs ::2 , ys ::2) -> (xs ::1 ::1 ::1 , ys ::1)
     -- to k (xs ∷2 , ys ∷2) = inj₁ (xs ∷1 ∷1 ∷1 , ys ∷1)
 
+    to k (xs ∷2 , ys ∷1) = inj₁ (xs ∷1 ∷1 ∷1 , ys)
+    to k (xs ∷1 , ys ∷1) = inj₁ (xs ∷2 , ys)
+    to k (xs ∷1 , ys ∷2) = inj₁ (ys ∷2 ∷1 , xs)
+    to k (xs ∷2 , ys ∷2) = inj₁ (xs ∷1 ∷1 ∷1 , ys ∷1)
 
-    to (ℕsuc k) xs rewrite fix k = to2 k xs
+    -- to (ℕsuc k) xs rewrite fix k = to2 k xs
 
-    to _ a = inj₂ nothing
+    -- to _ a = inj₂ nothing
 
     -- (xs ::2 , ys ::1 ::1 ::1) -> (ys ::2 ::1 ::1 , xs ::1)
     -- (xs ::1 ::1 ::2 , ys ::1 ::2) -> (xs ::2 ::1 ::1 , ys ::2)

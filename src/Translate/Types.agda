@@ -134,6 +134,12 @@ generateFibStr {ℕzero} = [] L∷ L[]
 generateFibStr {ℕsuc ℕzero} = ([] ∷1) L∷ L[]
 generateFibStr {ℕsuc (ℕsuc n)} = L.map _∷1 (generateFibStr {ℕsuc n}) L.++ L.map _∷2 (generateFibStr {n})
 
+equalFibStr : ∀ {n} → FibStr n → FibStr n → Bool
+equalFibStr [] [] = true
+equalFibStr (a ∷1) (b ∷1) = equalFibStr a b
+equalFibStr (a ∷2) (b ∷2) = equalFibStr a b
+equalFibStr _ _ = false
+
 ------------------------------------------------------------------------
 -- Binary strings
 
@@ -159,6 +165,12 @@ generateBinStr : ∀ {n} → List (BinStr n)
 generateBinStr {ℕzero} = [] L∷ L[]
 generateBinStr {ℕsuc n} = L.map (_∷_ Fzero) (generateBinStr {n}) L.++ L.map (_∷_ (Fsuc Fzero)) (generateBinStr {n})
 
+equalBinStr : ∀ {n} → BinStr n → BinStr n → Bool
+equalBinStr [] [] = true
+equalBinStr (Fzero ∷ a) (Fzero ∷ b) = equalBinStr a b
+equalBinStr (Fsuc Fzero ∷ a) (Fsuc Fzero ∷ b) = equalBinStr a b
+equalBinStr _ _ = false
+
 ------------------------------------------------------------------------
 -- Evaluating and lifting
 
@@ -178,20 +190,20 @@ value (l * r) = value l ℕ* value r
 value (fun f) = valueF f
 
 lift : Expr → Set
-lift zero = Fin (ℕzero)
+lift zero = ⊥
 lift (suc x) = Maybe (lift x)
 lift (l + r) = lift l ⊎ lift r
 lift (l * r) = lift l × lift r
 lift (fun f) = liftF f
 
 ------------------------------------------------------------------------
--- Show
+-- Various tools
 
 showF : (F : Fun) → (x : liftF F) → String
 showF (fib' n) = showFibStr
 showF (2^' n) = showBinStr
 
-show : ∀ (E : Expr) → (x : lift E) → String
+show : (E : Expr) → (x : lift E) → String
 show (zero) ()
 show (suc E) (just x) = "just " ++ paren (show E x)
 show (suc E) nothing = "nothing"
@@ -200,19 +212,28 @@ show (E + E₁) (inj₂ y) = "inj₂ " ++ paren (show E₁ y)
 show (E * E₁) (a , b) = paren (show E a) ++ " , " ++ paren (show E₁ b)
 show (fun f) = showF f
 
-generateF : ∀ (F : Fun) → List (liftF F)
+generateF : (F : Fun) → List (liftF F)
 generateF (fib' n) = generateFibStr
 generateF (2^' n) = generateBinStr
 
-generate : ∀ (E : Expr) → List (lift E)
+generate : (E : Expr) → List (lift E)
 generate zero = L[]
 generate (suc E) = nothing L∷ L.map just (generate E)
 generate (E + E₁) = L.map inj₁ (generate E) L.++ L.map inj₂ (generate E₁)
 generate (E * E₁) = L.concatMap (λ l → L.concatMap (λ r → (l , r) L∷ L[]) (generate E₁)) (generate E)
--- generate (E * E₁) = listProd (generate E) (generate E₁)
---   where
---     listProd : ∀ {A B : Set} → List A → List B → List (A × B)
---     listProd L[] bs = L[]
---     listProd (a L∷ as) bs = L.map (_,_ a) bs L.++ listProd as bs
 generate (fun f) = generateF f
+
+equalF : (A : Fun) → liftF A → liftF A → Bool
+equalF (fib' n) x y = equalFibStr x y
+equalF (2^' n) x y = equalBinStr x y
+
+equal : (A : Expr) → lift A → lift A → Bool
+equal zero () ()
+equal (suc A) (just x) (just x₁) = equal A x x₁
+equal (suc A) nothing nothing = true
+equal (A + A₁) (inj₁ x) (inj₁ x₁) = equal A x x₁
+equal (A + A₁) (inj₂ y) (inj₂ y₁) = equal A₁ y y₁
+equal (A * A₁) (p , q) (p₁ , q₁) = equal A p p₁ ∧ equal A₁ q q₁
+equal (fun f) x y = equalF f x y
+equal _ _ _ = false
 

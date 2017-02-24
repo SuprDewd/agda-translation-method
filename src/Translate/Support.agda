@@ -77,4 +77,19 @@ open import Coinduction public
         )
 
 open import Data.Bool public
+  using ( Bool
+        ; true
+        ; false
+        ; if_then_else_
+        ; _∧_
+        ; _∨_
+        )
+
+open import Relation.Nullary public
+  using ( Dec
+        ; yes
+        ; no
+        )
+
+open import Data.Empty using (⊥) public
 

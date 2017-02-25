@@ -176,42 +176,75 @@ cassini-even-direct k rewrite NPS.+-comm (2 ℕ* k) 3 | NPS.+-comm (2 ℕ* k) 2 
     -- }
     -- to2 : (FibStr (ℕsuc (ℕsuc (ℕsuc (ℕsuc (ℕsuc (k ℕ+ k))))))) × (FibStr (ℕsuc (ℕsuc (ℕsuc (k ℕ+ k))))) ⊎ Maybe ⊥
 
-    to2 : ∀ k → (FibStr (ℕsuc (ℕsuc (ℕsuc (ℕsuc (k ℕ+ k)))))) × (FibStr (ℕsuc (ℕsuc (ℕsuc (ℕsuc (k ℕ+ k)))))) → (FibStr (ℕsuc (ℕsuc (ℕsuc (ℕsuc (ℕsuc (k ℕ+ k))))))) × (FibStr (ℕsuc (ℕsuc (ℕsuc (k ℕ+ k))))) ⊎ Maybe ⊥
-    -- to2 k (xs ∷1 ∷2 , ys ∷1) = inj₁ (xs ∷2 ∷1 ∷1 , ys)
-    -- to2 k (xs ∷1 ∷1 , ys ∷2) = inj₁ (xs ∷2 ∷1 , ys ∷1)
-    to2 k _ = inj₂ nothing
 
-    to : ∀ k → FibStr (ℕsuc (ℕsuc (2 ℕ* k))) × FibStr (ℕsuc (ℕsuc (2 ℕ* k))) → FibStr (ℕsuc (ℕsuc (ℕsuc (2 ℕ* k)))) × FibStr (ℕsuc (2 ℕ* k)) ⊎ Maybe ⊥
+    fixit : ∀ {k} → FibStr (ℕsuc (ℕsuc (k ℕ+ k))) → FibStr (ℕsuc (ℕsuc (k ℕ+ (k ℕ+ ℕzero))))
+    fixit {k} xs rewrite NPS.+-right-identity k = xs
 
-    -- (xs ::1 , ys ::1) -> (xs ::2 , ys)
-    -- to k (xs ∷1 , ys ∷1) = inj₁ (xs ∷2 , ys)
-    -- (xs ::1 , ys ::2)  -> (ys ::2 ::1, xs)
-    -- to k (xs ∷1 , ys ∷2) = inj₁ (ys ∷2 ∷1 , xs)
-    -- (xs ::2 , ys ::2) -> (xs ::1 ::1 ::1 , ys ::1)
-    -- to k (xs ∷2 , ys ∷2) = inj₁ (xs ∷1 ∷1 ∷1 , ys ∷1)
+    fixtp : ∀ k → (ℕsuc (ℕsuc (ℕsuc (ℕsuc (ℕsuc (k ℕ+ 0 ℕ+ (k ℕ+ 0 ℕ+ 0))))))) P≡ (ℕsuc (ℕsuc (ℕsuc (ℕsuc (ℕsuc (k ℕ+ 0 ℕ+ (k ℕ+ 0)))))))
+    fixtp = ℕsolve 1 (λ x → (con 1 :ℕ+ (con 1 :ℕ+ (con 1 :ℕ+ (con 1 :ℕ+ (con 1 :ℕ+ (x :ℕ+ con 0 :ℕ+ (x :ℕ+ con 0 :ℕ+ con 0))))))) , (con 1 :ℕ+  (con 1 :ℕ+ (con 1 :ℕ+ (con 1 :ℕ+ (con 1 :ℕ+ (x :ℕ+ con 0 :ℕ+ (x :ℕ+ con 0)))))))) Prefl
 
-    to k (xs ∷2 , ys ∷1) = inj₁ (xs ∷1 ∷1 ∷1 , ys)
-    to k (xs ∷1 , ys ∷1) = inj₁ (xs ∷2 , ys)
-    to k (xs ∷1 , ys ∷2) = inj₁ (ys ∷2 ∷1 , xs)
-    to k (xs ∷2 , ys ∷2) = inj₁ (xs ∷1 ∷1 ∷1 , ys ∷1)
+    fixit2 : ∀ {k} → FibStr (ℕsuc (ℕsuc (ℕsuc (ℕsuc (ℕsuc (k ℕ+ 0 ℕ+ (k ℕ+ 0 ℕ+ 0))))))) → FibStr (ℕsuc (ℕsuc (ℕsuc (ℕsuc (ℕsuc (k ℕ+ 0 ℕ+ (k ℕ+ 0)))))))
+    fixit2 {k} xs rewrite fixtp k = xs
 
-    -- to (ℕsuc k) xs rewrite fix k = to2 k xs
+    fixtp2 : ∀ k → (ℕsuc (ℕsuc (ℕsuc (k ℕ+ 0 ℕ+ (k ℕ+ 0 ℕ+ 0))))) P≡ (ℕsuc (ℕsuc (ℕsuc (k ℕ+ 0 ℕ+ (k ℕ+ 0)))))
+    fixtp2 = ℕsolve 1 (λ x → (con 1 :ℕ+ (con 1 :ℕ+ (con 1 :ℕ+ (x :ℕ+ con 0 :ℕ+ (x :ℕ+ con 0 :ℕ+ con 0))))) , (con 1 :ℕ+ (con 1 :ℕ+ (con 1 :ℕ+ (x :ℕ+ con 0 :ℕ+ (x :ℕ+ con 0)))))) Prefl
 
-    -- to _ a = inj₂ nothing
+    fixit3 : ∀ {k} → FibStr (ℕsuc (ℕsuc (ℕsuc (k ℕ+ 0 ℕ+ (k ℕ+ 0 ℕ+ 0))))) → FibStr (ℕsuc (ℕsuc (ℕsuc (k ℕ+ 0 ℕ+ (k ℕ+ 0)))))
+    fixit3 {k} xs rewrite fixtp2 k = xs
 
-    -- (xs ::2 , ys ::1 ::1 ::1) -> (ys ::2 ::1 ::1 , xs ::1)
-    -- (xs ::1 ::1 ::2 , ys ::1 ::2) -> (xs ::2 ::1 ::1 , ys ::2)
-    -- (xs ::1 ::2 , ys ::2 ::1) -> (ys ::1 ::1 ::1 ::1 , xs ::2)
-    -- (xs ::1 ::2 , ys ::1 ::1) -> (ys ::1 ::1 ::1 ::1 , xs ::1)
-    -- (xs ::1 ::2 , ys ::2 ::2) -> (xs ::2 ::1 ::1 , ys ::2 ::1)
-    -- (xs ::2 , ys ::1) -> (xs ::1 ::1 ::1 , ys)
-    -- (xs ::2 , ys ::1 ::1 ::1) -> (ys ::1 ::1 ::1 ::1 , ys ::1)
-    -- (xs ::1 ::2 , ys ::2 ::1) -> (ys ::1 ::1 ::1 ::1 , xs ::2)
-    -- (xs ::1 ::2 , ys ::1 ::2) -> (xs ::2 ::1 ::1 , ys ::2)
-    -- (xs ::2 ::2 , ys ::2 ::2 ::1 ::1) -> (ys ::2 ::1 ::1 ::1 ::1 ::1 , xs ::1 ::1 ::1)
-    -- (xs ::2 ::2 , ys ::1 ::2 ::1 ::1) -> (ys ::2 ::1 ::1 ::1 ::1 , xs ::1 ::1 ::1)
-    -- (xs ::1 ::2 , ys ::1 ::2 ::1 ::1) -> nothing
-    -- to k (a , b) = inj₂ nothing
+    mutual
+      to2 : ∀ k → (FibStr (ℕsuc (ℕsuc (ℕsuc (ℕsuc (k ℕ+ k)))))) × (FibStr (ℕsuc (ℕsuc (ℕsuc (ℕsuc (k ℕ+ k)))))) → (FibStr (ℕsuc (ℕsuc (ℕsuc (ℕsuc (ℕsuc (k ℕ+ k))))))) × (FibStr (ℕsuc (ℕsuc (ℕsuc (k ℕ+ k))))) ⊎ Maybe ⊥
+      -- to2 k (xs ∷1 ∷2 , ys ∷1) = inj₁ (xs ∷2 ∷1 ∷1 , ys)
+      -- to2 k (xs ∷1 ∷1 , ys ∷2) = inj₁ (xs ∷2 ∷1 , ys ∷1)
+
+      -- THIS SEEMS ALMOST CORRECT! Try doing this with big random examples.
+      to2 k (xs ∷2 , ys ∷1 ∷1) with (to k (fixit {k} ys , fixit {k} xs))
+      ... | inj₂ (just ())
+      ... | inj₂ nothing = inj₂ nothing
+      ... | inj₁ (xs' , ys') rewrite (Psym (NPS.+-right-identity k)) = inj₁ (fixit2 {k} (xs' ∷1 ∷1) , fixit3 {k} (ys' ∷1 ∷1))
+
+      to2 k (xs ∷2 , ys ∷1) = inj₁ (xs ∷1 ∷1 ∷1 , ys)
+      to2 k (xs ∷1 , ys ∷1) = inj₁ (xs ∷2 , ys)
+      to2 k (xs ∷1 , ys ∷2) = inj₁ (ys ∷2 ∷1 , xs)
+
+      to2 k (xs ∷1 ∷2 , ys ∷1 ∷2) = inj₁ (xs ∷2 ∷1 ∷1 , ys ∷2)
+      to2 k (xs ∷1 ∷2 , ys ∷2 ∷2) = inj₁ (xs ∷2 ∷1 ∷1 , ys ∷2 ∷1)
+
+      to2 k (xs ∷2 , ys ∷2) = inj₁ (xs ∷1 ∷1 ∷1 , ys ∷1)
+
+      -- to2 k _ = inj₂ nothing
+
+      to : ∀ k → FibStr (ℕsuc (ℕsuc (2 ℕ* k))) × FibStr (ℕsuc (ℕsuc (2 ℕ* k))) → FibStr (ℕsuc (ℕsuc (ℕsuc (2 ℕ* k)))) × FibStr (ℕsuc (2 ℕ* k)) ⊎ Maybe ⊥
+
+      -- (xs ::1 , ys ::1) -> (xs ::2 , ys)
+      -- to k (xs ∷1 , ys ∷1) = inj₁ (xs ∷2 , ys)
+      -- (xs ::1 , ys ::2)  -> (ys ::2 ::1, xs)
+      -- to k (xs ∷1 , ys ∷2) = inj₁ (ys ∷2 ∷1 , xs)
+      -- (xs ::2 , ys ::2) -> (xs ::1 ::1 ::1 , ys ::1)
+      -- to k (xs ∷2 , ys ∷2) = inj₁ (xs ∷1 ∷1 ∷1 , ys ∷1)
+
+      to ℕzero ([] ∷2 , [] ∷1 ∷1) = inj₁ ([] ∷1 ∷1 ∷1 , [] ∷1)
+      to ℕzero ([] ∷1 ∷1 , [] ∷1 ∷1) = inj₁ ([] ∷1 ∷2 , [] ∷1)
+      to ℕzero ([] ∷1 ∷1 , [] ∷2) = inj₁ ([] ∷2 ∷1 , [] ∷1)
+
+
+      to (ℕsuc k) xs rewrite fix k = to2 k xs
+
+      to _ a = inj₂ nothing
+
+      -- (xs ::2 , ys ::1 ::1 ::1) -> (ys ::2 ::1 ::1 , xs ::1)
+      -- (xs ::1 ::1 ::2 , ys ::1 ::2) -> (xs ::2 ::1 ::1 , ys ::2)
+      -- (xs ::1 ::2 , ys ::2 ::1) -> (ys ::1 ::1 ::1 ::1 , xs ::2)
+      -- (xs ::1 ::2 , ys ::1 ::1) -> (ys ::1 ::1 ::1 ::1 , xs ::1)
+      -- (xs ::1 ::2 , ys ::2 ::2) -> (xs ::2 ::1 ::1 , ys ::2 ::1)
+      -- (xs ::2 , ys ::1) -> (xs ::1 ::1 ::1 , ys)
+      -- (xs ::2 , ys ::1 ::1 ::1) -> (ys ::1 ::1 ::1 ::1 , ys ::1)
+      -- (xs ::1 ::2 , ys ::2 ::1) -> (ys ::1 ::1 ::1 ::1 , xs ::2)
+      -- (xs ::1 ::2 , ys ::1 ::2) -> (xs ::2 ::1 ::1 , ys ::2)
+      -- (xs ::2 ::2 , ys ::2 ::2 ::1 ::1) -> (ys ::2 ::1 ::1 ::1 ::1 ::1 , xs ::1 ::1 ::1)
+      -- (xs ::2 ::2 , ys ::1 ::2 ::1 ::1) -> (ys ::2 ::1 ::1 ::1 ::1 , xs ::1 ::1 ::1)
+      -- (xs ::1 ::2 , ys ::1 ::2 ::1 ::1) -> nothing
+      -- to k (a , b) = inj₂ nothing
 
 -- XXxxXXx|XXx
 --  XXxxXX|xXXx
@@ -265,8 +298,8 @@ module Runner where
                             -- putStrLn "" >>'
                             putStrLn (ℕshow (2 ℕ* n ℕ+ 2)) >>'
                             -- show≡ (cassini-even n) >>'
-                            -- check≡ (cassini-even n) (cassini-even-direct n) >>'
-                            check≡ (cassini-even n) (cassini-even-direct-2 {n}) >>'
+                            check≡ (cassini-even n) (cassini-even-direct n) >>'
+                            -- check≡ (cassini-even n) (cassini-even-direct-2 {n}) >>'
                             putStrLn "")
                      (count ℕzero) >>'
          return tt

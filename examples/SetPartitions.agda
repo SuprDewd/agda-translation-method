@@ -44,18 +44,6 @@ party {ℕsuc l} {ℕsuc r} =
     CS₂ (ℕsuc (ℕsuc l)) (ℕsuc r)
   ∎
 
-  -- begin
-  --   S₂ (ℕsuc l) (ℕsuc r)
-  -- ≈⟨ S₂-def₁ ⟩
-  --   (nat (ℕsuc l)) * S₂ (ℕsuc l) r + S₂ l (ℕsuc r)
-  -- ≈⟨ {!!} ⟩
-  --   (nat (ℕsuc l)) * S₂ (ℕsuc l) r + S₂ l (ℕsuc r)
-  -- ≈⟨ {!!} ⟩
-  --   CS₂ (ℕsuc (ℕsuc l)) (ℕsuc r)
-  -- ≈⟨ {!!} ⟩
-  --   CS₂ (ℕsuc (ℕsuc l)) (ℕsuc r)
-  -- ∎
-
 module Runner where
   open import IO
   open import Data.List hiding (_++_)

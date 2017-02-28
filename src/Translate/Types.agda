@@ -209,9 +209,9 @@ showSetPartitionK : ∀ {l r} → SetPartitionK l r → String
 showSetPartitionK {l} {r} p = showVec (λ xs → showList (λ y → ℕshow y) xs) (convert p)
   where
     convert : ∀ {l r} → SetPartitionK l r → Vec (List ℕ) l
-    convert empty = V[]
-    convert {ℕsuc l} {r} (add p) rewrite NPS.+-comm 1 l = convert p V.++ ((l ℕ+ r) L∷ L[]) V∷ V[]
-    convert (insert x p) =
+    convert {l} {r} empty = V[]
+    convert {ℕsuc l} {r} (add p) rewrite NPS.+-comm 1 l = convert p V.++ (((ℕsuc l) ℕ+ r) L∷ L[]) V∷ V[]
+    convert {l} {r} (insert x p) =
       let xs = convert p
       in xs V.[ x ]≔ (V.lookup x xs L.++ (l ℕ+ r) L∷ L[])
 

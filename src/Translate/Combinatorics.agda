@@ -12,6 +12,7 @@ open import Translate.Support
 open import Translate.Types
 open import Function
 import Data.Fin as F
+open import Translate.Bijection using (getTo; getFrom)
 
 -- infixr 7 _^_
 -- TODO: infix? ? ∷
@@ -88,6 +89,24 @@ fib-def {n} = axiom Prefl (mkBij to from)
 --   (λ { (inj₁ xs) → Fzero ∷ xs
 --      ; (inj₂ xs) → Fsuc Fzero ∷ xs
 --      })
+
+------------------------------------------------------------------------
+-- Set partitions
+
+S₂-def₁ : ∀ {l r} → S₂ (ℕsuc l) (ℕsuc r) ≡ (nat (ℕsuc l)) * S₂ (ℕsuc l) r + S₂ l (ℕsuc r)
+S₂-def₁ {l} {r} = axiom (Pcong (λ x → ℕS₂ (ℕsuc l) r ℕ+ x ℕ* ℕS₂ (ℕsuc l) r ℕ+ ℕS₂ l (ℕsuc r)) (Psym (nat-value l))) (mkBij to from)
+  where
+    to : lift (S₂ (ℕsuc l) (ℕsuc r)) → lift ((nat (ℕsuc l)) * S₂ (ℕsuc l) r + S₂ l (ℕsuc r))
+    to (add x) = inj₂ x
+    to (insert Fzero x₁) = inj₁ (nothing , x₁)
+    to (insert (Fsuc x) x₁) = inj₁ (just (getFrom (nat-lift l) x) , x₁)
+
+    from : lift ((nat (ℕsuc l)) * S₂ (ℕsuc l) r + S₂ l (ℕsuc r)) → lift (S₂ (ℕsuc l) (ℕsuc r))
+    from (inj₁ (just x , b)) = insert (F.inject₁ (getTo (nat-lift l) x)) b
+    from (inj₁ (nothing , b)) = insert Fzero b
+    from (inj₂ y) = add y
+
+    -- TODO: Prove bijectivity
 
 ------------------------------------------------------------------------
 -- K-ary strings

@@ -7,6 +7,7 @@ open import Coinduction
 open import Data.String
   using (String; _++_; toList)
 import Data.List as L
+import Data.List.Any
 import Data.Vec as V
 import Data.Fin as F
 open import Data.Char using (Char)
@@ -14,7 +15,6 @@ import Data.Nat.Properties.Simple as NPS
 open import Data.Nat.Show
   using ()
   renaming (show to ℕshow)
-
 open import Data.Nat
   using (_≤?_)
 
@@ -128,7 +128,7 @@ data Fun : Set where
   fib' : (n : ℕ) → Fun
   2^' : (n : ℕ) → Fun
   S₂' : (l r : ℕ) → Fun
-
+  CS₂' : (l r : ℕ) → Fun
 
 data Expr : Set where
   zero : Expr
@@ -145,6 +145,9 @@ fib n = fun (fib' n)
 
 S₂ : ℕ → ℕ → Expr
 S₂ l r = fun (S₂' l r)
+
+CS₂ : ℕ → ℕ → Expr
+CS₂ l r = fun (CS₂' l r)
 
 ------------------------------------------------------------------------
 -- Natural numbers
@@ -230,6 +233,58 @@ equalSetPartitionK {ℕsuc l} {ℕsuc r} (insert i₁ p) (insert i₂ q) = equal
 equalSetPartitionK {ℕsuc l} {ℕsuc r} _ _ = false
 
 ------------------------------------------------------------------------
+-- Set partitions with no consecutive numbers in a part
+
+-- Enumeration
+
+-- l parts, (l + r) elements
+ℕCS₂ : (l r : ℕ) → ℕ
+ℕCS₂ ℕzero ℕzero = 1
+ℕCS₂ ℕzero (ℕsuc r) = 0
+ℕCS₂ (ℕsuc l) ℕzero = ℕCS₂ l ℕzero -- Or just 1
+ℕCS₂ (ℕsuc l) (ℕsuc r) = l ℕ* ℕCS₂ (ℕsuc l) r ℕ+ ℕCS₂ l (ℕsuc r)
+
+-- Combinatorial interpretation
+
+data CSetPartitionK : ℕ → ℕ → Set where
+  empty : CSetPartitionK ℕzero ℕzero
+  add : ∀ {l r} → CSetPartitionK l r → CSetPartitionK (ℕsuc l) r
+  insert : ∀ {l r} → Fin l → CSetPartitionK (ℕsuc l) r → CSetPartitionK (ℕsuc l) (ℕsuc r)
+
+showCSetPartitionK : ∀ {l r} → CSetPartitionK l r → String
+showCSetPartitionK {l} {r} p = showVec (λ xs → showList (λ y → ℕshow y) xs) (convert p)
+  where
+    app' : ∀ {l} → ℕ → Fin l → Vec (List ℕ) l → Vec (List ℕ) l
+    app' x i xs = xs V.[ i ]≔ (V.lookup i xs L.++ x L∷ L[])
+
+    app : ∀ {l} → ℕ → Fin l → Vec (List ℕ) (ℕsuc l) → Vec (List ℕ) (ℕsuc l)
+    app x Fzero (x₁ V∷ xs) with Data.List.Any.any (λ y → (ℕsuc y) Data.Nat.≟ x) x₁
+    app x Fzero (x₁ V∷ xs) | yes p = x₁ V∷ (app' x Fzero xs)
+    app x Fzero (x₁ V∷ xs) | no ¬p = (x₁ L.++ (x L∷ L[])) V∷ xs
+    app x (Fsuc i) (x₁ V∷ xs) with Data.List.Any.any (λ y → (ℕsuc y) Data.Nat.≟ x) x₁
+    app x (Fsuc i) (x₁ V∷ xs) | yes p = x₁ V∷ (app' x (Fsuc i) xs)
+    app x (Fsuc i) (x₁ V∷ xs) | no ¬p = x₁ V∷ (app x i xs)
+
+    convert : ∀ {l r} → CSetPartitionK l r → Vec (List ℕ) l
+    convert empty = V[]
+    convert {ℕsuc l} {r} (add p) rewrite NPS.+-comm 1 l = convert p V.++ (((ℕsuc l) ℕ+ r) L∷ L[]) V∷ V[]
+    convert {ℕsuc l} {ℕsuc r} (insert x p) = let xs = convert p in app ((ℕsuc l) ℕ+ (ℕsuc r)) x xs
+
+generateCSetPartitionK : ∀ {l r} → List (CSetPartitionK l r)
+generateCSetPartitionK {ℕzero} {ℕzero} = empty L∷ L[]
+generateCSetPartitionK {ℕzero} {ℕsuc r} = L[]
+generateCSetPartitionK {ℕsuc l} {ℕzero} = L.map add generateCSetPartitionK
+generateCSetPartitionK {ℕsuc l} {ℕsuc r} = L.concatMap (λ i → L.map (λ p → insert i p) (generateCSetPartitionK {ℕsuc l} {r})) (generateFin {l}) L.++ L.map add generateCSetPartitionK
+
+equalCSetPartitionK : ∀ {l r} → (p q : CSetPartitionK l r) → Bool
+equalCSetPartitionK {ℕzero} {ℕzero} empty empty = true
+equalCSetPartitionK {ℕzero} {ℕsuc r} () q
+equalCSetPartitionK {ℕsuc l} {ℕzero} (add p) (add q) = equalCSetPartitionK p q
+equalCSetPartitionK {ℕsuc l} {ℕsuc r} (add p) (add q) = equalCSetPartitionK p q
+equalCSetPartitionK {ℕsuc l} {ℕsuc r} (insert x p) (insert x₁ q) = equalFin x x₁ ∧ equalCSetPartitionK p q
+equalCSetPartitionK {ℕsuc l} {ℕsuc r} _ _ = false
+
+------------------------------------------------------------------------
 -- Binary strings
 
 -- Enumeration
@@ -267,11 +322,13 @@ valueF : Fun → ℕ
 valueF (fib' n) = ℕfib n
 valueF (2^' n) = ℕ2^ n
 valueF (S₂' l r) = ℕS₂ l r
+valueF (CS₂' l r) = ℕCS₂ l r
 
 liftF : Fun → Set
 liftF (fib' n) = FibStr n
 liftF (2^' n) = BinStr n
 liftF (S₂' l r) = SetPartitionK l r
+liftF (CS₂' l r) = CSetPartitionK l r
 
 value : Expr → ℕ
 value zero = ℕzero
@@ -294,6 +351,7 @@ showF : (F : Fun) → (x : liftF F) → String
 showF (fib' n) = showFibStr
 showF (2^' n) = showBinStr
 showF (S₂' l r) = showSetPartitionK
+showF (CS₂' l r) = showCSetPartitionK
 
 show : (E : Expr) → (x : lift E) → String
 show (zero) ()
@@ -308,6 +366,7 @@ generateF : (F : Fun) → List (liftF F)
 generateF (fib' n) = generateFibStr
 generateF (2^' n) = generateBinStr
 generateF (S₂' l r) = generateSetPartitionK
+generateF (CS₂' l r) = generateCSetPartitionK
 
 generate : (E : Expr) → List (lift E)
 generate zero = L[]
@@ -320,6 +379,7 @@ equalF : (A : Fun) → liftF A → liftF A → Bool
 equalF (fib' n) x y = equalFibStr x y
 equalF (2^' n) x y = equalBinStr x y
 equalF (S₂' l r) x y = equalSetPartitionK x y
+equalF (CS₂' l r) x y = equalCSetPartitionK x y
 
 equal : (A : Expr) → lift A → lift A → Bool
 equal zero () ()

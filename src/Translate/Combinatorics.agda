@@ -117,6 +117,30 @@ S₂-def₂ {l} = axiom Prefl (mkBij to from)
     from x = add x
 
 ------------------------------------------------------------------------
+-- Set partitions with no consecutive numbers in a part
+
+CS₂-def₁ : ∀ {l r} → CS₂ (ℕsuc l) (ℕsuc r) ≡ (nat l) * CS₂ (ℕsuc l) r + CS₂ l (ℕsuc r)
+CS₂-def₁ {l} {r} = axiom (Pcong (λ x → x ℕ* ℕCS₂ (ℕsuc l) r ℕ+ ℕCS₂ l (ℕsuc r)) (Psym (nat-value l))) (mkBij to from)
+  where
+    to : lift (CS₂ (ℕsuc l) (ℕsuc r)) → lift ((nat l) * CS₂ (ℕsuc l) r + CS₂ l (ℕsuc r))
+    to (add x) = inj₂ x
+    to (insert x x₁) = inj₁ ((getFrom (nat-lift l) x) , x₁)
+
+    from : lift ((nat l) * CS₂ (ℕsuc l) r + CS₂ l (ℕsuc r)) → lift (CS₂ (ℕsuc l) (ℕsuc r))
+    from (inj₁ (a , b)) = insert (getTo (nat-lift l) a) b
+    from (inj₂ y) = add y
+
+    -- TODO: Prove bijectivity
+
+CS₂-def₂ : ∀ {l} → CS₂ (ℕsuc l) ℕzero ≡ CS₂ l ℕzero
+CS₂-def₂ {l} = axiom Prefl (mkBij to from)
+  where
+    to : CSetPartitionK (ℕsuc l) ℕzero → CSetPartitionK l ℕzero
+    to (add x) = x
+    from : CSetPartitionK l ℕzero → CSetPartitionK (ℕsuc l) ℕzero
+    from x = add x
+
+------------------------------------------------------------------------
 -- K-ary strings
 
 -- Enumeration

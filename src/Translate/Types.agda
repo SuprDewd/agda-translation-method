@@ -191,19 +191,6 @@ equalFibStr _ _ = false
 
 -- Enumeration
 
--- ℕfib : ℕ → ℕ
--- ℕfib 0 = 1
--- ℕfib 1 = 1
--- ℕfib (ℕsuc (ℕsuc n)) = ℕfib (ℕsuc n) ℕ+ ℕfib n
-
--- ℕS₂ : (n : ℕ) → (k : Fin (1 ℕ+ n)) → ℕ
--- ℕS₂ ℕzero Fzero = 1
--- ℕS₂ ℕzero (Fsuc ())
--- ℕS₂ (ℕsuc n) Fzero = 0
--- ℕS₂ (ℕsuc n) (Fsuc k) with (ℕsuc (F.toℕ (Fsuc k))) ≤? ℕsuc n
--- ℕS₂ (ℕsuc n) (Fsuc k) | yes p = (ℕsuc (F.toℕ k)) ℕ* ℕS₂ n (F.fromℕ≤ p) ℕ+ ℕS₂ n k
--- ℕS₂ (ℕsuc n) (Fsuc k) | no ¬p = ℕS₂ n k
-
 -- l parts, (l + r) elements
 ℕS₂ : (l r : ℕ) → ℕ
 ℕS₂ ℕzero ℕzero = 1
@@ -213,16 +200,6 @@ equalFibStr _ _ = false
 
 -- Combinatorial interpretation
 
--- data FibStr : ℕ → Set where
--- [] : FibStr ℕzero
--- _∷1 : ∀ {n} → FibStr n → FibStr (ℕsuc n)
--- _∷2 : ∀ {n} → FibStr n → FibStr (ℕsuc (ℕsuc n))
--- data SetPartitionK : (n : ℕ) → Fin (ℕsuc n) → Set where
---   empty : SetPartitionK ℕzero Fzero
---   add : ∀ {n k} → SetPartitionK n k → SetPartitionK (ℕsuc n) (Fsuc k)
---   insert : ∀ {n} {k : Fin (ℕsuc n)} → Fin (F.toℕ k) → SetPartitionK n k → SetPartitionK (ℕsuc n) (F.inject₁ k)
--- N K
--- K (N - K)
 data SetPartitionK : ℕ → ℕ → Set where
   empty : SetPartitionK ℕzero ℕzero
   add : ∀ {l r} → SetPartitionK l r → SetPartitionK (ℕsuc l) r
@@ -231,17 +208,6 @@ data SetPartitionK : ℕ → ℕ → Set where
 showSetPartitionK : ∀ {l r} → SetPartitionK l r → String
 showSetPartitionK {l} {r} p = showVec (λ xs → showList (λ y → ℕshow y) xs) (convert p)
   where
---     list-ℕinj : ∀ {k} {n : Fin k} {A : Set} → Vec A (F.toℕ n) → Vec A (F.toℕ (F.inject₁ n))
---     list-ℕinj {ℕzero} {()} xs
---     list-ℕinj {ℕsuc k} {Fzero} xs = V[]
---     list-ℕinj {ℕsuc k} {Fsuc n} (x V∷ xs) = x V∷ list-ℕinj xs
-
---     ℕinj : ∀ {k} → {n : Fin k} → Fin (F.toℕ n) → Fin (F.toℕ (F.inject₁ n))
---     ℕinj {ℕzero} {()} x
---     ℕinj {ℕsuc k} {Fzero} x = x
---     ℕinj {ℕsuc k} {Fsuc n} Fzero = Fzero
---     ℕinj {ℕsuc k} {Fsuc n} (Fsuc x) = Fsuc (ℕinj x)
-
     convert : ∀ {l r} → SetPartitionK l r → Vec (List ℕ) l
     convert empty = V[]
     convert {ℕsuc l} {r} (add p) rewrite NPS.+-comm 1 l = convert p V.++ ((l ℕ+ r) L∷ L[]) V∷ V[]
@@ -249,69 +215,11 @@ showSetPartitionK {l} {r} p = showVec (λ xs → showList (λ y → ℕshow y) x
       let xs = convert p
       in xs V.[ x ]≔ (V.lookup x xs L.++ (l ℕ+ r) L∷ L[])
 
---     convert empty = V[]
---     convert {ℕsuc n} {Fsuc k} (add p) rewrite NPS.+-comm 1 (F.toℕ k) = V.map (L.map F.inject₁) (convert p) V.++ ((F.fromℕ n L∷ L[]) V∷ V[])
---     convert {ℕsuc n} {k} (insert x p) =
---       let xs = V.map (L.map F.inject₁) (list-ℕinj (convert p))
---       in xs V.[ ℕinj x ]≔ (V.lookup (ℕinj x) xs L.++ F.fromℕ n L∷ L[])
-
--- generateFibStr : ∀ {n} → List (FibStr n)
--- generateFibStr {ℕzero} = [] L∷ L[]
--- generateFibStr {ℕsuc ℕzero} = ([] ∷1) L∷ L[]
--- generateFibStr {ℕsuc (ℕsuc n)} = L.map _∷1 (generateFibStr {ℕsuc n}) L.++ L.map _∷2 (generateFibStr {n})
-
--- lem : ∀ {n} {k} → (p : ℕsuc (ℕsuc (F.toℕ k)) Data.Nat.≤ ℕsuc (ℕsuc n)) → Fsuc k P≡ F.fromℕ≤ p
--- lem {ℕzero} {Fzero} (Data.Nat.s≤s (Data.Nat.s≤s Data.Nat.z≤n)) = Prefl
--- lem {ℕzero} {Fsuc k} (Data.Nat.s≤s (Data.Nat.s≤s ()))
--- lem {ℕsuc n} {Fzero} (Data.Nat.s≤s (Data.Nat.s≤s Data.Nat.z≤n)) = Prefl
--- lem {ℕsuc n} {Fsuc k} (Data.Nat.s≤s (Data.Nat.s≤s p)) = Pcong (λ x → Fsuc x) (lem (Data.Nat.s≤s p))
-
 generateSetPartitionK : ∀ {l r} → List (SetPartitionK l r)
 generateSetPartitionK {ℕzero} {ℕzero} = empty L∷ L[]
 generateSetPartitionK {ℕzero} {ℕsuc r} = L[]
 generateSetPartitionK {ℕsuc l} {ℕzero} = L.map add generateSetPartitionK
 generateSetPartitionK {ℕsuc l} {ℕsuc r} = L.concatMap (λ i → L.map (λ p → insert i p) (generateSetPartitionK {ℕsuc l} {r})) (generateFin {ℕsuc l}) L.++ L.map add generateSetPartitionK
-
--- generateSetPartitionK : ∀ {n k} → List (SetPartitionK n k)
--- generateSetPartitionK {ℕzero} {Fzero} = empty L∷ L[]
--- generateSetPartitionK {ℕzero} {Fsuc ()}
--- generateSetPartitionK {ℕsuc n} {Fzero} = L[]
--- generateSetPartitionK {ℕsuc n} {Fsuc k} with (ℕsuc (F.toℕ (Fsuc k))) ≤? ℕsuc n
--- generateSetPartitionK {ℕsuc ℕzero} {Fsuc k} | yes (Data.Nat.s≤s ())
--- generateSetPartitionK {ℕsuc (ℕsuc n)} {Fsuc k} | yes p
---   = L.concatMap (λ i → L.map (λ q → doInsert q i) (generateSetPartitionK {ℕsuc n} {F.fromℕ≤ p})) (generateFin {F.toℕ (F.fromℕ≤ p)})
---   where
---     fix : ∀ {n} {k} → (p : ℕsuc (ℕsuc (F.toℕ k)) Data.Nat.≤ ℕsuc (ℕsuc n)) → Fsuc k P≡ F.inject₁ (F.fromℕ≤ p)
---     fix {ℕzero} {Fzero} (Data.Nat.s≤s (Data.Nat.s≤s Data.Nat.z≤n)) = Prefl
---     fix {ℕzero} {Fsuc k} (Data.Nat.s≤s (Data.Nat.s≤s ()))
---     fix {ℕsuc n} {Fzero} (Data.Nat.s≤s (Data.Nat.s≤s Data.Nat.z≤n)) = Prefl
---     fix {ℕsuc n} {Fsuc k} (Data.Nat.s≤s (Data.Nat.s≤s p)) = Pcong (λ x → Fsuc x) (fix (Data.Nat.s≤s p))
-
---     doInsert : (q : SetPartitionK (ℕsuc n) (F.fromℕ≤ p)) → (i : Fin (F.toℕ (F.fromℕ≤ p))) → SetPartitionK (ℕsuc (ℕsuc n)) (Fsuc k)
---     doInsert q i rewrite fix {n} {k} p = insert {ℕsuc n} {F.fromℕ≤ p} i q
-
--- generateSetPartitionK {ℕsuc n} {Fsuc k} | no ¬p = L.map add generateSetPartitionK
-
-
--- insert : ∀ {n k} → Fin (F.toℕ k) → SetPartitionK n k → SetPartitionK (ℕsuc n) (F.inject₁ k)
-
--- ℕS₂ (ℕsuc n) Fzero = 0
--- ℕS₂ (ℕsuc n) (Fsuc k) with (ℕsuc (F.toℕ (Fsuc k))) ≤? ℕsuc n
--- ℕS₂ (ℕsuc n) (Fsuc k) | yes p = (ℕsuc (F.toℕ k)) ℕ* ℕS₂ n (F.fromℕ≤ p) ℕ+ ℕS₂ n k
--- ℕS₂ (ℕsuc n) (Fsuc k) | no ¬p = ℕS₂ n k
-
--- equalFibStr : ∀ {n} → FibStr n → FibStr n → Bool
--- equalFibStr [] [] = true
--- equalFibStr (a ∷1) (b ∷1) = equalFibStr a b
--- equalFibStr (a ∷2) (b ∷2) = equalFibStr a b
--- equalFibStr _ _ = false
-
--- equalSetPartitionK : ∀ {n k} → (p q : SetPartitionK n k) → Bool
--- equalSetPartitionK {ℕzero} {Fzero} empty empty = true
--- equalSetPartitionK {ℕsuc n} {Fzero} p q = true -- This is actually impossible...
--- equalSetPartitionK {ℕsuc n} {Fsuc k} p q with (ℕsuc (F.toℕ (Fsuc k))) ≤? ℕsuc n
--- equalSetPartitionK {ℕsuc n} {Fsuc k} p q | yes prf = {!!}
--- equalSetPartitionK {ℕsuc n} {Fsuc k} p q | no ¬prf = {!!}
 
 equalSetPartitionK : ∀ {l r} → (p q : SetPartitionK l r) → Bool
 equalSetPartitionK {ℕzero} {ℕzero} empty empty = true

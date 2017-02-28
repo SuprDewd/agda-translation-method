@@ -108,6 +108,14 @@ S₂-def₁ {l} {r} = axiom (Pcong (λ x → ℕS₂ (ℕsuc l) r ℕ+ x ℕ* �
 
     -- TODO: Prove bijectivity
 
+S₂-def₂ : ∀ {l} → S₂ (ℕsuc l) ℕzero ≡ S₂ l ℕzero
+S₂-def₂ {l} = axiom Prefl (mkBij to from)
+  where
+    to : SetPartitionK (ℕsuc l) ℕzero → SetPartitionK l ℕzero
+    to (add x) = x
+    from : SetPartitionK l ℕzero → SetPartitionK (ℕsuc l) ℕzero
+    from x = add x
+
 ------------------------------------------------------------------------
 -- K-ary strings
 

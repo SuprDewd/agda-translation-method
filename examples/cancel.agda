@@ -5,11 +5,11 @@ open import Function
 open import Translate
 open import Translate.Combinatorics
 open import Translate.Support
--- open import Translate.EqReasoning
 open import Translate.Axioms
 open import Translate.Bijection using (getTo; getFrom; getToFrom; getFromTo)
 open import Translate.Tools
 import Relation.Binary.PropositionalEquality
+open Relation.Binary.PropositionalEquality.≡-Reasoning
 import Data.Nat.Properties.Simple as NPS
 
 open import Data.Product
@@ -25,30 +25,6 @@ inj₂-inj Prefl = Prefl
 
 apply-with-proof : ∀ {l} {a b : Set l} → (f : a → b) → (x : a) → Σ b (λ y → f x P≡ y)
 apply-with-proof f x = f x , Prefl
-
-open Relation.Binary.PropositionalEquality.≡-Reasoning
-
--- absurd : ∀ {l} {a : Set l} → ⊥ → a
--- absurd ()
-
--- suc-cancel : ∀ {a b} → suc a ≡ suc b → a ≡ b
--- suc-cancel {a} {b} p with toEquality p | toBijection p
--- suc-cancel {a} {b} p | eq | mkBij to from x x₁
---   = axiom (suc-inj eq) (mkBij to' from' {!!} {!!})
---     where
---       contr : ∀ {x y} → to x P≡ nothing → to y P≡ nothing → ⊥
---       contr p₁ p₂ = {!!}
-
---       to' : lift a → lift b
---       to' x with apply-with-proof to (just x)
---       to' x | just y , p₁ = y
---       to' x | nothing , p₁ with apply-with-proof to nothing
---       to' x | nothing , p₁ | just y , p₂ = y
---       to' x | nothing , p₁ | nothing , p₂ = absurd (contr p₁ p₂)
-
---       from' : lift b → lift a
---       from' x = {!!}
-
 
 data [_∧_⊨_⇒_] {A B C D : Set} (b₁ : (A ⊎ B) B≡ (C ⊎ D)) (b₂ : B B≡ D) : (A ⊎ B) → C → Set where
   step : ∀ {p q r s} → (getTo b₁ p P≡ inj₂ q) → (getFrom b₂ q P≡ r) → [ b₁ ∧ b₂ ⊨ inj₂ r ⇒ s ] → [ b₁ ∧ b₂ ⊨ p ⇒ s ]
@@ -149,11 +125,6 @@ bijective (mkBij to₁ from₁ toFrom₁ fromTo₁) (mkBij to₂ from₂ toFrom�
 bijective (mkBij to₁ from₁ toFrom₁ fromTo₁) (mkBij to₂ from₂ toFrom₂ fromTo₂) x y z (step p₁ p₂ p) (done q) with Ptrans (Psym p₁) q
 ... | ()
 
--- iter : ∀ {A B C D : Set} → (b₁ : (A ⊎ B) B≡ (C ⊎ D)) → (b₂ : B B≡ D) → (x : A ⊎ B) → Σ C (λ y → [ b₁ ∧ b₂ ⊨ x ⇒ y ])
--- iter b₁ b₂ x = {!!} -- y , end p Prefl
--- iter b₁ b₂ x = ? -- with apply-with-proof (getFrom b₂) y
--- iter b₁ b₂ x (inj₂ y) p | z , zp = iter b₁ b₂ x (getTo b₁ (inj₂ z)) (step p zp Prefl)
-
 -- XXX: Should this be TERMINATING?
 -- TODO: Use that "decreasing" datatype to show that this is terminating
 {-# NON_TERMINATING #-}
@@ -162,74 +133,6 @@ run b₁ b₂ x with apply-with-proof (getTo b₁) x
 run b₁ b₂ x | inj₁ y , yp = y , done yp
 run b₁ b₂ x | inj₂ y , yp with run b₁ b₂ (inj₂ (getFrom b₂ y))
 run b₁ b₂ x | inj₂ y , yp | (z , zp) = z , step yp Prefl zp
-
--- bijective : ∀ {A B C D} (b₁ : (A ⊎ B) B≡ (C ⊎ D)) b₂ x y z → [ b₁ ∧ b₂ ⊨ inj₁ x ⇒ y ] → [ (Bsym b₁) ∧ (Bsym b₂) ⊨ inj₁ y ⇒ z ] → x P≡ z
--- bijective b₁@(mkBij to₁ from₁ toFrom₁ fromTo₁)
---           b₂@(mkBij to₂ from₂ toFrom₂ fromTo₂)
---           x y z (step {dp₁} {dq₁} {dr₁} {ds₁} p₁ p₂ p) (step {dp₂} {dq₂} {dr₂} {ds₂} q₁ q₂ q)
---           =
---           let meow = bijective b₁ b₂ {!!} {!!} {!!} {!!} {!!}
---           in inj₁-inj (
---             begin
---               inj₁ x
---             ≡⟨ Psym (fromTo₁ (inj₁ x)) ⟩
---               from₁ (to₁ (inj₁ x))
---             ≡⟨ Pcong from₁ p₁ ⟩
---               from₁ (inj₂ dq₁)
---             ≡⟨ {!!} ⟩
---               from₁ (to₁ (inj₁ z))
---             ≡⟨ fromTo₁ (inj₁ z) ⟩
---               inj₁ z
---             ∎
---           )
-
--- -- x P≡ z
-
--- -- p₁      : to₁ (inj₁ x) P≡ inj₂ dq₁
--- -- p₂      : from₂ dq₁ P≡ dr₁
--- -- p       : [ mkBij to₁ from₁ toFrom₁ fromTo₁ ∧ mkBij to₂ from₂ toFrom₂ fromTo₂ ⊨ inj₂ dr₁ ⇒ y ]
-
--- -- q₁      : from₁ (inj₁ y) P≡ inj₂ dq₂
--- -- q₂      : to₂ dq₂ P≡ dr₂
--- -- q       : [ mkBij from₁ to₁ fromTo₁ toFrom₁ ∧ mkBij from₂ to₂ fromTo₂ toFrom₂ ⊨ inj₂ dr₂ ⇒ z ]
-
--- -- dp₁     : .A ⊎ .B
--- -- dq₁     : .D
--- -- dr₁     : .B
--- -- ds₁     : .C
-
--- -- dp₂     : .C ⊎ .D
--- -- dq₂     : .B
--- -- dr₂     : .D
--- -- ds₂     : .A
-
--- -- to₁     : .A ⊎ .B → .C ⊎ .D
--- -- from₁   : .C ⊎ .D → .A ⊎ .B
--- -- toFrom₁ : (y₁ : .C ⊎ .D) → to₁ (from₁ y₁) P≡ y₁
--- -- fromTo₁ : (x₁ : .A ⊎ .B) → from₁ (to₁ x₁) P≡ x₁
-
--- -- to₂     : .B → .D
--- -- from₂   : .D → .B
--- -- toFrom₂ : (y₁ : .D) → to₂ (from₂ y₁) P≡ y₁
--- -- fromTo₂ : (x₁ : .B) → from₂ (to₂ x₁) P≡ x₁
-
--- -- x z : A
-
--- bijective b₁ b₂ x y z (step x₁ x₂ p) (done x₃) = {!!}
--- bijective b₁ b₂ x y z (done x₁) (step x₂ x₃ q₁) = {!!}
--- bijective (mkBij to₁ from₁ toFrom₁ fromTo₁)
---           (mkBij to₂ from₂ toFrom₂ fromTo₂)
---           x y z (done p) (done q) = inj₁-inj (
---             begin
---               inj₁ x
---             ≡⟨ Psym (fromTo₁ (inj₁ x)) ⟩
---               from₁ (to₁ (inj₁ x))
---             ≡⟨ Pcong from₁ p ⟩
---               from₁ (inj₁ y)
---             ≡⟨ q ⟩
---               inj₁ z
---             ∎
---           )
 
 +-inj₂ : ∀ {A B C D} → A ℕ+ B P≡ C ℕ+ D → A P≡ C → B P≡ D
 +-inj₂ {ℕzero} {B} {.0} {D} p Prefl = p

@@ -37,7 +37,7 @@ ex3 a b c =
   (solve 3 (λ p q r → p :+ (q :+ r) := r :+ (q :+ p)) refl) a b c
 
 MyFin : ℕ → Set
-MyFin ℕzero = Fin 0
+MyFin ℕzero = ⊥
 MyFin (ℕsuc n) = Maybe (MyFin n)
 
 fin : ℕ → Expr

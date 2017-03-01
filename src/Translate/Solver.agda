@@ -671,20 +671,20 @@ normalizedMonomialLt : ∀ {n} → (p q : NormalizedMonomial n) → Bool
 normalizedMonomialLt (mon x vs fs) (mon x₁ vs₁ fs₁) = isLt (toBool (lv-eq vs vs₁) ∷ toBool (lf-eq fs fs₁) ∷ [])
                                                            (lv-lt vs vs₁ ∷ lf-lt fs fs₁ ∷ [])
 
-insert : ∀ {n} → NormalizedMonomial n → RightLeaningSumOfNormalizedMonomials n → RightLeaningSumOfNormalizedMonomials n
-insert x nil = x :+ nil
-insert x (x₁ :+ xs) with normalizedMonomialLt x x₁
-insert x (x₁ :+ xs) | true = x :+ (x₁ :+ xs)
-insert x (x₁ :+ xs) | false = x₁ :+ insert x xs
+sort-insert : ∀ {n} → NormalizedMonomial n → RightLeaningSumOfNormalizedMonomials n → RightLeaningSumOfNormalizedMonomials n
+sort-insert x nil = x :+ nil
+sort-insert x (x₁ :+ xs) with normalizedMonomialLt x x₁
+sort-insert x (x₁ :+ xs) | true = x :+ (x₁ :+ xs)
+sort-insert x (x₁ :+ xs) | false = x₁ :+ sort-insert x xs
 
-insert-correct : ∀ {n} → (Γ : Env n) → (x : NormalizedMonomial n) → (xs : RightLeaningSumOfNormalizedMonomials n) → ⟦ insert x xs ⟧RLSNM Γ ≡ ⟦ x ⟧NM Γ + ⟦ xs ⟧RLSNM Γ
-insert-correct Γ x nil = refl
-insert-correct Γ x (x₁ :+ xs) with normalizedMonomialLt x x₁
-insert-correct Γ x (x₁ :+ xs) | true = refl
-insert-correct Γ x (x₁ :+ xs) | false =
+sort-insert-correct : ∀ {n} → (Γ : Env n) → (x : NormalizedMonomial n) → (xs : RightLeaningSumOfNormalizedMonomials n) → ⟦ sort-insert x xs ⟧RLSNM Γ ≡ ⟦ x ⟧NM Γ + ⟦ xs ⟧RLSNM Γ
+sort-insert-correct Γ x nil = refl
+sort-insert-correct Γ x (x₁ :+ xs) with normalizedMonomialLt x x₁
+sort-insert-correct Γ x (x₁ :+ xs) | true = refl
+sort-insert-correct Γ x (x₁ :+ xs) | false =
   begin
-    ⟦ x₁ :+ insert x xs ⟧RLSNM Γ
-  ≈⟨ +-cong refl (insert-correct Γ x xs) ⟩
+    ⟦ x₁ :+ sort-insert x xs ⟧RLSNM Γ
+  ≈⟨ +-cong refl (sort-insert-correct Γ x xs) ⟩
     ⟦ x₁ ⟧NM Γ + (⟦ x ⟧NM Γ + ⟦ xs ⟧RLSNM Γ)
   ≈⟨ sym +-assoc ⟩
     (⟦ x₁ ⟧NM Γ + ⟦ x ⟧NM Γ) + ⟦ xs ⟧RLSNM Γ
@@ -696,14 +696,14 @@ insert-correct Γ x (x₁ :+ xs) | false =
 
 sort : ∀ {n} → RightLeaningSumOfNormalizedMonomials n → RightLeaningSumOfNormalizedMonomials n
 sort nil = nil
-sort (x :+ xs) = insert x (sort xs)
+sort (x :+ xs) = sort-insert x (sort xs)
 
 sort-correct : ∀ {n} → (Γ : Env n) → (p : RightLeaningSumOfNormalizedMonomials n) → ⟦ sort p ⟧RLSNM Γ ≡ ⟦ p ⟧RLSNM Γ
 sort-correct Γ nil = refl
 sort-correct Γ (x :+ xs) =
   begin
-    ⟦ insert x (sort xs) ⟧RLSNM Γ
-  ≈⟨ insert-correct Γ x (sort xs) ⟩
+    ⟦ sort-insert x (sort xs) ⟧RLSNM Γ
+  ≈⟨ sort-insert-correct Γ x (sort xs) ⟩
     ⟦ x ⟧NM Γ + ⟦ sort xs ⟧RLSNM Γ
   ≈⟨ +-cong refl (sort-correct Γ xs) ⟩
     ⟦ x ⟧NM Γ + ⟦ xs ⟧RLSNM Γ

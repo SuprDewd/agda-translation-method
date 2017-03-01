@@ -399,8 +399,8 @@ nat-value ℕzero = Prefl
 nat-value (ℕsuc n) = Pcong ℕsuc (nat-value n)
 
 nat-lift : ∀ n → lift (nat n) B≡ Fin n
-nat-lift ℕzero = mkBij (λ ()) (λ ())
-nat-lift (ℕsuc n) = mkBij to from
+nat-lift ℕzero = mkBij (λ ()) (λ ()) (λ ()) (λ ())
+nat-lift (ℕsuc n) = mkBij to from toFrom (fromTo {n})
   where
     to : ∀ {n} → Maybe (lift (nat n)) → Fin (ℕsuc n)
     to {ℕzero} (just ())
@@ -414,4 +414,15 @@ nat-lift (ℕsuc n) = mkBij to from
     from {ℕsuc n} Fzero = nothing
     from {ℕsuc n} (Fsuc x) = just (from x)
 
-    -- TODO: Might be an interesting exercise to prove bijectivity
+    toFrom : ∀ {n} y → to {n} (from {n} y) P≡ y
+    toFrom {ℕzero} (Fsuc ())
+    toFrom {ℕzero} Fzero = Prefl
+    toFrom {ℕsuc n} Fzero = Prefl
+    toFrom {ℕsuc n} (Fsuc y) = Pcong Fsuc (toFrom {n} y)
+
+    fromTo : ∀ {n} x → from {n} (to {n} x) P≡ x
+    fromTo {ℕzero} (just ())
+    fromTo {ℕzero} nothing = Prefl
+    fromTo {ℕsuc n} nothing = Prefl
+    fromTo {ℕsuc n} (just x) = Pcong just (fromTo {n} x)
+

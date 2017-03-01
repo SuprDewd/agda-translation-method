@@ -44,7 +44,7 @@ toEquality (trans a≡b c≡d) = Ptrans (toEquality a≡b) (toEquality c≡d)
 toEquality (axiom prf _) = prf
 
 toBijection : ∀ {a b} → a ≡ b → lift a B≡ lift b
-toBijection refl = mkBij (λ x → x) (λ x → x)
+toBijection refl = mkBij (λ x → x) (λ x → x) (λ y → Prefl) (λ x → Prefl)
 toBijection (sym a≡b) = Bsym (toBijection a≡b)
 toBijection (trans a≡b c≡d) = Btrans (toBijection a≡b) (toBijection c≡d)
 toBijection (axiom _ bij) = bij

@@ -12,7 +12,7 @@ open import Translate.Support
 open import Translate.Types
 open import Function
 import Data.Fin as F
-open import Translate.Bijection using (getTo; getFrom)
+open import Translate.Bijection using (getTo; getFrom; getToFrom; getFromTo)
 
 -- infixr 7 _^_
 -- TODO: infix? ? ∷
@@ -45,7 +45,7 @@ open import Translate.Bijection using (getTo; getFrom)
 -- Axioms
 
 fib-def : ∀ {n} → fib (ℕsuc (ℕsuc n)) ≡ fib (ℕsuc n) + fib n
-fib-def {n} = axiom Prefl (mkBij to from)
+fib-def {n} = axiom Prefl (mkBij to from toFrom fromTo)
   where
     to : lift (fib (ℕsuc (ℕsuc n))) → lift (fib (ℕsuc n) + fib n)
     to (xs ∷1) = inj₁ xs
@@ -54,6 +54,14 @@ fib-def {n} = axiom Prefl (mkBij to from)
     from : lift (fib (ℕsuc n) + fib n) → lift (fib (ℕsuc (ℕsuc n)))
     from (inj₁ xs) = xs ∷1
     from (inj₂ xs) = xs ∷2
+
+    toFrom : ∀ y → to (from y) P≡ y
+    toFrom (inj₁ x) = Prefl
+    toFrom (inj₂ y) = Prefl
+
+    fromTo : ∀ x → from (to x) P≡ x
+    fromTo (x ∷1) = Prefl
+    fromTo (x ∷2) = Prefl
 
 ------------------------------------------------------------------------
 -- Binary strings
@@ -94,7 +102,7 @@ fib-def {n} = axiom Prefl (mkBij to from)
 -- Set partitions
 
 S₂-def₁ : ∀ {l r} → S₂ (ℕsuc l) (ℕsuc r) ≡ (nat (ℕsuc l)) * S₂ (ℕsuc l) r + S₂ l (ℕsuc r)
-S₂-def₁ {l} {r} = axiom (Pcong (λ x → ℕS₂ (ℕsuc l) r ℕ+ x ℕ* ℕS₂ (ℕsuc l) r ℕ+ ℕS₂ l (ℕsuc r)) (Psym (nat-value l))) (mkBij to from)
+S₂-def₁ {l} {r} = axiom (Pcong (λ x → ℕS₂ (ℕsuc l) r ℕ+ x ℕ* ℕS₂ (ℕsuc l) r ℕ+ ℕS₂ l (ℕsuc r)) (Psym (nat-value l))) (mkBij to from toFrom fromTo)
   where
     to : lift (S₂ (ℕsuc l) (ℕsuc r)) → lift ((nat (ℕsuc l)) * S₂ (ℕsuc l) r + S₂ l (ℕsuc r))
     to (add x) = inj₂ x
@@ -106,21 +114,36 @@ S₂-def₁ {l} {r} = axiom (Pcong (λ x → ℕS₂ (ℕsuc l) r ℕ+ x ℕ* �
     from (inj₁ (nothing , b)) = insert Fzero b
     from (inj₂ y) = add y
 
-    -- TODO: Prove bijectivity
+    toFrom : ∀ y → to (from y) P≡ y
+    toFrom (inj₁ (just x , b)) = Pcong (λ t → inj₁ (just t , b)) (getFromTo (nat-lift l) x)
+    toFrom (inj₁ (nothing , b)) = Prefl
+    toFrom (inj₂ y) = Prefl
+
+    fromTo : ∀ x → from (to x) P≡ x
+    fromTo (add x) = Prefl
+    fromTo (insert Fzero x₁) = Prefl
+    fromTo (insert (Fsuc x) x₁) = Pcong (λ t → insert (Fsuc t) x₁) (getToFrom (nat-lift l) x)
 
 S₂-def₂ : ∀ {l} → S₂ (ℕsuc l) ℕzero ≡ S₂ l ℕzero
-S₂-def₂ {l} = axiom Prefl (mkBij to from)
+S₂-def₂ {l} = axiom Prefl (mkBij to from toFrom fromTo)
   where
     to : SetPartitionK (ℕsuc l) ℕzero → SetPartitionK l ℕzero
     to (add x) = x
+
     from : SetPartitionK l ℕzero → SetPartitionK (ℕsuc l) ℕzero
     from x = add x
+
+    toFrom : ∀ y → to (from y) P≡ y
+    toFrom y = Prefl
+
+    fromTo : ∀ x → from (to x) P≡ x
+    fromTo (add x) = Prefl
 
 ------------------------------------------------------------------------
 -- Set partitions with no consecutive numbers in a part
 
 CS₂-def₁ : ∀ {l r} → CS₂ (ℕsuc l) (ℕsuc r) ≡ (nat l) * CS₂ (ℕsuc l) r + CS₂ l (ℕsuc r)
-CS₂-def₁ {l} {r} = axiom (Pcong (λ x → x ℕ* ℕCS₂ (ℕsuc l) r ℕ+ ℕCS₂ l (ℕsuc r)) (Psym (nat-value l))) (mkBij to from)
+CS₂-def₁ {l} {r} = axiom (Pcong (λ x → x ℕ* ℕCS₂ (ℕsuc l) r ℕ+ ℕCS₂ l (ℕsuc r)) (Psym (nat-value l))) (mkBij to from toFrom fromTo)
   where
     to : lift (CS₂ (ℕsuc l) (ℕsuc r)) → lift ((nat l) * CS₂ (ℕsuc l) r + CS₂ l (ℕsuc r))
     to (add x) = inj₂ x
@@ -130,15 +153,28 @@ CS₂-def₁ {l} {r} = axiom (Pcong (λ x → x ℕ* ℕCS₂ (ℕsuc l) r ℕ+ 
     from (inj₁ (a , b)) = insert (getTo (nat-lift l) a) b
     from (inj₂ y) = add y
 
-    -- TODO: Prove bijectivity
+    toFrom : ∀ y → to (from y) P≡ y
+    toFrom (inj₁ (x₁ , x₂)) = Pcong (λ t → inj₁ (t , x₂)) (getFromTo (nat-lift l) x₁)
+    toFrom (inj₂ y) = Prefl
+
+    fromTo : ∀ x → from (to x) P≡ x
+    fromTo (add x) = Prefl
+    fromTo (insert x x₁) = Pcong (λ t → insert t x₁) (getToFrom (nat-lift l) x)
 
 CS₂-def₂ : ∀ {l} → CS₂ (ℕsuc l) ℕzero ≡ CS₂ l ℕzero
-CS₂-def₂ {l} = axiom Prefl (mkBij to from)
+CS₂-def₂ {l} = axiom Prefl (mkBij to from toFrom fromTo)
   where
     to : CSetPartitionK (ℕsuc l) ℕzero → CSetPartitionK l ℕzero
     to (add x) = x
+
     from : CSetPartitionK l ℕzero → CSetPartitionK (ℕsuc l) ℕzero
     from x = add x
+
+    toFrom : ∀ y → to (from y) P≡ y
+    toFrom y = Prefl
+
+    fromTo : ∀ x → from (to x) P≡ x
+    fromTo (add x) = Prefl
 
 ------------------------------------------------------------------------
 -- K-ary strings

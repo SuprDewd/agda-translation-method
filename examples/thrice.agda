@@ -31,7 +31,7 @@ fin-value (ℕsuc n) rewrite Psym (fin-value n) = Prefl
 
 thrice : ∀ {n} → three * fib (ℕsuc (ℕsuc n)) ≡ fib (ℕsuc (ℕsuc (ℕsuc (ℕsuc n)))) + fib n
 -- thrice {n} rewrite fin-value n = solve 1 (λ x → :three :* :fib (:suc (:suc x)) := :fib (:suc (:suc (:suc (:suc x)))) :+ :fib x) refl (fin n)
-thrice {0} = axiom Prefl (mkBij to from)
+thrice {0} = axiom Prefl (mkBij to from toFrom fromTo)
   where
     to : lift (three * fib 2) → lift (fib 4 + fib 0)
     to (nothing             , [] ∷1 ∷1) = inj₁ ([] ∷1 ∷1 ∷1 ∷1)
@@ -50,7 +50,24 @@ thrice {0} = axiom Prefl (mkBij to from)
     from (inj₁ ([] ∷1 ∷2 ∷1))    = just (just nothing) , [] ∷1 ∷1
     from (inj₂ [])               = just (just nothing) , [] ∷2
 
-thrice {1} = axiom Prefl (mkBij to from)
+    toFrom : ∀ y → to (from y) P≡ y
+    toFrom (inj₁ ([] ∷1 ∷1 ∷1 ∷1)) = Prefl
+    toFrom (inj₁ ([] ∷1 ∷1 ∷2))    = Prefl
+    toFrom (inj₁ ([] ∷2 ∷1 ∷1))    = Prefl
+    toFrom (inj₁ ([] ∷2 ∷2))       = Prefl
+    toFrom (inj₁ ([] ∷1 ∷2 ∷1))    = Prefl
+    toFrom (inj₂ [])               = Prefl
+
+    fromTo : ∀ x → from (to x) P≡ x
+    fromTo (nothing             , [] ∷1 ∷1) = Prefl
+    fromTo (nothing             , [] ∷2)    = Prefl
+    fromTo (just nothing        , [] ∷1 ∷1) = Prefl
+    fromTo (just nothing        , [] ∷2)    = Prefl
+    fromTo (just (just nothing) , [] ∷1 ∷1) = Prefl
+    fromTo (just (just nothing) , [] ∷2)    = Prefl
+    fromTo (just (just (just ())) , _)
+
+thrice {1} = axiom Prefl (mkBij to from toFrom fromTo)
   where
     to : lift (three * fib 3) → lift (fib 5 + fib 1)
     to (nothing             , [] ∷1 ∷1 ∷1) = inj₁ ([] ∷1 ∷1 ∷1 ∷1 ∷1)
@@ -74,6 +91,29 @@ thrice {1} = axiom Prefl (mkBij to from)
     from (inj₁ ([] ∷1 ∷2 ∷1 ∷1))    = just (just nothing) , [] ∷1 ∷1 ∷1
     from (inj₁ ([] ∷1 ∷2 ∷2))       = just (just nothing) , [] ∷1 ∷2
     from (inj₂ ([] ∷1))             = just (just nothing) , [] ∷2 ∷1
+
+    toFrom : ∀ y → to (from y) P≡ y
+    toFrom (inj₁ ([] ∷1 ∷1 ∷1 ∷1 ∷1)) = Prefl
+    toFrom (inj₁ ([] ∷1 ∷1 ∷1 ∷2))    = Prefl
+    toFrom (inj₁ ([] ∷1 ∷1 ∷2 ∷1))    = Prefl
+    toFrom (inj₁ ([] ∷2 ∷1 ∷1 ∷1))    = Prefl
+    toFrom (inj₁ ([] ∷2 ∷1 ∷2))       = Prefl
+    toFrom (inj₁ ([] ∷2 ∷2 ∷1))       = Prefl
+    toFrom (inj₁ ([] ∷1 ∷2 ∷1 ∷1))    = Prefl
+    toFrom (inj₁ ([] ∷1 ∷2 ∷2))       = Prefl
+    toFrom (inj₂ ([] ∷1))             = Prefl
+
+    fromTo : ∀ x → from (to x) P≡ x
+    fromTo (nothing             , [] ∷1 ∷1 ∷1) = Prefl
+    fromTo (nothing             , [] ∷1 ∷2)    = Prefl
+    fromTo (nothing             , [] ∷2 ∷1)    = Prefl
+    fromTo (just nothing        , [] ∷1 ∷1 ∷1) = Prefl
+    fromTo (just nothing        , [] ∷1 ∷2)    = Prefl
+    fromTo (just nothing        , [] ∷2 ∷1)    = Prefl
+    fromTo (just (just nothing) , [] ∷1 ∷1 ∷1) = Prefl
+    fromTo (just (just nothing) , [] ∷1 ∷2)    = Prefl
+    fromTo (just (just nothing) , [] ∷2 ∷1)    = Prefl
+    fromTo (just (just (just ())) , _)
 
 thrice {ℕsuc (ℕsuc n)} = -- rewrite fin-value n = solve 1 (λ x → :three :* :fib (:suc (:suc (:suc (:suc x)))) := :fib (:suc (:suc (:suc (:suc (:suc (:suc x)))))) :+ :fib (:suc (:suc x))) refl (fin n)
   begin

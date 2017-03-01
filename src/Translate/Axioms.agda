@@ -44,7 +44,7 @@ open import Translate.Types
 open import Translate.Semiring
 
 +-assoc : ∀ {a b c} → (a + b) + c ≡ a + (b + c)
-+-assoc {a} {b} {c} = axiom (NPS.+-assoc (value a) (value b) (value c)) (mkBij to from)
++-assoc {a} {b} {c} = axiom (NPS.+-assoc (value a) (value b) (value c)) (mkBij to from toFrom fromTo)
   where
     -- TODO: is it cleaner to have these as lambdas?
     to : lift ((a + b) + c) → lift (a + (b + c))
@@ -57,8 +57,18 @@ open import Translate.Semiring
     from (inj₂ (inj₁ x)) = inj₁ (inj₂ x)
     from (inj₂ (inj₂ x)) = inj₂ x
 
+    toFrom : ∀ y → to (from y) P≡ y
+    toFrom (inj₁ x) = Prefl
+    toFrom (inj₂ (inj₁ x)) = Prefl
+    toFrom (inj₂ (inj₂ y)) = Prefl
+
+    fromTo : ∀ x → from (to x) P≡ x
+    fromTo (inj₁ (inj₁ x)) = Prefl
+    fromTo (inj₁ (inj₂ y)) = Prefl
+    fromTo (inj₂ y) = Prefl
+
 +-right-identity : ∀ {a} → a + zero ≡ a
-+-right-identity {a} = axiom (NPS.+-right-identity (value a)) (mkBij to from)
++-right-identity {a} = axiom (NPS.+-right-identity (value a)) (mkBij to from toFrom fromTo)
   where
     to : lift (a + zero) → lift a
     to (inj₁ x) = x
@@ -67,8 +77,15 @@ open import Translate.Semiring
     from : lift a → lift (a + zero)
     from x = inj₁ x
 
+    toFrom : ∀ y → to (from y) P≡ y
+    toFrom y = Prefl
+
+    fromTo : ∀ x → from (to x) P≡ x
+    fromTo (inj₁ x) = Prefl
+    fromTo (inj₂ ())
+
 +-suc : ∀ {a b} → a + suc b ≡ suc (a + b)
-+-suc {a} {b} = axiom (NPS.+-suc (value a) (value b)) (mkBij to from)
++-suc {a} {b} = axiom (NPS.+-suc (value a) (value b)) (mkBij to from toFrom fromTo)
   where
     to : lift (a + suc b) → lift (suc (a + b))
     to (inj₁ x) = just (inj₁ x)
@@ -80,8 +97,18 @@ open import Translate.Semiring
     from (just (inj₁ x)) = inj₁ x
     from (just (inj₂ x)) = inj₂ (just x)
 
+    toFrom : ∀ y → to (from y) P≡ y
+    toFrom (just (inj₁ x)) = Prefl
+    toFrom (just (inj₂ y)) = Prefl
+    toFrom nothing = Prefl
+
+    fromTo : ∀ x → from (to x) P≡ x
+    fromTo (inj₁ x) = Prefl
+    fromTo (inj₂ (just x)) = Prefl
+    fromTo (inj₂ nothing) = Prefl
+
 +-comm : ∀ {a b} → a + b ≡ b + a
-+-comm {a} {b} = axiom (NPS.+-comm (value a) (value b)) (mkBij to from)
++-comm {a} {b} = axiom (NPS.+-comm (value a) (value b)) (mkBij to from toFrom fromTo)
   where
     to : lift (a + b) → lift (b + a)
     to (inj₁ x) = inj₂ x
@@ -91,8 +118,16 @@ open import Translate.Semiring
     from (inj₁ x) = inj₂ x
     from (inj₂ x) = inj₁ x
 
+    toFrom : ∀ y → to (from y) P≡ y
+    toFrom (inj₁ x) = Prefl
+    toFrom (inj₂ y) = Prefl
+
+    fromTo : ∀ x → from (to x) P≡ x
+    fromTo (inj₁ x) = Prefl
+    fromTo (inj₂ y) = Prefl
+
 +-*-suc : ∀ {a b} → a * suc b ≡ a + a * b
-+-*-suc {a} {b} = axiom (NPS.+-*-suc (value a) (value b)) (mkBij to from)
++-*-suc {a} {b} = axiom (NPS.+-*-suc (value a) (value b)) (mkBij to from toFrom fromTo)
   where
     to : lift (a * suc b) → lift (a + a * b)
     to (l , nothing) = inj₁ l
@@ -102,8 +137,16 @@ open import Translate.Semiring
     from (inj₁ l) = l , nothing
     from (inj₂ (l , r)) = l , (just r)
 
+    toFrom : ∀ y → to (from y) P≡ y
+    toFrom (inj₁ x) = Prefl
+    toFrom (inj₂ (l , r)) = Prefl
+
+    fromTo : ∀ x → from (to x) P≡ x
+    fromTo (l , just x) = Prefl
+    fromTo (l , nothing) = Prefl
+
 *-right-zero : ∀ {a} → a * zero ≡ zero
-*-right-zero {a} = axiom (NPS.*-right-zero (value a)) (mkBij to from)
+*-right-zero {a} = axiom (NPS.*-right-zero (value a)) (mkBij to from toFrom fromTo)
   where
     to : lift (a * zero) → lift zero
     to (l , ())
@@ -111,8 +154,14 @@ open import Translate.Semiring
     from : lift zero → lift (a * zero)
     from ()
 
+    toFrom : ∀ y → to (from y) P≡ y
+    toFrom ()
+
+    fromTo : ∀ x → from (to x) P≡ x
+    fromTo (l , ())
+
 *-right-identity : ∀ {a} → a * suc zero ≡ a
-*-right-identity {a} = axiom NP.*-right-identity (mkBij to from)
+*-right-identity {a} = axiom NP.*-right-identity (mkBij to from toFrom fromTo)
   where
     to : lift (a * suc zero) → lift a
     to (l , nothing) = l
@@ -121,8 +170,15 @@ open import Translate.Semiring
     from : lift a → lift (a * suc zero)
     from l = (l , nothing)
 
+    toFrom : ∀ y → to (from y) P≡ y
+    toFrom y = Prefl
+
+    fromTo : ∀ x → from (to x) P≡ x
+    fromTo (l , just ())
+    fromTo (l , nothing) = Prefl
+
 *-comm : ∀ {a b} → a * b ≡ b * a
-*-comm {a} {b} = axiom (NPS.*-comm (value a) (value b)) (mkBij to from)
+*-comm {a} {b} = axiom (NPS.*-comm (value a) (value b)) (mkBij to from toFrom fromTo)
   where
     to : lift (a * b) → lift (b * a)
     to (l , r) = r , l
@@ -130,8 +186,14 @@ open import Translate.Semiring
     from : lift (b * a) → lift (a * b)
     from (l , r) = r , l
 
+    toFrom : ∀ y → to (from y) P≡ y
+    toFrom (l , r) = Prefl
+
+    fromTo : ∀ x → from (to x) P≡ x
+    fromTo (l , r) = Prefl
+
 distribʳ-*-+ : ∀ {a b c} → (b + c) * a ≡ b * a + c * a
-distribʳ-*-+ {a} {b} {c} = axiom (NPS.distribʳ-*-+ (value a) (value b) (value c)) (mkBij to from)
+distribʳ-*-+ {a} {b} {c} = axiom (NPS.distribʳ-*-+ (value a) (value b) (value c)) (mkBij to from toFrom fromTo)
   where
     to : lift ((b + c) * a) → lift (b * a + c * a)
     to ((inj₁ l) , r) = inj₁ (l , r)
@@ -141,8 +203,16 @@ distribʳ-*-+ {a} {b} {c} = axiom (NPS.distribʳ-*-+ (value a) (value b) (value 
     from (inj₁ (l , r)) = (inj₁ l) , r
     from (inj₂ (l , r)) = (inj₂ l) , r
 
+    toFrom : ∀ y → to (from y) P≡ y
+    toFrom (inj₁ (l , r)) = Prefl
+    toFrom (inj₂ (l , r)) = Prefl
+
+    fromTo : ∀ x → from (to x) P≡ x
+    fromTo (inj₁ x , r) = Prefl
+    fromTo (inj₂ y , r) = Prefl
+
 distribˡ-*-+ : ∀ {a b c} → a * (b + c) ≡ a * b + a * c
-distribˡ-*-+ {a} {b} {c} = axiom (NP.distribˡ-*-+ (value a) (value b) (value c)) (mkBij to from)
+distribˡ-*-+ {a} {b} {c} = axiom (NP.distribˡ-*-+ (value a) (value b) (value c)) (mkBij to from toFrom fromTo)
   where
     to : lift (a * (b + c)) → lift (a * b + a * c)
     to (l , (inj₁ r)) = inj₁ (l , r)
@@ -152,14 +222,28 @@ distribˡ-*-+ {a} {b} {c} = axiom (NP.distribˡ-*-+ (value a) (value b) (value c
     from (inj₁ (l , r)) = l , (inj₁ r)
     from (inj₂ (l , r)) = l , (inj₂ r)
 
+    toFrom : ∀ y → to (from y) P≡ y
+    toFrom (inj₁ (l , r)) = Prefl
+    toFrom (inj₂ (l , r)) = Prefl
+
+    fromTo : ∀ x → from (to x) P≡ x
+    fromTo (l , inj₁ x) = Prefl
+    fromTo (l , inj₂ y) = Prefl
+
 *-assoc : ∀ {a b c} → (a * b) * c ≡ a * (b * c)
-*-assoc {a} {b} {c} = axiom (NPS.*-assoc (value a) (value b) (value c)) (mkBij to from)
+*-assoc {a} {b} {c} = axiom (NPS.*-assoc (value a) (value b) (value c)) (mkBij to from toFrom fromTo)
   where
     to : lift ((a * b) * c) → lift (a * (b * c))
     to ((x , y) , z) = x , (y , z)
 
     from : lift (a * (b * c)) → lift ((a * b) * c)
     from (x , (y , z)) = (x , y) , z
+
+    toFrom : ∀ y → to (from y) P≡ y
+    toFrom (a , b , c) = Prefl
+
+    fromTo : ∀ x → from (to x) P≡ x
+    fromTo ((a , b) , c) = Prefl
 
 +-cong : ∀ {a b c d} → a ≡ b → c ≡ d → a + c ≡ b + d
 +-cong {a} {b} {c} {d} a≡b c≡d
@@ -170,7 +254,7 @@ distribˡ-*-+ {a} {b} {c} = axiom (NP.distribˡ-*-+ (value a) (value b) (value c
           → value c P≡ value d
           → lift c B≡ lift d
           → a + c ≡ b + d
-    lemma a≡b (mkBij a→b b→a) c≡d (mkBij c→d d→c) = axiom prf (mkBij to from)
+    lemma a≡b (mkBij a→b b→a toFrom₁ fromTo₁) c≡d (mkBij c→d d→c toFrom₂ fromTo₂) = axiom prf (mkBij to from toFrom fromTo)
       where
         prf : value (a + c) P≡ value (b + d)
         prf = Ptrans (Pcong (λ y → y ℕ+ value c) a≡b) (Pcong (λ y → value b ℕ+ y) c≡d)
@@ -183,6 +267,14 @@ distribˡ-*-+ {a} {b} {c} = axiom (NP.distribˡ-*-+ (value a) (value b) (value c
         from (inj₁ x) = inj₁ (b→a x)
         from (inj₂ x) = inj₂ (d→c x)
 
+        toFrom : ∀ y → to (from y) P≡ y
+        toFrom (inj₁ x) = Pcong inj₁ (toFrom₁ x)
+        toFrom (inj₂ y) = Pcong inj₂ (toFrom₂ y)
+
+        fromTo : ∀ x → from (to x) P≡ x
+        fromTo (inj₁ x) = Pcong inj₁ (fromTo₁ x)
+        fromTo (inj₂ y) = Pcong inj₂ (fromTo₂ y)
+
 *-cong : ∀ {a b c d} → a ≡ b → c ≡ d → a * c ≡ b * d
 *-cong {a} {b} {c} {d} a≡b c≡d
   = lemma (toEquality a≡b) (toBijection a≡b) (toEquality c≡d) (toBijection c≡d)
@@ -192,7 +284,7 @@ distribˡ-*-+ {a} {b} {c} = axiom (NP.distribˡ-*-+ (value a) (value b) (value c
           → value c P≡ value d
           → lift c B≡ lift d
           → a * c ≡ b * d
-    lemma a≡b (mkBij a→b b→a) c≡d (mkBij c→d d→c) = axiom prf (mkBij to from)
+    lemma a≡b (mkBij a→b b→a toFrom₁ fromTo₁) c≡d (mkBij c→d d→c toFrom₂ fromTo₂) = axiom prf (mkBij to from toFrom fromTo)
       where
         prf : value (a * c) P≡ value (b * d)
         prf = Ptrans (Pcong (λ y → y ℕ* value c) a≡b) (Pcong (λ y → value b ℕ* y) c≡d)
@@ -202,6 +294,12 @@ distribˡ-*-+ {a} {b} {c} = axiom (NP.distribˡ-*-+ (value a) (value b) (value c
 
         from : lift (b * d) → lift (a * c)
         from (x , y) = (b→a x) , (d→c y)
+
+        toFrom : ∀ y → to (from y) P≡ y
+        toFrom (l , r) = Ptrans (Pcong (λ t → (t , c→d (d→c r))) (toFrom₁ l)) (Pcong (λ t → (l , t)) (toFrom₂ r))
+
+        fromTo : ∀ x → from (to x) P≡ x
+        fromTo (l , r) = Ptrans (Pcong (λ t → (t , d→c (c→d r))) (fromTo₁ l)) (Pcong (λ t → (l , t)) (fromTo₂ r))
 
 ------------------------------------------------------------------------
 -- Cancellation
@@ -213,11 +311,34 @@ module AltIter where
           → lift c B≡ lift d
           → lift (a + c)
           → lift b
-  alt-iter {a} {b} {c} {d} (mkBij a+c→b+d b+d→a+c) (mkBij c→d d→c) x with a+c→b+d x
+  alt-iter {a} {b} {c} {d} (mkBij a+c→b+d b+d→a+c toFrom fromTo) (mkBij c→d d→c toFrom₂ fromTo₂) x with a+c→b+d x
   ... | inj₁ y = y
-  ... | inj₂ y = alt-iter {a} {b} {c} {d} (mkBij a+c→b+d b+d→a+c) (mkBij c→d d→c) (inj₂ (d→c y))
+  ... | inj₂ y = alt-iter {a} {b} {c} {d} (mkBij a+c→b+d b+d→a+c toFrom fromTo) (mkBij c→d d→c toFrom₂ fromTo₂) (inj₂ (d→c y))
+
+
+  -- alt-iter-to : ∀ {a b c d}
+  --             → (bij₁ : (lift a ⊎ lift c) B≡ (lift b ⊎ lift d))
+  --             → (bij₂ : lift c B≡ lift d)
+  --             → (y : lift b)
+  --             → alt-iter {a} {b} {c} {d} bij₁ bij₂ (inj₁ (alt-iter {b} {a} {d} {c} (Bsym bij₁) (Bsym bij₂) (inj₁ y))) P≡ y
+  -- alt-iter-to {a} {b} {c} {d} (mkBij a+c→b+d b+d→a+c toFrom fromTo) (mkBij c→d d→c toFrom₂ fromTo₂) y with a+c→b+d y
+  -- ... | inj₁ y = ?
+  -- ... | inj₂ y = ?
+
+  -- alt-iter-from : ∀ {a b c d}
+  --               → (bij₁ : (lift a ⊎ lift c) B≡ (lift b ⊎ lift d))
+  --               → (bij₂ : lift c B≡ lift d)
+  --               → (x : lift a)
+  --               → alt-iter {b} {a} {d} {c} (Bsym bij₁) (Bsym bij₂) (inj₁ (alt-iter {a} {b} {c} {d} bij₁ bij₂ (inj₁ x))) P≡ x
+  -- alt-iter-from {a} {b} {c} {d} (mkBij a+c→b+d b+d→a+c toFrom fromTo) (mkBij c→d d→c toFrom₂ fromTo₂) x with a+c→b+d (inj₁ x)
+  -- alt-iter-from {a} {b} {c} {d} (mkBij a+c→b+d b+d→a+c toFrom fromTo) (mkBij c→d d→c toFrom₂ fromTo₂) x | inj₁ y with b+d→a+c (inj₁ y)
+  -- alt-iter-from {a} {b} {c} {d} (mkBij a+c→b+d b+d→a+c toFrom fromTo) (mkBij c→d d→c toFrom₂ fromTo₂) x | inj₁ y | (inj₁ y₁) = {!!}
+  -- alt-iter-from {a} {b} {c} {d} (mkBij a+c→b+d b+d→a+c toFrom fromTo) (mkBij c→d d→c toFrom₂ fromTo₂) x | inj₁ y | (inj₂ y₁) = {!!}
+  -- alt-iter-from {a} {b} {c} {d} (mkBij a+c→b+d b+d→a+c toFrom fromTo) (mkBij c→d d→c toFrom₂ fromTo₂) x | inj₂ y = {!!}
 
 open AltIter
+-- XXX: Don't use TrustMe!
+import Relation.Binary.PropositionalEquality.TrustMe
 
 -- TODO: Rename this to something related to subtraction
 cancel : ∀ {a b c d} → a + c ≡ b + d → c ≡ d → a ≡ b
@@ -228,13 +349,19 @@ cancel {a} {b} {c} {d} a+c≡b+d c≡d = lemma (toEquality a+c≡b+d) (toEqualit
           → lift (a + c) B≡ lift (b + d)
           → lift c B≡ lift d
           → a ≡ b
-    lemma p₁ p₂ bij₁ bij₂ = axiom (NP.+-cancel (value a) (value b) (value c) (value d) p₁ p₂) (mkBij to' from')
+    lemma p₁ p₂ bij₁ bij₂ = axiom (NP.+-cancel (value a) (value b) (value c) (value d) p₁ p₂) (mkBij to' from' toFrom' fromTo')
       where
         to' : lift a → lift b
         to' x = alt-iter {a} {b} {c} {d} bij₁ bij₂ (inj₁ x)
 
         from' : lift b → lift a
         from' x = alt-iter {b} {a} {d} {c} (Bsym bij₁) (Bsym bij₂) (inj₁ x)
+
+        toFrom' : ∀ y → to' (from' y) P≡ y
+        toFrom' y = Relation.Binary.PropositionalEquality.TrustMe.trustMe -- alt-iter-to {a} {b} {c} {d} bij₁ bij₂ y
+
+        fromTo' : ∀ x → from' (to' x) P≡ x
+        fromTo' x = Relation.Binary.PropositionalEquality.TrustMe.trustMe -- alt-iter-from {a} {b} {c} {d} bij₁ bij₂ x
 
 -- TODO: Implement rest of cancellation algorithms
 

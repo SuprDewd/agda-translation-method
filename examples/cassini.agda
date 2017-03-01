@@ -53,7 +53,7 @@ mutual
 
   cassini-odd : ∀ k → fib (2 ℕ* k ℕ+ 2) * fib (2 ℕ* k)
                     ≡ fib (2 ℕ* k ℕ+ 1) * fib (2 ℕ* k ℕ+ 1) + one
-  cassini-odd ℕzero = axiom Prefl (mkBij to from)
+  cassini-odd ℕzero = axiom Prefl (mkBij to from toFrom fromTo)
     where
       -- TODO: There are two possible base cases. Try both of them?
       to : (FibStr 2 × FibStr 0) → (FibStr 1 × FibStr 1 ⊎ Maybe ⊥)
@@ -68,6 +68,15 @@ mutual
       from (inj₂ nothing) = ([] ∷2) , []
       from (inj₁ (([] ∷1) , ([] ∷1))) = ([] ∷1 ∷1) , []
       from (inj₂ (just ()))
+
+      toFrom : ∀ y → to (from y) P≡ y
+      toFrom (inj₁ (([] ∷1) , ([] ∷1))) = Prefl
+      toFrom (inj₂ (just ()))
+      toFrom (inj₂ nothing) = Prefl
+
+      fromTo : ∀ x → from (to x) P≡ x
+      fromTo ((([] ∷1) ∷1) , []) = Prefl
+      fromTo (([] ∷2) , []) = Prefl
 
   cassini-odd (ℕsuc k) =
     begin

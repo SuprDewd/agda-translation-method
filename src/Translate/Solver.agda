@@ -39,7 +39,7 @@ infixl 5 _C+_
 private
 
   suc-distrib : ∀ {x} → suc x ≡ suc zero + x
-  suc-distrib {x} = axiom Prefl (mkBij to from)
+  suc-distrib {x} = axiom Prefl (mkBij to from toFrom fromTo)
     where
       to : lift (suc x) → lift (suc zero + x)
       to (just y) = inj₂ y
@@ -50,8 +50,17 @@ private
       from (inj₁ nothing) = nothing
       from (inj₂ y) = just y
 
+      toFrom : ∀ y → to (from y) P≡ y
+      toFrom (inj₁ (just ()))
+      toFrom (inj₁ nothing) = Prefl
+      toFrom (inj₂ y) = Prefl
+
+      fromTo : ∀ x → from (to x) P≡ x
+      fromTo (just x₁) = Prefl
+      fromTo nothing = Prefl
+
   suc-pull : ∀ {a b} → suc a + b ≡ suc (a + b)
-  suc-pull {a} {b} = axiom Prefl (mkBij to from)
+  suc-pull {a} {b} = axiom Prefl (mkBij to from toFrom fromTo)
     where
       to : lift (suc a + b) → lift (suc (a + b))
       to (inj₁ (just x)) = just (inj₁ x)
@@ -63,9 +72,19 @@ private
       from nothing = inj₁ nothing
       from (just (inj₂ y)) = inj₂ y
 
+      toFrom : ∀ y → to (from y) P≡ y
+      toFrom (just (inj₁ x)) = Prefl
+      toFrom (just (inj₂ y)) = Prefl
+      toFrom nothing = Prefl
+
+      fromTo : ∀ x → from (to x) P≡ x
+      fromTo (inj₁ (just x)) = Prefl
+      fromTo (inj₁ nothing) = Prefl
+      fromTo (inj₂ y) = Prefl
+
   suc-cong : ∀ {a b} → a ≡ b → suc a ≡ suc b
   suc-cong p with (toEquality p) | (toBijection p)
-  suc-cong {a} {b} p | q | mkBij t f = axiom (Pcong (λ x → ℕsuc x) q) (mkBij to from)
+  suc-cong {a} {b} p | q | mkBij t f tf ft = axiom (Pcong (λ x → ℕsuc x) q) (mkBij to from toFrom fromTo)
     where
       to : lift (suc a) → lift (suc b)
       to (just x) = just (t x)
@@ -75,8 +94,16 @@ private
       from (just x) = just (f x)
       from nothing = nothing
 
+      toFrom : ∀ y → to (from y) P≡ y
+      toFrom (just x) = Pcong just (tf x)
+      toFrom nothing = Prefl
+
+      fromTo : ∀ x → from (to x) P≡ x
+      fromTo (just x) = Pcong just (ft x)
+      fromTo nothing = Prefl
+
   suc-* : ∀ {a b} → suc a * b ≡ b + a * b
-  suc-* {a} {b} = axiom Prefl (mkBij to from)
+  suc-* {a} {b} = axiom Prefl (mkBij to from toFrom fromTo)
     where
       to : lift (suc a * b) → lift (b + a * b)
       to (just x , y) = inj₂ (x , y)
@@ -85,6 +112,14 @@ private
       from : lift (b + a * b) → lift (suc a * b)
       from (inj₁ y) = nothing , y
       from (inj₂ (x , y)) = just x , y
+
+      toFrom : ∀ y → to (from y) P≡ y
+      toFrom (inj₁ x) = Prefl
+      toFrom (inj₂ (x , y)) = Prefl
+
+      fromTo : ∀ x → from (to x) P≡ x
+      fromTo (just x , y) = Prefl
+      fromTo (nothing , y) = Prefl
 
 ------------------------------------------------------------------------
 -- Expansion by distributivity

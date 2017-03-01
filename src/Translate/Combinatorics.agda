@@ -102,7 +102,7 @@ S₂-def₁ {l} {r} = axiom (Pcong (λ x → ℕS₂ (ℕsuc l) r ℕ+ x ℕ* �
     to (insert (Fsuc x) x₁) = inj₁ (just (getFrom (nat-lift l) x) , x₁)
 
     from : lift ((nat (ℕsuc l)) * S₂ (ℕsuc l) r + S₂ l (ℕsuc r)) → lift (S₂ (ℕsuc l) (ℕsuc r))
-    from (inj₁ (just x , b)) = insert (F.inject₁ (getTo (nat-lift l) x)) b
+    from (inj₁ (just x , b)) = insert (Fsuc (getTo (nat-lift l) x)) b
     from (inj₁ (nothing , b)) = insert Fzero b
     from (inj₂ y) = add y
 

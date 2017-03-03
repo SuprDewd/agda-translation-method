@@ -14,11 +14,13 @@ import Data.Nat.Properties.Simple as NPS
 
 open import Data.Product
 
+open import Relation.Nullary
 
 import Level
 open import Relation.Binary
 import Data.List as L
 open import Data.List.Any as Any using (here; there)
+open import Data.Empty
 
 -- open import Data.List.Any.Membership
 
@@ -157,12 +159,12 @@ module InvolutionPrinciple
   bijective (mkBij to₁ from₁ toFrom₁ fromTo₁) (mkBij to₂ from₂ toFrom₂ fromTo₂) x y z (step p₁ p₂ p) (done q) with Ptrans (Psym p₁) q
   ... | ()
 
-  module Run2 (A : Set) (_A≟_ : (x y : A) → Dec (x P≡ y))
+  module Run2 (A : Set)
               (B : Set) (_B≟_ : (x y : B) → Dec (x P≡ y))
               (C : Set)
-              (D : Set)
-              (counted : List A)
-              (ex-counted : ex-counted-tp A counted) -- (x : A) → x ∈ counted
+              (D : Set) (_D≟_ : (x y : D) → Dec (x P≡ y))
+              (counted : List D)
+              (ex-counted : ex-counted-tp D counted) -- (x : D) → x ∈ counted
               (b₁ : (A ⊎ B) B≡ (C ⊎ D))
               (b₂ : B B≡ D)
               where
@@ -172,36 +174,87 @@ module InvolutionPrinciple
     -- open Setoid CS using () renaming (Carrier to C)
     -- open Setoid DS using () renaming (Carrier to D)
 
-    private
-      decEqA⊎B : (x : A ⊎ B) → (y : A ⊎ B) → Dec (x P≡ y)
-      decEqA⊎B (inj₁ x) (inj₁ x₁) with x A≟ x₁
-      decEqA⊎B (inj₁ x) (inj₁ .x) | yes Prefl = yes Prefl
-      decEqA⊎B (inj₁ x) (inj₁ x₁) | no ¬p = no (λ x₂ → ¬p (inj₁-inj x₂))
-      decEqA⊎B (inj₁ x) (inj₂ y) = no (λ())
-      decEqA⊎B (inj₂ y) (inj₁ x) = no (λ())
-      decEqA⊎B (inj₂ y) (inj₂ y₁) with y B≟ y₁
-      decEqA⊎B (inj₂ y) (inj₂ .y) | yes Prefl = yes Prefl
-      decEqA⊎B (inj₂ y) (inj₂ y₁) | no ¬p = no (λ x → ¬p (inj₂-inj x))
+    -- private
+    --   decEqA⊎B : (x : A ⊎ B) → (y : A ⊎ B) → Dec (x P≡ y)
+    --   decEqA⊎B (inj₁ x) (inj₁ x₁) with x A≟ x₁
+    --   decEqA⊎B (inj₁ x) (inj₁ .x) | yes Prefl = yes Prefl
+    --   decEqA⊎B (inj₁ x) (inj₁ x₁) | no ¬p = no (λ x₂ → ¬p (inj₁-inj x₂))
+    --   decEqA⊎B (inj₁ x) (inj₂ y) = no (λ())
+    --   decEqA⊎B (inj₂ y) (inj₁ x) = no (λ())
+    --   decEqA⊎B (inj₂ y) (inj₂ y₁) with y B≟ y₁
+    --   decEqA⊎B (inj₂ y) (inj₂ .y) | yes Prefl = yes Prefl
+    --   decEqA⊎B (inj₂ y) (inj₂ y₁) | no ¬p = no (λ x → ¬p (inj₂-inj x))
 
-    open import Data.List.Countdown (record { Carrier = A ⊎ B
-                                            ; _≈_ = λ x x₁ → x P≡ x₁
+    open import Data.List.Countdown (record { Carrier = D
+                                            ; _≈_ = _P≡_
                                             ; isDecEquivalence = record { isEquivalence = record { refl = Prefl
                                                                                                  ; sym = Psym
                                                                                                  ; trans = Ptrans
                                                                                                  }
-                                                                        ; _≟_ = decEqA⊎B
+                                                                        ; _≟_ = _D≟_
                                                                         }
-                                            }) as Cnt
+                                            }) as CntD
+    open Any.Membership (record { Carrier = D
+                                ; _≈_ = _P≡_
+                                ; isEquivalence = record { refl = Prefl ; sym = Psym ; trans = Ptrans }
+                                }) using () renaming (_∈_ to _D∈_)
+    open import Data.List.Countdown (record { Carrier = B
+                                            ; _≈_ = _P≡_
+                                            ; isDecEquivalence = record { isEquivalence = record { refl = Prefl
+                                                                                                 ; sym = Psym
+                                                                                                 ; trans = Ptrans
+                                                                                                 }
+                                                                        ; _≟_ = _B≟_
+                                                                        }
+                                            }) as CntB
+    open Any.Membership (record { Carrier = B
+                                ; _≈_ = _P≡_
+                                ; isEquivalence = record { refl = Prefl ; sym = Psym ; trans = Ptrans }
+                                }) using () renaming (_∈_ to _B∈_)
 
-    {-# NON_TERMINATING #-}
-    run2 : ∀ {n} → (xs : List (A ⊎ B)) → xs ⊕ n → (x : A ⊎ B) → Σ C (λ y → [ b₁ ∧ b₂ ⊨ x ⇒ y ])
-    run2 {ℕzero} xs cnt x = {!!}
-    run2 {ℕsuc n} xs cnt x with lookup cnt x
-    run2 {ℕsuc n} xs cnt x | yes p = {!!}
-    run2 {ℕsuc n} xs cnt x | no ¬p with apply-with-proof (getTo b₁) x
-    run2 {ℕsuc n} xs cnt x | no ¬p | inj₁ y , yp = y , done yp
-    run2 {ℕsuc n} xs cnt x | no ¬p | inj₂ y , yp with run2 (x L∷ xs) (Cnt.insert cnt x ¬p) (inj₂ (getFrom b₂ y))
-    run2 {ℕsuc n} xs cnt x | no ¬p | inj₂ y , yp | (z , zp) = z , step yp Prefl zp
+    lemmaB : ∀ x x' xs → ¬ x B∈ xs → x' B∈ xs → ¬ x P≡ x'
+    lemmaB x x' (x₁ L∷ xs) x∉xs (here x'≡x₁) = λ x≡x' → x∉xs (here (Ptrans x≡x' x'≡x₁))
+    lemmaB x x' (x₁ L∷ xs) x∉xs (there x'∈xs) = lemmaB x x' xs (λ p → x∉xs (there p)) x'∈xs
+
+    -- {-# NON_TERMINATING #-}
+    run2 : ∀ {m n} → (xs : List B)
+                   → (ys : List D)
+                   → ((x' : B) → x' B∈ xs → Σ D (λ y' → getFrom b₂ y' P≡ x' × y' D∈ ys))
+                   → ((y' : D) → y' D∈ ys → Σ B (λ x' → getTo b₁ (inj₂ x') P≡ (inj₂ y') × x' B∈ xs))
+                   → xs CntB.⊕ m
+                   → ys CntD.⊕ n
+                   → (x : B)
+                   → ¬ x B∈ xs
+                   → Σ C (λ y → [ b₁ ∧ b₂ ⊨ inj₂ x ⇒ y ])
+    run2 {m} {ℕzero}  xs ys preB preD cntB cntD x x∉xs = {!!}
+    run2 {m} {ℕsuc n} xs ys preB preD cntB cntD x x∉xs with apply-with-proof (getTo b₁) (inj₂ x)
+    run2 {m} {ℕsuc n} xs ys preB preD cntB cntD x x∉xs | inj₁ y , x↦y = y , done x↦y
+    run2 {m} {ℕsuc n} xs ys preB preD cntB cntD x x∉xs | inj₂ y , x↦y with CntD.lookup cntD y
+    run2 {m} {ℕsuc n} xs ys preB preD cntB cntD x x∉xs | inj₂ y , x↦y | yes y∈ys with preD y y∈ys
+    run2 {m} {ℕsuc n} xs ys preB preD cntB cntD x x∉xs | inj₂ y , x↦y | yes y∈ys | (x' , x'↦y , x'∈xs) =
+         let x≠x' = lemmaB x x' xs x∉xs x'∈xs
+             x≡x' = inj₂-inj (begin
+                        inj₂ x
+                      ≡⟨ Psym (getFromTo b₁ (inj₂ x)) ⟩
+                        getFrom b₁ (getTo b₁ (inj₂ x))
+                      ≡⟨ Pcong (getFrom b₁) (Ptrans x↦y (Psym x'↦y)) ⟩
+                        getFrom b₁ (getTo b₁ (inj₂ x'))
+                      ≡⟨ getFromTo b₁ (inj₂ x') ⟩
+                        inj₂ x'
+                      ∎)
+         in ⊥-elim (x≠x' x≡x')
+
+    run2 {m} {ℕsuc n} xs ys preB preD cntB cntD x x∉xs | inj₂ y , x↦y | no y∉ys with CntB.lookup cntB (getFrom b₂ y)
+    run2 {m} {ℕsuc n} xs ys preB preD cntB cntD x x∉xs | inj₂ y , x↦y | no y∉ys | yes x'∈xs = {!!}
+    run2 {m} {ℕsuc n} xs ys preB preD cntB cntD x x∉xs | inj₂ y , x↦y | no y∉ys | no  x'∉xs
+      with run2 (x L∷ xs) (y L∷ ys) (λ { .x (here Prefl) → y , {!!}
+                                       ; x₁ (there x₁∈xs) → {!!}
+                                       }) {!!} {!!} {!!} {!!} {!!}
+    ... | res = {!!}
+    --                with run2 xs preB cntB (y L∷ ys) (λ { _ (here Prefl) → x , x↦y
+    --                                                        ; y' (there p) → preD y' p
+    --                                                        }) (CntD.insert cntD y ¬p) (inj₂ (getFrom b₂ y))
+    -- run2 {m} {ℕsuc n} xs preB cntB ys preD cntD x | inj₂ y , x↦y | no ¬p | (z , zp) = z , step x↦y Prefl zp
 
   -- XXX: Should this be TERMINATING?
   -- TODO: Use that "decreasing" datatype to show that this is terminating

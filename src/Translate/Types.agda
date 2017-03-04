@@ -7,7 +7,8 @@ open import Coinduction
 open import Data.String
   using (String; _++_; toList)
 import Data.List as L
-import Data.List.Any
+open import Data.List.Any
+open Data.List.Any.Membership-≡
 import Data.Vec as V
 import Data.Fin as F
 open import Data.Char using (Char)
@@ -52,6 +53,19 @@ private
   equalFin Fzero Fzero = true
   equalFin (Fsuc a) (Fsuc b) = equalFin a b
   equalFin _ _ = false
+
+  ∈++ˡ : ∀  {S : Set} {A B : List S}{x : S} → x ∈ A → x ∈ (A L.++ B)
+  ∈++ˡ (here p) = here p
+  ∈++ˡ (there p) = there (∈++ˡ p)
+
+  ∈++ʳ : ∀ {S : Set} {A B : List S} {x : S} → x ∈ B → x ∈ (A L.++ B)
+  ∈++ʳ {S} {L[]} (here p) = here p
+  ∈++ʳ {S} {L[]} (there p) = there (∈++ʳ {S} {L[]} p)
+  ∈++ʳ {S} {x L∷ A} p = there (∈++ʳ {S} {A} p)
+
+  ∈map : ∀ {A B : Set} {x : A} {xs : List A} {f : A → B} → x ∈ xs → f x ∈ L.map f xs
+  ∈map {A} {B} {x} {xs} {f} (here p) = here (Pcong f p)
+  ∈map (there p) = there (∈map p)
 
 -- mutual
 
@@ -173,21 +187,28 @@ data FibStr : ℕ → Set where
   _∷1 : ∀ {n} → FibStr n → FibStr (ℕsuc n)
   _∷2 : ∀ {n} → FibStr n → FibStr (ℕsuc (ℕsuc n))
 
-showFibStr : ∀ {n} → FibStr n → String
-showFibStr [] = "[]"
-showFibStr (x ∷1) = showFibStr x ++ " ∷1"
-showFibStr (x ∷2) = showFibStr x ++ " ∷2"
+module FibStrExpr where
 
-generateFibStr : ∀ {n} → List (FibStr n)
-generateFibStr {ℕzero} = [] L∷ L[]
-generateFibStr {ℕsuc ℕzero} = ([] ∷1) L∷ L[]
-generateFibStr {ℕsuc (ℕsuc n)} = L.map _∷1 (generateFibStr {ℕsuc n}) L.++ L.map _∷2 (generateFibStr {n})
+  show : ∀ {n} → FibStr n → String
+  show [] = "[]"
+  show (x ∷1) = show x ++ " ∷1"
+  show (x ∷2) = show x ++ " ∷2"
 
-equalFibStr : ∀ {n} → FibStr n → FibStr n → Bool
-equalFibStr [] [] = true
-equalFibStr (a ∷1) (b ∷1) = equalFibStr a b
-equalFibStr (a ∷2) (b ∷2) = equalFibStr a b
-equalFibStr _ _ = false
+  generate : ∀ {n} → List (FibStr n)
+  generate {ℕzero} = [] L∷ L[]
+  generate {ℕsuc ℕzero} = ([] ∷1) L∷ L[]
+  generate {ℕsuc (ℕsuc n)} = L.map _∷1 (generate {ℕsuc n}) L.++ L.map _∷2 (generate {n})
+
+  exhaustive : ∀ {n} x → x ∈ (generate {n})
+  exhaustive {ℕzero} [] = here Prefl
+  exhaustive {ℕsuc ℕzero} ([] ∷1) = here Prefl
+  exhaustive {ℕsuc (ℕsuc n)} (x ∷1) = ∈++ˡ {_} {L.map _∷1 (generate {ℕsuc n})} {L.map _∷2 (generate {n})} (∈map (exhaustive x))
+  exhaustive {ℕsuc (ℕsuc n)} (x ∷2) = ∈++ʳ {_} {L.map _∷1 (generate {ℕsuc n})} {L.map _∷2 (generate {n})} (∈map (exhaustive x))
+
+  equal : ∀ {n} → FibStr n → FibStr n → Bool
+  equal (a ∷1) (b ∷1) = equal a b
+  equal (a ∷2) (b ∷2) = equal a b
+  equal _ _ = false
 
 ------------------------------------------------------------------------
 -- Set partitions
@@ -348,7 +369,7 @@ lift (fun f) = liftF f
 -- Various tools
 
 showF : (F : Fun) → (x : liftF F) → String
-showF (fib' n) = showFibStr
+showF (fib' n) = FibStrExpr.show
 showF (2^' n) = showBinStr
 showF (S₂' l r) = showSetPartitionK
 showF (CS₂' l r) = showCSetPartitionK
@@ -363,7 +384,7 @@ show (E * E₁) (a , b) = paren (show E a) ++ " , " ++ paren (show E₁ b)
 show (fun f) = showF f
 
 generateF : (F : Fun) → List (liftF F)
-generateF (fib' n) = generateFibStr
+generateF (fib' n) = FibStrExpr.generate
 generateF (2^' n) = generateBinStr
 generateF (S₂' l r) = generateSetPartitionK
 generateF (CS₂' l r) = generateCSetPartitionK
@@ -376,7 +397,7 @@ generate (E * E₁) = L.concatMap (λ l → L.concatMap (λ r → (l , r) L∷ L
 generate (fun f) = generateF f
 
 equalF : (A : Fun) → liftF A → liftF A → Bool
-equalF (fib' n) x y = equalFibStr x y
+equalF (fib' n) x y = FibStrExpr.equal x y
 equalF (2^' n) x y = equalBinStr x y
 equalF (S₂' l r) x y = equalSetPartitionK x y
 equalF (CS₂' l r) x y = equalCSetPartitionK x y

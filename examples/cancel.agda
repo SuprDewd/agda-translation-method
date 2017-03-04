@@ -21,15 +21,9 @@ open import Relation.Nullary
 import Level
 open import Relation.Binary
 import Data.List as L
-open import Data.List.Any as Any using (here; there)
+open import Data.List.Any
+open Data.List.Any.Membership-≡
 open import Data.Empty
-
--- open import Data.List.Any.Membership
-
-ex-counted-tp : (A : Set) → List A → Set
-ex-counted-tp A counted = ∀ x → x ∈ counted
-  where
-    open Any.Membership (record { Carrier = A ; _≈_ = _P≡_ ; isEquivalence = record { refl = Prefl ; sym = Psym ; trans = Ptrans } }) -- TODO: Is there a simpler way?
 
 module InvolutionPrinciple
                            -- (AS : DecSetoid Level.zero Level.zero)
@@ -46,8 +40,6 @@ module InvolutionPrinciple
   -- open DecSetoid BS using () renaming (Carrier to B)
   -- open DecSetoid CS using () renaming (Carrier to C)
   -- open DecSetoid DS using () renaming (Carrier to D)
-
-  -- open import Data.List.Countdown
 
   private
     suc-inj : ∀ {a b} → ℕsuc a P≡ ℕsuc b → a P≡ b
@@ -166,26 +158,10 @@ module InvolutionPrinciple
               (C : Set)
               (D : Set) (_D≟_ : (x y : D) → Dec (x P≡ y))
               (counted : List D)
-              (ex-counted : ex-counted-tp D counted) -- (x : D) → x ∈ counted
+              (ex-counted : ∀ x → x ∈ counted) -- (x : D) → x ∈ counted
               (b₁ : (A ⊎ B) B≡ (C ⊎ D))
               (b₂ : B B≡ D)
               where
-
-    -- open Setoid AS using () renaming (Carrier to A)
-    -- open Setoid BS using () renaming (Carrier to B)
-    -- open Setoid CS using () renaming (Carrier to C)
-    -- open Setoid DS using () renaming (Carrier to D)
-
-    -- private
-    --   decEqA⊎B : (x : A ⊎ B) → (y : A ⊎ B) → Dec (x P≡ y)
-    --   decEqA⊎B (inj₁ x) (inj₁ x₁) with x A≟ x₁
-    --   decEqA⊎B (inj₁ x) (inj₁ .x) | yes Prefl = yes Prefl
-    --   decEqA⊎B (inj₁ x) (inj₁ x₁) | no ¬p = no (λ x₂ → ¬p (inj₁-inj x₂))
-    --   decEqA⊎B (inj₁ x) (inj₂ y) = no (λ())
-    --   decEqA⊎B (inj₂ y) (inj₁ x) = no (λ())
-    --   decEqA⊎B (inj₂ y) (inj₂ y₁) with y B≟ y₁
-    --   decEqA⊎B (inj₂ y) (inj₂ .y) | yes Prefl = yes Prefl
-    --   decEqA⊎B (inj₂ y) (inj₂ y₁) | no ¬p = no (λ x → ¬p (inj₂-inj x))
 
     open import Data.List.Countdown (record { Carrier = D
                                             ; _≈_ = _P≡_
@@ -196,10 +172,7 @@ module InvolutionPrinciple
                                                                         ; _≟_ = _D≟_
                                                                         }
                                             }) as CntD
-    open Any.Membership (record { Carrier = D
-                                ; _≈_ = _P≡_
-                                ; isEquivalence = record { refl = Prefl ; sym = Psym ; trans = Ptrans }
-                                }) using () renaming (_∈_ to _D∈_)
+
     open import Data.List.Countdown (record { Carrier = B
                                             ; _≈_ = _P≡_
                                             ; isDecEquivalence = record { isEquivalence = record { refl = Prefl
@@ -209,28 +182,20 @@ module InvolutionPrinciple
                                                                         ; _≟_ = _B≟_
                                                                         }
                                             }) as CntB
-    open Any.Membership (record { Carrier = B
-                                ; _≈_ = _P≡_
-                                ; isEquivalence = record { refl = Prefl ; sym = Psym ; trans = Ptrans }
-                                }) using () renaming (_∈_ to _B∈_)
 
-    lemmaB : ∀ x x' xs → ¬ x B∈ xs → x' B∈ xs → ¬ x P≡ x'
-    lemmaB x x' (x₁ L∷ xs) x∉xs (here x'≡x₁) = λ x≡x' → x∉xs (here (Ptrans x≡x' x'≡x₁))
-    lemmaB x x' (x₁ L∷ xs) x∉xs (there x'∈xs) = lemmaB x x' xs (λ p → x∉xs (there p)) x'∈xs
-
-    lemmaD : ∀ x x' xs → ¬ x D∈ xs → x' D∈ xs → ¬ x P≡ x'
-    lemmaD x x' (x₁ L∷ xs) x∉xs (here x'≡x₁) = λ x≡x' → x∉xs (here (Ptrans x≡x' x'≡x₁))
-    lemmaD x x' (x₁ L∷ xs) x∉xs (there x'∈xs) = lemmaD x x' xs (λ p → x∉xs (there p)) x'∈xs
+    lemma : ∀ {A : Set} (x : A) x' xs → ¬ x ∈ xs → x' ∈ xs → ¬ x P≡ x'
+    lemma x x' (x₁ L∷ xs) x∉xs (here x'≡x₁) = λ x≡x' → x∉xs (here (Ptrans x≡x' x'≡x₁))
+    lemma x x' (x₁ L∷ xs) x∉xs (there x'∈xs) = lemma x x' xs (λ p → x∉xs (there p)) x'∈xs
 
     y-contr : ∀ {w} {W : Set w}
             → ∀ x x' xs {y}
-            → ¬ x B∈ xs
-            → x' B∈ xs
+            → ¬ x ∈ xs
+            → x' ∈ xs
             → getTo b₁ (inj₂ x) P≡ inj₂ y
             → getTo b₁ (inj₂ x') P≡ inj₂ y
             → W
     y-contr x x' xs x∉xs x'∈xs x↦y x'↦y =
-      let x≠x' = lemmaB x x' xs x∉xs x'∈xs
+      let x≠x' = lemma x x' xs x∉xs x'∈xs
           x≡x' = inj₂-inj (begin
                             inj₂ x
                           ≡⟨ Psym (getFromTo b₁ (inj₂ x)) ⟩
@@ -244,13 +209,13 @@ module InvolutionPrinciple
 
     x-contr : ∀ {x} {w} {W : Set w}
             → ∀ y y' ys
-            → ¬ y D∈ ys
-            → y' D∈ ys
+            → ¬ y ∈ ys
+            → y' ∈ ys
             → getFrom b₂ y P≡ x
             → getFrom b₂ y' P≡ x
             → W
     x-contr {x} y y' ys y∉ys y'∈ys y↦x y'↦x =
-      let y≠y' = lemmaD y y' ys y∉ys y'∈ys
+      let y≠y' = lemma y y' ys y∉ys y'∈ys
           y≡y' = (begin
                   y
                  ≡⟨ Psym (getToFrom b₂ y) ⟩
@@ -266,13 +231,13 @@ module InvolutionPrinciple
 
     run2 : ∀ {m n} → (xs : List B)
                    → (ys : List D)
-                   → ((x' : B) → x' B∈ xs → Σ D (λ y' → getFrom b₂ y' P≡ x' × y' D∈ ys))
-                   → ((y' : D) → y' D∈ ys → Σ B (λ x' → getTo b₁ (inj₂ x') P≡ (inj₂ y') × x' B∈ xs))
+                   → ((x' : B) → x' ∈ xs → Σ D (λ y' → getFrom b₂ y' P≡ x' × y' ∈ ys))
+                   → ((y' : D) → y' ∈ ys → Σ B (λ x' → getTo b₁ (inj₂ x') P≡ (inj₂ y') × x' ∈ xs))
                    → xs CntB.⊕ m
                    → ys CntD.⊕ n
                    → (x : B)
-                   → ¬ x B∈ xs
-                   → Σ D (λ y' → getFrom b₂ y' P≡ x × y' D∈ ys)
+                   → ¬ x ∈ xs
+                   → Σ D (λ y' → getFrom b₂ y' P≡ x × y' ∈ ys)
                    → Σ C (λ y → [ b₁ ∧ b₂ ⊨ inj₂ x ⇒ y ])
 
     -- All D's seen
@@ -316,7 +281,7 @@ module InvolutionPrinciple
                 (CntD.insert cntD y y∉ys)
                 x'
                 (λ { (here x'≡x) → case xPre of (λ { (y₁ , y₁↦x , y₁∈ys)
-                                                   → lemmaD y y₁ ys y∉ys y₁∈ys (begin
+                                                   → lemma y y₁ ys y∉ys y₁∈ys (begin
                                                                                   y
                                                                                 ≡⟨ Psym (getToFrom b₂ y) ⟩
                                                                                   getTo b₂ (getFrom b₂ y)

@@ -10,6 +10,8 @@ open import Translate.Bijection using (getTo; getFrom; getToFrom; getFromTo)
 open import Translate.Tools
 import Relation.Binary.PropositionalEquality
 open Relation.Binary.PropositionalEquality.≡-Reasoning
+open import Relation.Binary.PropositionalEquality
+  using (inspect; [_])
 import Data.Nat.Properties.Simple as NPS
 
 open import Data.Product
@@ -216,7 +218,52 @@ module InvolutionPrinciple
     lemmaB x x' (x₁ L∷ xs) x∉xs (here x'≡x₁) = λ x≡x' → x∉xs (here (Ptrans x≡x' x'≡x₁))
     lemmaB x x' (x₁ L∷ xs) x∉xs (there x'∈xs) = lemmaB x x' xs (λ p → x∉xs (there p)) x'∈xs
 
-    -- {-# NON_TERMINATING #-}
+    lemmaD : ∀ x x' xs → ¬ x D∈ xs → x' D∈ xs → ¬ x P≡ x'
+    lemmaD x x' (x₁ L∷ xs) x∉xs (here x'≡x₁) = λ x≡x' → x∉xs (here (Ptrans x≡x' x'≡x₁))
+    lemmaD x x' (x₁ L∷ xs) x∉xs (there x'∈xs) = lemmaD x x' xs (λ p → x∉xs (there p)) x'∈xs
+
+    y-contr : ∀ {w} {W : Set w}
+            → ∀ x x' xs {y}
+            → ¬ x B∈ xs
+            → x' B∈ xs
+            → getTo b₁ (inj₂ x) P≡ inj₂ y
+            → getTo b₁ (inj₂ x') P≡ inj₂ y
+            → W
+    y-contr x x' xs x∉xs x'∈xs x↦y x'↦y =
+      let x≠x' = lemmaB x x' xs x∉xs x'∈xs
+          x≡x' = inj₂-inj (begin
+                            inj₂ x
+                          ≡⟨ Psym (getFromTo b₁ (inj₂ x)) ⟩
+                            getFrom b₁ (getTo b₁ (inj₂ x))
+                          ≡⟨ Pcong (getFrom b₁) (Ptrans x↦y (Psym x'↦y)) ⟩
+                            getFrom b₁ (getTo b₁ (inj₂ x'))
+                          ≡⟨ getFromTo b₁ (inj₂ x') ⟩
+                            inj₂ x'
+                          ∎)
+      in ⊥-elim (x≠x' x≡x')
+
+    x-contr : ∀ {x} {w} {W : Set w}
+            → ∀ y y' ys
+            → ¬ y D∈ ys
+            → y' D∈ ys
+            → getFrom b₂ y P≡ x
+            → getFrom b₂ y' P≡ x
+            → W
+    x-contr {x} y y' ys y∉ys y'∈ys y↦x y'↦x =
+      let y≠y' = lemmaD y y' ys y∉ys y'∈ys
+          y≡y' = (begin
+                  y
+                 ≡⟨ Psym (getToFrom b₂ y) ⟩
+                  getTo b₂ (getFrom b₂ y)
+                 ≡⟨ Pcong (getTo b₂) y↦x ⟩
+                  getTo b₂ x
+                 ≡⟨ Pcong (getTo b₂) (Psym y'↦x) ⟩
+                  getTo b₂ (getFrom b₂ y')
+                 ≡⟨ getToFrom b₂ y' ⟩
+                  y'
+                 ∎)
+      in ⊥-elim (y≠y' y≡y')
+
     run2 : ∀ {m n} → (xs : List B)
                    → (ys : List D)
                    → ((x' : B) → x' B∈ xs → Σ D (λ y' → getFrom b₂ y' P≡ x' × y' D∈ ys))
@@ -225,39 +272,68 @@ module InvolutionPrinciple
                    → ys CntD.⊕ n
                    → (x : B)
                    → ¬ x B∈ xs
+                   → Σ D (λ y' → getFrom b₂ y' P≡ x × y' D∈ ys)
                    → Σ C (λ y → [ b₁ ∧ b₂ ⊨ inj₂ x ⇒ y ])
-    run2 {m} {ℕzero}  xs ys preB preD cntB cntD x x∉xs = {!!}
-    run2 {m} {ℕsuc n} xs ys preB preD cntB cntD x x∉xs with apply-with-proof (getTo b₁) (inj₂ x)
-    run2 {m} {ℕsuc n} xs ys preB preD cntB cntD x x∉xs | inj₁ y , x↦y = y , done x↦y
-    run2 {m} {ℕsuc n} xs ys preB preD cntB cntD x x∉xs | inj₂ y , x↦y with CntD.lookup cntD y
-    run2 {m} {ℕsuc n} xs ys preB preD cntB cntD x x∉xs | inj₂ y , x↦y | yes y∈ys with preD y y∈ys
-    run2 {m} {ℕsuc n} xs ys preB preD cntB cntD x x∉xs | inj₂ y , x↦y | yes y∈ys | (x' , x'↦y , x'∈xs) =
-         let x≠x' = lemmaB x x' xs x∉xs x'∈xs
-             x≡x' = inj₂-inj (begin
-                        inj₂ x
-                      ≡⟨ Psym (getFromTo b₁ (inj₂ x)) ⟩
-                        getFrom b₁ (getTo b₁ (inj₂ x))
-                      ≡⟨ Pcong (getFrom b₁) (Ptrans x↦y (Psym x'↦y)) ⟩
-                        getFrom b₁ (getTo b₁ (inj₂ x'))
-                      ≡⟨ getFromTo b₁ (inj₂ x') ⟩
-                        inj₂ x'
-                      ∎)
-         in ⊥-elim (x≠x' x≡x')
 
-    run2 {m} {ℕsuc n} xs ys preB preD cntB cntD x x∉xs | inj₂ y , x↦y | no y∉ys with CntB.lookup cntB (getFrom b₂ y)
-    run2 {m} {ℕsuc n} xs ys preB preD cntB cntD x x∉xs | inj₂ y , x↦y | no y∉ys | yes x'∈xs = {!!}
-    run2 {m} {ℕsuc n} xs ys preB preD cntB cntD x x∉xs | inj₂ y , x↦y | no y∉ys | no  x'∉xs
-      with run2 (x L∷ xs) (y L∷ ys) (λ { .x (here Prefl) → y , {!!}
-                                       ; x₁ (there x₁∈xs) → {!!}
-                                       }) {!!} {!!} {!!} {!!} {!!}
-    ... | res = {!!}
-    --                with run2 xs preB cntB (y L∷ ys) (λ { _ (here Prefl) → x , x↦y
-    --                                                        ; y' (there p) → preD y' p
-    --                                                        }) (CntD.insert cntD y ¬p) (inj₂ (getFrom b₂ y))
-    -- run2 {m} {ℕsuc n} xs preB cntB ys preD cntD x | inj₂ y , x↦y | no ¬p | (z , zp) = z , step x↦y Prefl zp
+    -- All D's seen
+    run2 {m} {ℕzero} xs ys preB preD cntB cntD x x∉xs xPre with getTo b₁ (inj₂ x) | inspect (getTo b₁) (inj₂ x)
+    run2 {m} {ℕzero} xs ys preB preD cntB cntD x x∉xs xPre | inj₁ y | [ x↦y ] = y , done x↦y
+    run2 {m} {ℕzero} xs ys preB preD cntB cntD x x∉xs xPre | inj₂ y | [ x↦y ] with CntD.lookup! cntD y
+    run2 {m} {ℕzero} xs ys preB preD cntB cntD x x∉xs xPre | inj₂ y | [ x↦y ] | y∈ys with preD y y∈ys
+    run2 {m} {ℕzero} xs ys preB preD cntB cntD x x∉xs xPre | inj₂ y | [ x↦y ] | y∈ys | x' , x'↦y , x'∈xs = y-contr x x' xs x∉xs x'∈xs x↦y x'↦y
 
-  -- XXX: Should this be TERMINATING?
-  -- TODO: Use that "decreasing" datatype to show that this is terminating
+    -- All B's seen
+    run2 {ℕzero} {ℕsuc n}  xs ys preB preD cntB cntD x x∉xs xPre with getTo b₁ (inj₂ x) | inspect (getTo b₁) (inj₂ x)
+    run2 {ℕzero} {ℕsuc n} xs ys preB preD cntB cntD x x∉xs xPre | inj₁ y | [ x↦y ] = y , done x↦y
+    run2 {ℕzero} {ℕsuc n} xs ys preB preD cntB cntD x x∉xs xPre | inj₂ y | [ x↦y ] with CntD.lookup cntD y
+    run2 {ℕzero} {ℕsuc n} xs ys preB preD cntB cntD x x∉xs xPre | inj₂ y | [ x↦y ] | yes y∈ys with preD y y∈ys
+    run2 {ℕzero} {ℕsuc n} xs ys preB preD cntB cntD x x∉xs xPre | inj₂ y | [ x↦y ] | yes y∈ys | x' , x'↦y , x'∈xs = y-contr x x' xs x∉xs x'∈xs x↦y x'↦y
+    run2 {ℕzero} {ℕsuc n} xs ys preB preD cntB cntD x x∉xs xPre | inj₂ y | [ x↦y ] | no  y∉ys with getFrom b₂ y | inspect (getFrom b₂) y
+    run2 {ℕzero} {ℕsuc n} xs ys preB preD cntB cntD x x∉xs xPre | inj₂ y | [ x↦y ] | no  y∉ys | x' | [ y↦x' ] with CntB.lookup! cntB x'
+    run2 {ℕzero} {ℕsuc n} xs ys preB preD cntB cntD x x∉xs xPre | inj₂ y | [ x↦y ] | no  y∉ys | x' | [ y↦x' ] | x'∈xs with preB x' x'∈xs
+    run2 {ℕzero} {ℕsuc n} xs ys preB preD cntB cntD x x∉xs xPre | inj₂ y | [ x↦y ] | no  y∉ys | x' | [ y↦x' ] | x'∈xs | y' , y'↦x' , y'∈ys = x-contr y y' ys y∉ys y'∈ys y↦x' y'↦x'
+
+    -- At least one unseen B and D
+    run2 {ℕsuc m} {ℕsuc n} xs ys preB preD cntB cntD x x∉xs xPre with getTo b₁ (inj₂ x) | inspect (getTo b₁) (inj₂ x)
+    run2 {ℕsuc m} {ℕsuc n} xs ys preB preD cntB cntD x x∉xs xPre | inj₁ y | [ x↦y ] = y , done x↦y
+    run2 {ℕsuc m} {ℕsuc n} xs ys preB preD cntB cntD x x∉xs xPre | inj₂ y | [ x↦y ] with CntD.lookup cntD y
+    run2 {ℕsuc m} {ℕsuc n} xs ys preB preD cntB cntD x x∉xs xPre | inj₂ y | [ x↦y ] | yes y∈ys with preD y y∈ys
+    run2 {ℕsuc m} {ℕsuc n} xs ys preB preD cntB cntD x x∉xs xPre | inj₂ y | [ x↦y ] | yes y∈ys | x' , x'↦y , x'∈xs = y-contr x x' xs x∉xs x'∈xs x↦y x'↦y
+    run2 {ℕsuc m} {ℕsuc n} xs ys preB preD cntB cntD x x∉xs xPre | inj₂ y | [ x↦y ] | no  y∉ys with getFrom b₂ y | inspect (getFrom b₂) y
+    run2 {ℕsuc m} {ℕsuc n} xs ys preB preD cntB cntD x x∉xs xPre | inj₂ y | [ x↦y ] | no  y∉ys | x' | [ y↦x' ] with CntB.lookup cntB x'
+    run2 {ℕsuc m} {ℕsuc n} xs ys preB preD cntB cntD x x∉xs xPre | inj₂ y | [ x↦y ] | no  y∉ys | x' | [ y↦x' ] | yes x'∈xs with preB x' x'∈xs
+    run2 {ℕsuc m} {ℕsuc n} xs ys preB preD cntB cntD x x∉xs xPre | inj₂ y | [ x↦y ] | no  y∉ys | x' | [ y↦x' ] | yes x'∈xs | y' , y'↦x' , y'∈ys = x-contr y y' ys y∉ys y'∈ys y↦x' y'↦x'
+    run2 {ℕsuc m} {ℕsuc n} xs ys preB preD cntB cntD x x∉xs xPre | inj₂ y | [ x↦y ] | no  y∉ys | x' | [ y↦x' ] | no  x'∉xs
+      with run2 (x L∷ xs)
+                (y L∷ ys)
+                (λ { .x (here Prefl) → case xPre of (λ { (y₁ , y₁↦x , y₁∈ys) → y₁ , y₁↦x , there y₁∈ys })
+                   ; x₁ (there x₁∈xs) → case preB x₁ x₁∈xs of (λ { (y₁ , y₁↦x₁ , y₁∈ys) → y₁ , y₁↦x₁ , there y₁∈ys })
+                   })
+                (λ { .y (here Prefl) → x , x↦y , here Prefl
+                   ; y₁ (there y₁∈ys) → case preD y₁ y₁∈ys of (λ { (x₁ , x₁↦y₁ , x₁∈xs) → x₁ , x₁↦y₁ , there x₁∈xs })
+                   })
+                (CntB.insert cntB x x∉xs)
+                (CntD.insert cntD y y∉ys)
+                x'
+                (λ { (here x'≡x) → case xPre of (λ { (y₁ , y₁↦x , y₁∈ys)
+                                                   → lemmaD y y₁ ys y∉ys y₁∈ys (begin
+                                                                                  y
+                                                                                ≡⟨ Psym (getToFrom b₂ y) ⟩
+                                                                                  getTo b₂ (getFrom b₂ y)
+                                                                                ≡⟨ Pcong (getTo b₂) y↦x' ⟩
+                                                                                  getTo b₂ x'
+                                                                                ≡⟨ Pcong (getTo b₂) x'≡x ⟩
+                                                                                  getTo b₂ x
+                                                                                ≡⟨ Pcong (getTo b₂) (Psym y₁↦x) ⟩
+                                                                                  getTo b₂ (getFrom b₂ y₁)
+                                                                                ≡⟨ getToFrom b₂ y₁ ⟩
+                                                                                  y₁
+                                                                                ∎) })
+                   ; (there x'∈xs) → x'∉xs x'∈xs
+                   })
+                (y , (y↦x' , here Prefl))
+    run2 {ℕsuc m} {ℕsuc n} xs ys preB preD cntB cntD x x∉xs xPre | inj₂ y | [ x↦y ] | no y∉ys | x' | [ y↦x' ] | (no x'∉xs) | z , zp = z , step x↦y y↦x' zp
+
   {-# NON_TERMINATING #-}
   run : ∀ {A B C D : Set} → (b₁ : (A ⊎ B) B≡ (C ⊎ D)) → (b₂ : B B≡ D) → (x : A ⊎ B) → Σ C (λ y → [ b₁ ∧ b₂ ⊨ x ⇒ y ])
   run b₁ b₂ x with apply-with-proof (getTo b₁) x

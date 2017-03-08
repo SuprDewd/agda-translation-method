@@ -72,10 +72,13 @@ private
   exhaustiveFin {ℕsuc n} Fzero = here Prefl
   exhaustiveFin {ℕsuc n} (Fsuc x) = there (∈map (exhaustiveFin x))
 
-  equalFin : ∀ {n} → (a b : Fin n) → Bool
-  equalFin Fzero Fzero = true
-  equalFin (Fsuc a) (Fsuc b) = equalFin a b
-  equalFin _ _ = false
+  equalFin : ∀ {n} → (a b : Fin n) → Dec (a P≡ b)
+  equalFin Fzero Fzero = yes Prefl
+  equalFin Fzero (Fsuc b) = no (λ ())
+  equalFin (Fsuc a) Fzero = no (λ ())
+  equalFin (Fsuc a) (Fsuc b) with equalFin a b
+  equalFin (Fsuc a) (Fsuc b) | yes Prefl = yes Prefl
+  equalFin (Fsuc a) (Fsuc b) | no ¬p = no (λ { Prefl → ¬p Prefl })
 
 infixl 6 _*_
 infixl 5 _+_
@@ -136,10 +139,16 @@ module FibStrExpr where
   exhaustive {ℕsuc (ℕsuc n)} (x ∷1) = ∈++ˡ {_} {L.map _∷1 (generate {ℕsuc n})} {L.map _∷2 (generate {n})} (∈map (exhaustive x))
   exhaustive {ℕsuc (ℕsuc n)} (x ∷2) = ∈++ʳ {_} {L.map _∷1 (generate {ℕsuc n})} {L.map _∷2 (generate {n})} (∈map (exhaustive x))
 
-  equal : ∀ {n} → (a b : FibStr n) → Bool
-  equal (a ∷1) (b ∷1) = equal a b
-  equal (a ∷2) (b ∷2) = equal a b
-  equal _ _ = false
+  equal : ∀ {n} → (x y : FibStr n) → Dec (x P≡ y)
+  equal [] [] = yes Prefl
+  equal (x ∷1) (y ∷1) with equal x y
+  equal (x ∷1) (y ∷1) | yes Prefl = yes Prefl
+  equal (x ∷1) (y ∷1) | no ¬p = no (λ { Prefl → ¬p Prefl })
+  equal (x ∷1) (y ∷2) = no (λ ())
+  equal (x ∷2) (y ∷1) = no (λ ())
+  equal (x ∷2) (y ∷2) with equal x y
+  equal (x ∷2) (y ∷2) | yes Prefl = yes Prefl
+  equal (x ∷2) (y ∷2) | no ¬p = no (λ { Prefl → ¬p Prefl })
 
 ------------------------------------------------------------------------
 -- Set partitions
@@ -186,13 +195,18 @@ module SetPartitionKExpr where
   exhaustive {ℕsuc l} {ℕsuc r} (insert x x₁) = ∈++ˡ {SetPartitionK (ℕsuc l) (ℕsuc r)} {L.concatMap (λ i → L.map (λ p → insert i p) (generate {ℕsuc l} {r})) (generateFin {ℕsuc l})}
     (∈concatMap {Fin (ℕsuc l)} {SetPartitionK (ℕsuc l) (ℕsuc r)} {x} {insert x x₁} {generateFin {ℕsuc l}} {λ i → L.map (λ p → insert i p) (generate {ℕsuc l} {r})} (exhaustiveFin x) (∈map (exhaustive x₁)))
 
-  equal : ∀ {l r} → (p q : SetPartitionK l r) → Bool
-  equal {ℕzero} {ℕzero} empty empty = true
-  equal {ℕzero} {ℕsuc r} (insert () p) (insert x₁ q)
-  equal {ℕsuc l} {ℕzero} (add p) (add q) = equal p q
-  equal {ℕsuc l} {ℕsuc r} (add p) (add q) = equal p q
-  equal {ℕsuc l} {ℕsuc r} (insert i₁ p) (insert i₂ q) = equalFin i₁ i₂ ∧ equal p q
-  equal {ℕsuc l} {ℕsuc r} _ _ = false
+  equal : ∀ {l r} → (x y : SetPartitionK l r) → Dec (x P≡ y)
+  equal empty empty = yes Prefl
+  equal (add x) (add y) with equal x y
+  equal (add x) (add y) | yes Prefl = yes Prefl
+  equal (add x) (add y) | no ¬p = no (λ { Prefl → ¬p Prefl })
+  equal (add x) (insert x₁ y) = no (λ ())
+  equal (insert x x₁) (add y) = no (λ ())
+  equal (insert x x₁) (insert y y₁) with equalFin x y | equal x₁ y₁
+  equal (insert x x₁) (insert .x .x₁) | yes Prefl | yes Prefl = yes Prefl
+  equal (insert x x₁) (insert y y₁) | yes p | no ¬p = no (λ { Prefl → ¬p Prefl })
+  equal (insert x x₁) (insert y y₁) | no ¬p | yes p = no (λ { Prefl → ¬p Prefl })
+  equal (insert x x₁) (insert y y₁) | no ¬p | no ¬p₁ = no (λ { Prefl → ¬p Prefl })
 
 -- Set partitions with no consecutive numbers in a part
 
@@ -247,13 +261,18 @@ module CSetPartitionKExpr where
   exhaustive {ℕsuc l} {ℕsuc r} (insert x x₁) = ∈++ˡ {CSetPartitionK (ℕsuc l) (ℕsuc r)} {L.concatMap (λ i → L.map (λ p → insert i p) (generate {ℕsuc l} {r})) (generateFin {l})}
     (∈concatMap {Fin l} {CSetPartitionK (ℕsuc l) (ℕsuc r)} {x} {insert x x₁} {generateFin {l}} {λ i → L.map (λ p → insert i p) (generate {ℕsuc l} {r})} (exhaustiveFin x) (∈map (exhaustive x₁)))
 
-  equal : ∀ {l r} → (p q : CSetPartitionK l r) → Bool
-  equal {ℕzero} {ℕzero} empty empty = true
-  equal {ℕzero} {ℕsuc r} () q
-  equal {ℕsuc l} {ℕzero} (add p) (add q) = equal p q
-  equal {ℕsuc l} {ℕsuc r} (add p) (add q) = equal p q
-  equal {ℕsuc l} {ℕsuc r} (insert x p) (insert x₁ q) = equalFin x x₁ ∧ equal p q
-  equal {ℕsuc l} {ℕsuc r} _ _ = false
+  equal : ∀ {l r} → (x y : CSetPartitionK l r) → Dec (x P≡ y)
+  equal empty empty = yes Prefl
+  equal (add x) (add y) with equal x y
+  equal (add x) (add y) | yes Prefl = yes Prefl
+  equal (add x) (add y) | no ¬p = no (λ { Prefl → ¬p Prefl })
+  equal (add x) (insert x₁ y) = no (λ ())
+  equal (insert x x₁) (add y) = no (λ ())
+  equal (insert x x₁) (insert y y₁) with equalFin x y | equal x₁ y₁
+  equal (insert x x₁) (insert y y₁) | yes Prefl | yes Prefl = yes Prefl
+  equal (insert x x₁) (insert y y₁) | yes p | no ¬p = no (λ { Prefl → ¬p Prefl })
+  equal (insert x x₁) (insert y y₁) | no ¬p | yes p = no (λ { Prefl → ¬p Prefl })
+  equal (insert x x₁) (insert y y₁) | no ¬p | no ¬p₁ = no (λ { Prefl → ¬p Prefl })
 
 ------------------------------------------------------------------------
 -- Binary strings
@@ -288,11 +307,19 @@ module BinStrExpr where
   exhaustive {ℕsuc n} (Fsuc Fzero ∷ x) = ∈++ʳ {BinStr (ℕsuc n)} {L.map (_∷_ Fzero) (generate {n})} (∈map (exhaustive x))
   exhaustive {ℕsuc n} (Fsuc (Fsuc ()) ∷ _)
 
-  equal : ∀ {n} → (a b : BinStr n) → Bool
-  equal [] [] = true
-  equal (Fzero ∷ a) (Fzero ∷ b) = equal a b
-  equal (Fsuc Fzero ∷ a) (Fsuc Fzero ∷ b) = equal a b
-  equal _ _ = false
+  equal : ∀ {n} → (x y : BinStr n) → Dec (x P≡ y)
+  equal [] [] = yes Prefl
+  equal (Fzero ∷ xs) (Fzero ∷ ys) with equal xs ys
+  equal (Fzero ∷ xs) (Fzero ∷ ys) | yes Prefl = yes Prefl
+  equal (Fzero ∷ xs) (Fzero ∷ ys) | no ¬p = no (λ { Prefl → ¬p Prefl })
+  equal (Fzero ∷ xs) (Fsuc y ∷ ys) = no (λ ())
+  equal (Fsuc x ∷ xs) (Fzero ∷ ys) = no (λ ())
+  equal (Fsuc Fzero ∷ xs) (Fsuc Fzero ∷ ys) with equal xs ys
+  equal (Fsuc Fzero ∷ xs) (Fsuc Fzero ∷ ys) | yes Prefl = yes Prefl
+  equal (Fsuc Fzero ∷ xs) (Fsuc Fzero ∷ ys) | no ¬p = no (λ { Prefl → ¬p Prefl})
+  equal (Fsuc Fzero ∷ xs) (Fsuc (Fsuc ()) ∷ ys)
+  equal (Fsuc (Fsuc ()) ∷ xs) (Fsuc Fzero ∷ ys)
+  equal (Fsuc (Fsuc ()) ∷ xs) (Fsuc (Fsuc y) ∷ ys)
 
 ------------------------------------------------------------------------
 -- Shorthands
@@ -385,21 +412,34 @@ exhaustive (E * E₁) (x , y) = ∈concatMap {lift E} {lift (E * E₁)} {x} {x ,
   (∈concatMap {lift E₁} {lift (E * E₁)} {y} {x , y} {generate E₁} {λ r → (x , r) L∷ L[]} (exhaustive E₁ y) (here Prefl))
 exhaustive (fun f) = exhaustiveF f
 
-equalF : (A : Fun) → liftF A → liftF A → Bool
+equalF : (A : Fun) → (x y : liftF A) → Dec (x P≡ y)
 equalF (fib' n) = FibStrExpr.equal
 equalF (2^' n) = BinStrExpr.equal
 equalF (S₂' l r) = SetPartitionKExpr.equal
 equalF (CS₂' l r) = CSetPartitionKExpr.equal
 
-equal : (A : Expr) → lift A → lift A → Bool
+equal : (A : Expr) → (x y : lift A) → Dec (x P≡ y)
 equal zero () ()
-equal (suc A) (just x) (just x₁) = equal A x x₁
-equal (suc A) nothing nothing = true
-equal (A + A₁) (inj₁ x) (inj₁ x₁) = equal A x x₁
-equal (A + A₁) (inj₂ y) (inj₂ y₁) = equal A₁ y y₁
-equal (A * A₁) (p , q) (p₁ , q₁) = equal A p p₁ ∧ equal A₁ q q₁
+equal (suc A) (just x) (just y) with equal A x y
+equal (suc A) (just x) (just .x) | yes Prefl = yes Prefl
+equal (suc A) (just x) (just y) | no ¬p = no (λ { Prefl → ¬p Prefl })
+equal (suc A) (just x) nothing = no (λ ())
+equal (suc A) nothing (just x) = no (λ ())
+equal (suc A) nothing nothing = yes Prefl
+equal (A₁ + A₂) (inj₁ x) (inj₁ y) with equal A₁ x y
+equal (A₁ + A₂) (inj₁ x) (inj₁ y) | yes Prefl = yes Prefl
+equal (A₁ + A₂) (inj₁ x) (inj₁ y) | no ¬p = no (λ { Prefl → (¬p Prefl) })
+equal (A₁ + A₂) (inj₁ x) (inj₂ y) = no (λ ())
+equal (A₁ + A₂) (inj₂ y) (inj₁ x) = no (λ ())
+equal (A₁ + A₂) (inj₂ x) (inj₂ y) with equal A₂ x y
+equal (A₁ + A₂) (inj₂ x) (inj₂ y) | yes Prefl = yes Prefl
+equal (A₁ + A₂) (inj₂ x) (inj₂ y) | no ¬p = no (λ { Prefl → (¬p Prefl) })
+equal (A₁ * A₂) (x₁ , x₂) (y₁ , y₂) with equal A₁ x₁ y₁ | equal A₂ x₂ y₂
+equal (A₁ * A₂) (x₁ , x₂) (.x₁ , .x₂) | yes Prefl | (yes Prefl) = yes Prefl
+equal (A₁ * A₂) (x₁ , x₂) (y₁ , y₂) | yes p | no ¬p = no (λ { Prefl → ¬p Prefl })
+equal (A₁ * A₂) (x₁ , x₂) (y₁ , y₂) | no ¬p | yes p = no (λ { Prefl → ¬p Prefl })
+equal (A₁ * A₂) (x₁ , x₂) (y₁ , y₂) | no ¬p | no ¬p₁ = no (λ { Prefl → ¬p Prefl })
 equal (fun f) x y = equalF f x y
-equal _ _ _ = false
 
 ------------------------------------------------------------------------
 -- Properties

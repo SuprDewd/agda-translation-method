@@ -1,5 +1,7 @@
 module Translate.Tools where
 
+open import Function
+
 open import Translate.Base
 open import Translate.Types
 open import Translate.Support
@@ -35,7 +37,7 @@ check≡ {A} {B} p to = mapM′ (check (getTo (toBijection p))) (CL.fromList (ge
     check f x =
       let y = f x
           y′ = to x
-      in if equal B y y′ then return tt
+      in if (case equal B y y′ of (λ { (yes p₁) → true ; (no ¬p) → false })) then return tt
          else putStr (show A x) >>'
               putStr " -> " >>'
               putStr (show B y) >>'

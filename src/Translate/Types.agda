@@ -20,7 +20,7 @@ open import Data.Nat
   using (_≤?_)
 
 private
-  -- Helper for show* functions
+  -- Helper for show functions
   paren : String → String
   paren x = if has-space (toList x) then "(" ++ x ++ ")" else x
     where
@@ -45,15 +45,7 @@ private
       rec (x L∷ L[]) = f x
       rec (x L∷ x₁ L∷ xs₁) = f x ++ ", " ++ rec (x₁ L∷ xs₁)
 
-  generateFin : ∀ {n} → List (Fin n)
-  generateFin {ℕzero} = L[]
-  generateFin {ℕsuc n} = L.map F.inject₁ (generateFin {n}) L.++ F.fromℕ n L∷ L[]
-
-  equalFin : ∀ {n} → (a b : Fin n) → Bool
-  equalFin Fzero Fzero = true
-  equalFin (Fsuc a) (Fsuc b) = equalFin a b
-  equalFin _ _ = false
-
+  -- TODO: Use the builtin ∈ helpers
   ∈++ˡ : ∀  {S : Set} {A B : List S}{x : S} → x ∈ A → x ∈ (A L.++ B)
   ∈++ˡ (here p) = here p
   ∈++ˡ (there p) = there (∈++ˡ p)
@@ -67,73 +59,23 @@ private
   ∈map {A} {B} {x} {xs} {f} (here p) = here (Pcong f p)
   ∈map (there p) = there (∈map p)
 
--- mutual
+  ∈concatMap : ∀ {A B : Set} {x : A} {y : B} {xs : List A} {f : A → List B} → x ∈ xs → y ∈ f x → y ∈ L.concatMap f xs
+  ∈concatMap {A} {B} {.x₁} {y} {x₁ L∷ xs} {f} (here Prefl) q = ∈++ˡ {_} {f x₁} q
+  ∈concatMap {A} {B} {x} {y} {(x₁ L∷ xs)} {f} (there p) q = ∈++ʳ {_} {f x₁} (∈concatMap p q)
 
-  -- An expression
-  -- record Expr : Set₁ where
-  --   inductive
-  --   field
-  --     value : ∞ ℕ
-  --     lift : Set
-  --     -- expand : ∞ Polynomial
+  generateFin : ∀ {n} → List (Fin n)
+  generateFin {ℕzero} = L[]
+  generateFin {ℕsuc n} = Fzero L∷ L.map Fsuc (generateFin {n})
 
-  -- data Polynomial : Set₁ where
-  --   ∗atom : (x : Expr) → Polynomial
-  --   -- ∗var : Fin ℕzero → Polynomial
-  --   ∗zero : Polynomial
-  --   ∗suc : (x : Polynomial) → Polynomial
-  --   _∗+_ : (x y : Polynomial) → Polynomial
-  --   _∗*_ : (x y : Polynomial) → Polynomial
+  exhaustiveFin : ∀ {n} → (x : Fin n) → x ∈ generateFin {n}
+  exhaustiveFin {ℕzero} ()
+  exhaustiveFin {ℕsuc n} Fzero = here Prefl
+  exhaustiveFin {ℕsuc n} (Fsuc x) = there (∈map (exhaustiveFin x))
 
--- An environment with n variables
--- Env : ∀ n → Set₁
--- Env n = Vec Expr n
-
--- Some shortcuts for ♭
-
--- value : Expr → ℕ
--- value e = ♭ $ Expr.value e
-
--- lift : Expr → Set
--- lift e = Expr.lift e
-
--- expand : Expr → Polynomial
--- expand e = ♭ $ Expr.expand e
-
--- Helpers for converting between zero-variable Expressions and Polynomials
-
--- mutual
-
-  -- expr : :Expr ℕzero → Expr
-  -- expr x = record
-  --   { value = ♯ :value x []
-  --   ; lift = ♯ :lift x []
-  --   ; expand = ♯ polynomial (:expand x)
-  --   }
-
-  -- :expr : Expr → :Expr ℕzero
-  -- :expr x = record
-  --   { :value = λ Γ → ♯ value x
-  --   ; :lift = λ Γ → ♯ lift x
-  --   ; :expand = ♯ (:polynomial (expand x))
-  --   ; :semantics = λ Γ → ♯ x
-  --   }
-
-  -- polynomial : :Polynomial ℕzero → Polynomial
-  -- polynomial (∗atom x) = ∗atom (expr x)
-  -- polynomial (∗var ())
-  -- polynomial ∗zero = ∗zero
-  -- polynomial (∗suc x) = ∗suc (polynomial x)
-  -- polynomial (x ∗+ y) = (polynomial x) ∗+ (polynomial y)
-  -- polynomial (x ∗* y) = (polynomial x) ∗* (polynomial y)
-
-  -- :polynomial : Polynomial → :Polynomial ℕzero
-  -- :polynomial (∗atom x) = ∗atom (:expr x)
-  -- :polynomial ∗zero = ∗zero
-  -- :polynomial (∗suc x) = ∗suc (:polynomial x)
-  -- :polynomial (x ∗+ y) = (:polynomial x) ∗+ (:polynomial y)
-  -- :polynomial (x ∗* y) = (:polynomial x) ∗* (:polynomial y)
-
+  equalFin : ∀ {n} → (a b : Fin n) → Bool
+  equalFin Fzero Fzero = true
+  equalFin (Fsuc a) (Fsuc b) = equalFin a b
+  equalFin _ _ = false
 
 infixl 6 _*_
 infixl 5 _+_
@@ -151,21 +93,10 @@ data Expr : Set where
   _*_ : (l r : Expr) → Expr
   fun : (f : Fun) → Expr
 
-fib : ℕ → Expr
-fib n = fun (fib' n)
-
-2^ : ℕ → Expr
-2^ n = fun (2^' n)
-
-S₂ : ℕ → ℕ → Expr
-S₂ l r = fun (S₂' l r)
-
-CS₂ : ℕ → ℕ → Expr
-CS₂ l r = fun (CS₂' l r)
-
 ------------------------------------------------------------------------
 -- Natural numbers
 
+-- TODO: Maybe nat should be a part of Expr?
 nat : ℕ → Expr
 nat ℕzero = zero
 nat (ℕsuc n) = suc (nat n)
@@ -205,7 +136,7 @@ module FibStrExpr where
   exhaustive {ℕsuc (ℕsuc n)} (x ∷1) = ∈++ˡ {_} {L.map _∷1 (generate {ℕsuc n})} {L.map _∷2 (generate {n})} (∈map (exhaustive x))
   exhaustive {ℕsuc (ℕsuc n)} (x ∷2) = ∈++ʳ {_} {L.map _∷1 (generate {ℕsuc n})} {L.map _∷2 (generate {n})} (∈map (exhaustive x))
 
-  equal : ∀ {n} → FibStr n → FibStr n → Bool
+  equal : ∀ {n} → (a b : FibStr n) → Bool
   equal (a ∷1) (b ∷1) = equal a b
   equal (a ∷2) (b ∷2) = equal a b
   equal _ _ = false
@@ -229,31 +160,40 @@ data SetPartitionK : ℕ → ℕ → Set where
   add : ∀ {l r} → SetPartitionK l r → SetPartitionK (ℕsuc l) r
   insert : ∀ {l r} → Fin l → SetPartitionK l r → SetPartitionK l (ℕsuc r)
 
-showSetPartitionK : ∀ {l r} → SetPartitionK l r → String
-showSetPartitionK {l} {r} p = showVec (λ xs → showList (λ y → ℕshow y) xs) (convert p)
-  where
-    convert : ∀ {l r} → SetPartitionK l r → Vec (List ℕ) l
-    convert {l} {r} empty = V[]
-    convert {ℕsuc l} {r} (add p) rewrite NPS.+-comm 1 l = convert p V.++ (((ℕsuc l) ℕ+ r) L∷ L[]) V∷ V[]
-    convert {l} {r} (insert x p) =
-      let xs = convert p
-      in xs V.[ x ]≔ (V.lookup x xs L.++ (l ℕ+ r) L∷ L[])
+module SetPartitionKExpr where
 
-generateSetPartitionK : ∀ {l r} → List (SetPartitionK l r)
-generateSetPartitionK {ℕzero} {ℕzero} = empty L∷ L[]
-generateSetPartitionK {ℕzero} {ℕsuc r} = L[]
-generateSetPartitionK {ℕsuc l} {ℕzero} = L.map add generateSetPartitionK
-generateSetPartitionK {ℕsuc l} {ℕsuc r} = L.concatMap (λ i → L.map (λ p → insert i p) (generateSetPartitionK {ℕsuc l} {r})) (generateFin {ℕsuc l}) L.++ L.map add generateSetPartitionK
+  show : ∀ {l r} → SetPartitionK l r → String
+  show {l} {r} p = showVec (λ xs → showList (λ y → ℕshow y) xs) (convert p)
+    where
+      convert : ∀ {l r} → SetPartitionK l r → Vec (List ℕ) l
+      convert {l} {r} empty = V[]
+      convert {ℕsuc l} {r} (add p) rewrite NPS.+-comm 1 l = convert p V.++ (((ℕsuc l) ℕ+ r) L∷ L[]) V∷ V[]
+      convert {l} {r} (insert x p) =
+        let xs = convert p
+        in xs V.[ x ]≔ (V.lookup x xs L.++ (l ℕ+ r) L∷ L[])
 
-equalSetPartitionK : ∀ {l r} → (p q : SetPartitionK l r) → Bool
-equalSetPartitionK {ℕzero} {ℕzero} empty empty = true
-equalSetPartitionK {ℕzero} {ℕsuc r} (insert () p) (insert x₁ q)
-equalSetPartitionK {ℕsuc l} {ℕzero} (add p) (add q) = equalSetPartitionK p q
-equalSetPartitionK {ℕsuc l} {ℕsuc r} (add p) (add q) = equalSetPartitionK p q
-equalSetPartitionK {ℕsuc l} {ℕsuc r} (insert i₁ p) (insert i₂ q) = equalFin i₁ i₂ ∧ equalSetPartitionK p q
-equalSetPartitionK {ℕsuc l} {ℕsuc r} _ _ = false
+  generate : ∀ {l r} → List (SetPartitionK l r)
+  generate {ℕzero} {ℕzero} = empty L∷ L[]
+  generate {ℕzero} {ℕsuc r} = L[]
+  generate {ℕsuc l} {ℕzero} = L.map add generate
+  generate {ℕsuc l} {ℕsuc r} = L.concatMap (λ i → L.map (λ p → insert i p) (generate {ℕsuc l} {r})) (generateFin {ℕsuc l}) L.++ L.map add generate
 
-------------------------------------------------------------------------
+  exhaustive : ∀ {l r} → (x : SetPartitionK l r) → x ∈ generate {l} {r}
+  exhaustive {ℕzero} {ℕzero} empty = here Prefl
+  exhaustive {ℕzero} {ℕsuc r} (insert () _)
+  exhaustive {ℕsuc l} {ℕzero} (add x) = ∈map (exhaustive x)
+  exhaustive {ℕsuc l} {ℕsuc r} (add x) = ∈++ʳ {SetPartitionK (ℕsuc l) (ℕsuc r)} {L.concatMap (λ i → L.map (λ p → insert i p) (generate {ℕsuc l} {r})) (generateFin {ℕsuc l})} (∈map (exhaustive x))
+  exhaustive {ℕsuc l} {ℕsuc r} (insert x x₁) = ∈++ˡ {SetPartitionK (ℕsuc l) (ℕsuc r)} {L.concatMap (λ i → L.map (λ p → insert i p) (generate {ℕsuc l} {r})) (generateFin {ℕsuc l})}
+    (∈concatMap {Fin (ℕsuc l)} {SetPartitionK (ℕsuc l) (ℕsuc r)} {x} {insert x x₁} {generateFin {ℕsuc l}} {λ i → L.map (λ p → insert i p) (generate {ℕsuc l} {r})} (exhaustiveFin x) (∈map (exhaustive x₁)))
+
+  equal : ∀ {l r} → (p q : SetPartitionK l r) → Bool
+  equal {ℕzero} {ℕzero} empty empty = true
+  equal {ℕzero} {ℕsuc r} (insert () p) (insert x₁ q)
+  equal {ℕsuc l} {ℕzero} (add p) (add q) = equal p q
+  equal {ℕsuc l} {ℕsuc r} (add p) (add q) = equal p q
+  equal {ℕsuc l} {ℕsuc r} (insert i₁ p) (insert i₂ q) = equalFin i₁ i₂ ∧ equal p q
+  equal {ℕsuc l} {ℕsuc r} _ _ = false
+
 -- Set partitions with no consecutive numbers in a part
 
 -- Enumeration
@@ -272,38 +212,48 @@ data CSetPartitionK : ℕ → ℕ → Set where
   add : ∀ {l r} → CSetPartitionK l r → CSetPartitionK (ℕsuc l) r
   insert : ∀ {l r} → Fin l → CSetPartitionK (ℕsuc l) r → CSetPartitionK (ℕsuc l) (ℕsuc r)
 
-showCSetPartitionK : ∀ {l r} → CSetPartitionK l r → String
-showCSetPartitionK {l} {r} p = showVec (λ xs → showList (λ y → ℕshow y) xs) (convert p)
-  where
-    app' : ∀ {l} → ℕ → Fin l → Vec (List ℕ) l → Vec (List ℕ) l
-    app' x i xs = xs V.[ i ]≔ (V.lookup i xs L.++ x L∷ L[])
+module CSetPartitionKExpr where
 
-    app : ∀ {l} → ℕ → Fin l → Vec (List ℕ) (ℕsuc l) → Vec (List ℕ) (ℕsuc l)
-    app x Fzero (x₁ V∷ xs) with Data.List.Any.any (λ y → (ℕsuc y) Data.Nat.≟ x) x₁
-    app x Fzero (x₁ V∷ xs) | yes p = x₁ V∷ (app' x Fzero xs)
-    app x Fzero (x₁ V∷ xs) | no ¬p = (x₁ L.++ (x L∷ L[])) V∷ xs
-    app x (Fsuc i) (x₁ V∷ xs) with Data.List.Any.any (λ y → (ℕsuc y) Data.Nat.≟ x) x₁
-    app x (Fsuc i) (x₁ V∷ xs) | yes p = x₁ V∷ (app' x (Fsuc i) xs)
-    app x (Fsuc i) (x₁ V∷ xs) | no ¬p = x₁ V∷ (app x i xs)
+  show : ∀ {l r} → CSetPartitionK l r → String
+  show {l} {r} p = showVec (λ xs → showList (λ y → ℕshow y) xs) (convert p)
+    where
+      app' : ∀ {l} → ℕ → Fin l → Vec (List ℕ) l → Vec (List ℕ) l
+      app' x i xs = xs V.[ i ]≔ (V.lookup i xs L.++ x L∷ L[])
 
-    convert : ∀ {l r} → CSetPartitionK l r → Vec (List ℕ) l
-    convert empty = V[]
-    convert {ℕsuc l} {r} (add p) rewrite NPS.+-comm 1 l = convert p V.++ (((ℕsuc l) ℕ+ r) L∷ L[]) V∷ V[]
-    convert {ℕsuc l} {ℕsuc r} (insert x p) = let xs = convert p in app ((ℕsuc l) ℕ+ (ℕsuc r)) x xs
+      app : ∀ {l} → ℕ → Fin l → Vec (List ℕ) (ℕsuc l) → Vec (List ℕ) (ℕsuc l)
+      app x Fzero (x₁ V∷ xs) with Data.List.Any.any (λ y → (ℕsuc y) Data.Nat.≟ x) x₁
+      app x Fzero (x₁ V∷ xs) | yes p = x₁ V∷ (app' x Fzero xs)
+      app x Fzero (x₁ V∷ xs) | no ¬p = (x₁ L.++ (x L∷ L[])) V∷ xs
+      app x (Fsuc i) (x₁ V∷ xs) with Data.List.Any.any (λ y → (ℕsuc y) Data.Nat.≟ x) x₁
+      app x (Fsuc i) (x₁ V∷ xs) | yes p = x₁ V∷ (app' x (Fsuc i) xs)
+      app x (Fsuc i) (x₁ V∷ xs) | no ¬p = x₁ V∷ (app x i xs)
 
-generateCSetPartitionK : ∀ {l r} → List (CSetPartitionK l r)
-generateCSetPartitionK {ℕzero} {ℕzero} = empty L∷ L[]
-generateCSetPartitionK {ℕzero} {ℕsuc r} = L[]
-generateCSetPartitionK {ℕsuc l} {ℕzero} = L.map add generateCSetPartitionK
-generateCSetPartitionK {ℕsuc l} {ℕsuc r} = L.concatMap (λ i → L.map (λ p → insert i p) (generateCSetPartitionK {ℕsuc l} {r})) (generateFin {l}) L.++ L.map add generateCSetPartitionK
+      convert : ∀ {l r} → CSetPartitionK l r → Vec (List ℕ) l
+      convert empty = V[]
+      convert {ℕsuc l} {r} (add p) rewrite NPS.+-comm 1 l = convert p V.++ (((ℕsuc l) ℕ+ r) L∷ L[]) V∷ V[]
+      convert {ℕsuc l} {ℕsuc r} (insert x p) = let xs = convert p in app ((ℕsuc l) ℕ+ (ℕsuc r)) x xs
 
-equalCSetPartitionK : ∀ {l r} → (p q : CSetPartitionK l r) → Bool
-equalCSetPartitionK {ℕzero} {ℕzero} empty empty = true
-equalCSetPartitionK {ℕzero} {ℕsuc r} () q
-equalCSetPartitionK {ℕsuc l} {ℕzero} (add p) (add q) = equalCSetPartitionK p q
-equalCSetPartitionK {ℕsuc l} {ℕsuc r} (add p) (add q) = equalCSetPartitionK p q
-equalCSetPartitionK {ℕsuc l} {ℕsuc r} (insert x p) (insert x₁ q) = equalFin x x₁ ∧ equalCSetPartitionK p q
-equalCSetPartitionK {ℕsuc l} {ℕsuc r} _ _ = false
+  generate : ∀ {l r} → List (CSetPartitionK l r)
+  generate {ℕzero} {ℕzero} = empty L∷ L[]
+  generate {ℕzero} {ℕsuc r} = L[]
+  generate {ℕsuc l} {ℕzero} = L.map add generate
+  generate {ℕsuc l} {ℕsuc r} = L.concatMap (λ i → L.map (λ p → insert i p) (generate {ℕsuc l} {r})) (generateFin {l}) L.++ L.map add generate
+
+  exhaustive : ∀ {l r} → (x : CSetPartitionK l r) → x ∈ generate {l} {r}
+  exhaustive {ℕzero} {ℕzero} empty = here Prefl
+  exhaustive {ℕzero} {ℕsuc r} ()
+  exhaustive {ℕsuc l} {ℕzero} (add x) = ∈map (exhaustive x)
+  exhaustive {ℕsuc l} {ℕsuc r} (add x) = ∈++ʳ {CSetPartitionK (ℕsuc l) (ℕsuc r)} {L.concatMap (λ i → L.map (λ p → insert i p) (generate {ℕsuc l} {r})) (generateFin {l})} (∈map (exhaustive x))
+  exhaustive {ℕsuc l} {ℕsuc r} (insert x x₁) = ∈++ˡ {CSetPartitionK (ℕsuc l) (ℕsuc r)} {L.concatMap (λ i → L.map (λ p → insert i p) (generate {ℕsuc l} {r})) (generateFin {l})}
+    (∈concatMap {Fin l} {CSetPartitionK (ℕsuc l) (ℕsuc r)} {x} {insert x x₁} {generateFin {l}} {λ i → L.map (λ p → insert i p) (generate {ℕsuc l} {r})} (exhaustiveFin x) (∈map (exhaustive x₁)))
+
+  equal : ∀ {l r} → (p q : CSetPartitionK l r) → Bool
+  equal {ℕzero} {ℕzero} empty empty = true
+  equal {ℕzero} {ℕsuc r} () q
+  equal {ℕsuc l} {ℕzero} (add p) (add q) = equal p q
+  equal {ℕsuc l} {ℕsuc r} (add p) (add q) = equal p q
+  equal {ℕsuc l} {ℕsuc r} (insert x p) (insert x₁ q) = equalFin x x₁ ∧ equal p q
+  equal {ℕsuc l} {ℕsuc r} _ _ = false
 
 ------------------------------------------------------------------------
 -- Binary strings
@@ -320,21 +270,44 @@ data BinStr : ℕ → Set where
   [] : BinStr ℕzero
   _∷_ : ∀ {n} → Fin 2 → BinStr n → BinStr (ℕsuc n)
 
-showBinStr : ∀ {n} → BinStr n → String
-showBinStr [] = "[]"
-showBinStr (Fzero ∷ x₁) = "0 ∷ " ++ showBinStr x₁
-showBinStr (Fsuc Fzero ∷ x₁) = "1 ∷ " ++ showBinStr x₁
-showBinStr (Fsuc (Fsuc ()) ∷ _)
+module BinStrExpr where
 
-generateBinStr : ∀ {n} → List (BinStr n)
-generateBinStr {ℕzero} = [] L∷ L[]
-generateBinStr {ℕsuc n} = L.map (_∷_ Fzero) (generateBinStr {n}) L.++ L.map (_∷_ (Fsuc Fzero)) (generateBinStr {n})
+  show : ∀ {n} → BinStr n → String
+  show [] = "[]"
+  show (Fzero ∷ x₁) = "0 ∷ " ++ show x₁
+  show (Fsuc Fzero ∷ x₁) = "1 ∷ " ++ show x₁
+  show (Fsuc (Fsuc ()) ∷ _)
 
-equalBinStr : ∀ {n} → BinStr n → BinStr n → Bool
-equalBinStr [] [] = true
-equalBinStr (Fzero ∷ a) (Fzero ∷ b) = equalBinStr a b
-equalBinStr (Fsuc Fzero ∷ a) (Fsuc Fzero ∷ b) = equalBinStr a b
-equalBinStr _ _ = false
+  generate : ∀ {n} → List (BinStr n)
+  generate {ℕzero} = [] L∷ L[]
+  generate {ℕsuc n} = L.map (_∷_ Fzero) (generate {n}) L.++ L.map (_∷_ (Fsuc Fzero)) (generate {n})
+
+  exhaustive : ∀ {n} → (x : BinStr n) → x ∈ generate {n}
+  exhaustive {ℕzero} [] = here Prefl
+  exhaustive {ℕsuc n} (Fzero ∷ x) = ∈++ˡ (∈map (exhaustive x))
+  exhaustive {ℕsuc n} (Fsuc Fzero ∷ x) = ∈++ʳ {BinStr (ℕsuc n)} {L.map (_∷_ Fzero) (generate {n})} (∈map (exhaustive x))
+  exhaustive {ℕsuc n} (Fsuc (Fsuc ()) ∷ _)
+
+  equal : ∀ {n} → (a b : BinStr n) → Bool
+  equal [] [] = true
+  equal (Fzero ∷ a) (Fzero ∷ b) = equal a b
+  equal (Fsuc Fzero ∷ a) (Fsuc Fzero ∷ b) = equal a b
+  equal _ _ = false
+
+------------------------------------------------------------------------
+-- Shorthands
+
+fib : ℕ → Expr
+fib n = fun (fib' n)
+
+2^ : ℕ → Expr
+2^ n = fun (2^' n)
+
+S₂ : ℕ → ℕ → Expr
+S₂ l r = fun (S₂' l r)
+
+CS₂ : ℕ → ℕ → Expr
+CS₂ l r = fun (CS₂' l r)
 
 ------------------------------------------------------------------------
 -- Evaluating and lifting
@@ -370,9 +343,9 @@ lift (fun f) = liftF f
 
 showF : (F : Fun) → (x : liftF F) → String
 showF (fib' n) = FibStrExpr.show
-showF (2^' n) = showBinStr
-showF (S₂' l r) = showSetPartitionK
-showF (CS₂' l r) = showCSetPartitionK
+showF (2^' n) = BinStrExpr.show
+showF (S₂' l r) = SetPartitionKExpr.show
+showF (CS₂' l r) = CSetPartitionKExpr.show
 
 show : (E : Expr) → (x : lift E) → String
 show (zero) ()
@@ -385,9 +358,15 @@ show (fun f) = showF f
 
 generateF : (F : Fun) → List (liftF F)
 generateF (fib' n) = FibStrExpr.generate
-generateF (2^' n) = generateBinStr
-generateF (S₂' l r) = generateSetPartitionK
-generateF (CS₂' l r) = generateCSetPartitionK
+generateF (2^' n) = BinStrExpr.generate
+generateF (S₂' l r) = SetPartitionKExpr.generate
+generateF (CS₂' l r) = CSetPartitionKExpr.generate
+
+exhaustiveF : (F : Fun) → (f : liftF F) → f ∈ generateF F
+exhaustiveF (fib' n) = FibStrExpr.exhaustive
+exhaustiveF (2^' n) = BinStrExpr.exhaustive
+exhaustiveF (S₂' l r) = SetPartitionKExpr.exhaustive
+exhaustiveF (CS₂' l r) = CSetPartitionKExpr.exhaustive
 
 generate : (E : Expr) → List (lift E)
 generate zero = L[]
@@ -396,11 +375,21 @@ generate (E + E₁) = L.map inj₁ (generate E) L.++ L.map inj₂ (generate E₁
 generate (E * E₁) = L.concatMap (λ l → L.concatMap (λ r → (l , r) L∷ L[]) (generate E₁)) (generate E)
 generate (fun f) = generateF f
 
+exhaustive : (E : Expr) → (e : lift E) → e ∈ generate E
+exhaustive zero ()
+exhaustive (suc E) (just x) = there (∈map (exhaustive E x))
+exhaustive (suc E) nothing = here Prefl
+exhaustive (E + E₁) (inj₁ x) = ∈++ˡ (∈map (exhaustive E x))
+exhaustive (E + E₁) (inj₂ y) = ∈++ʳ {lift (E + E₁)} {L.map inj₁ (generate E)} (∈map (exhaustive E₁ y))
+exhaustive (E * E₁) (x , y) = ∈concatMap {lift E} {lift (E * E₁)} {x} {x , y} {generate E} {λ l → L.concatMap (λ r → (l , r) L∷ L[]) (generate E₁)} (exhaustive E x)
+  (∈concatMap {lift E₁} {lift (E * E₁)} {y} {x , y} {generate E₁} {λ r → (x , r) L∷ L[]} (exhaustive E₁ y) (here Prefl))
+exhaustive (fun f) = exhaustiveF f
+
 equalF : (A : Fun) → liftF A → liftF A → Bool
-equalF (fib' n) x y = FibStrExpr.equal x y
-equalF (2^' n) x y = equalBinStr x y
-equalF (S₂' l r) x y = equalSetPartitionK x y
-equalF (CS₂' l r) x y = equalCSetPartitionK x y
+equalF (fib' n) = FibStrExpr.equal
+equalF (2^' n) = BinStrExpr.equal
+equalF (S₂' l r) = SetPartitionKExpr.equal
+equalF (CS₂' l r) = CSetPartitionKExpr.equal
 
 equal : (A : Expr) → lift A → lift A → Bool
 equal zero () ()

@@ -155,55 +155,63 @@ module InvolutionPrinciple
   bijective (mkBij to₁ from₁ toFrom₁ fromTo₁) (mkBij to₂ from₂ toFrom₂ fromTo₂) x y z (step p₁ p₂ p) (done q) with Ptrans (Psym p₁) q
   ... | ()
 
-  module Run2 (A : Set) (_A≟_ : (x y : A) → Dec (x P≡ y))
-              (B : Set) (_B≟_ : (x y : B) → Dec (x P≡ y))
-              (C : Set)
-              (D : Set) (_D≟'_ : (x y : D) → Dec (x P≡ y))
-              -- (counted : List D)
-              -- (ex-counted : ∀ x → x ∈ counted) -- (x : D) → x ∈ counted
-              (b₁ : (A ⊎ B) B≡ (C ⊎ D))
-              (b₂ : B B≡ D)
+  module Run2 (A B C D : Expr)
+              -- (A : Set) (_A≟_ : (x y : A) → Dec (x P≡ y))
+              -- (B : Set) (_B≟_ : (x y : B) → Dec (x P≡ y))
+              -- (C : Set)
+              -- (D : Set) (_D≟'_ : (x y : D) → Dec (x P≡ y))
+              -- -- (counted : List D)
+              -- -- (ex-counted : ∀ x → x ∈ counted) -- (x : D) → x ∈ counted
+              -- (b₁ : (A ⊎ B) B≡ (C ⊎ D))
+              -- (b₂ : B B≡ D)
+              (A+B≡C+D : A + B ≡ C + D)
+              (B≡D : B ≡ D)
               where
 
+    b₁ : lift (A + B) B≡ lift (C + D)
+    b₁ = toBijection A+B≡C+D
 
-    L : Set
-    L = A ⊎ B
+    b₂ : lift B B≡ lift D
+    b₂ = toBijection B≡D
+
+    L : Expr
+    L = A + B
 
 -- R : Set
 -- R = C ⊎ D
 
-    _L≟_ : (x y : L) → Dec (x P≡ y)
-    inj₁ x L≟ inj₁ x₁ with x A≟ x₁
-    inj₁ x L≟ inj₁ x₁ | yes Prefl = yes Prefl
-    inj₁ x L≟ inj₁ x₁ | no ¬p = no (λ { Prefl → ¬p Prefl })
-    inj₁ x L≟ inj₂ y = no (λ ())
-    inj₂ y L≟ inj₁ x = no (λ ())
-    inj₂ y L≟ inj₂ y₁ with y B≟ y₁
-    inj₂ y L≟ inj₂ y₁ | yes Prefl = yes Prefl
-    inj₂ y L≟ inj₂ y₁ | no ¬p = no (λ { Prefl → ¬p Prefl })
+    -- _L≟_ : (x y : L) → Dec (x P≡ y)
+    -- inj₁ x L≟ inj₁ x₁ with x A≟ x₁
+    -- inj₁ x L≟ inj₁ x₁ | yes Prefl = yes Prefl
+    -- inj₁ x L≟ inj₁ x₁ | no ¬p = no (λ { Prefl → ¬p Prefl })
+    -- inj₁ x L≟ inj₂ y = no (λ ())
+    -- inj₂ y L≟ inj₁ x = no (λ ())
+    -- inj₂ y L≟ inj₂ y₁ with y B≟ y₁
+    -- inj₂ y L≟ inj₂ y₁ | yes Prefl = yes Prefl
+    -- inj₂ y L≟ inj₂ y₁ | no ¬p = no (λ { Prefl → ¬p Prefl })
 
-    _D≟_ : (x y : D) → Dec (x P≡ y)
-    _D≟_ = _D≟'_
+    -- _D≟_ : (x y : D) → Dec (x P≡ y)
+    -- _D≟_ = _D≟'_
 
     module CntD where
-      open Data.List.Countdown (record { Carrier = D
+      open Data.List.Countdown (record { Carrier = lift D
                                        ; _≈_ = _P≡_
                                        ; isDecEquivalence = record { isEquivalence = record { refl = Prefl
                                                                                              ; sym = Psym
                                                                                              ; trans = Ptrans
                                                                                              }
-                                                                   ; _≟_ = _D≟_
+                                                                   ; _≟_ = equal D -- _D≟_
                                                                    }
                                        }) public
 
     module CntL where
-      open Data.List.Countdown (record { Carrier = L
+      open Data.List.Countdown (record { Carrier = lift L
                                        ; _≈_ = _P≡_
                                        ; isDecEquivalence = record { isEquivalence = record { refl = Prefl
                                                                                              ; sym = Psym
                                                                                              ; trans = Ptrans
                                                                                              }
-                                                                   ; _≟_ = _L≟_
+                                                                   ; _≟_ = equal L -- _L≟_
                                                                    }
                                        }) public
 
@@ -369,16 +377,16 @@ module InvolutionPrinciple
                  ∎)
       in ⊥-elim (y≠y' y≡y')
 
-    run2 : ∀ {m n} → (xs : List L)
-                   → (ys : List D)
-                   → ((x : L) → x ∈ xs → (inj₂-p : ∃ (λ x' → x P≡ inj₂ x')) → Σ D (λ y → getFrom b₂ y P≡ (proj₁ inj₂-p) × y ∈ ys))
-                   → ((y' : D) → y' ∈ ys → Σ L (λ x' → getTo b₁ x' P≡ (inj₂ y') × x' ∈ xs))
+    run2 : ∀ {m n} → (xs : List (lift L))
+                   → (ys : List (lift D))
+                   → ((x : lift L) → x ∈ xs → (inj₂-p : ∃ (λ x' → x P≡ inj₂ x')) → Σ (lift D) (λ y → getFrom b₂ y P≡ (proj₁ inj₂-p) × y ∈ ys))
+                   → ((y' : lift D) → y' ∈ ys → Σ (lift L) (λ x' → getTo b₁ x' P≡ (inj₂ y') × x' ∈ xs))
                    → xs CntL.⊕ m
                    → ys CntD.⊕ n
-                   → (x : B)
+                   → (x : lift B)
                    → ¬ (inj₂ x) ∈ xs
-                   → Σ D (λ y' → getFrom b₂ y' P≡ x × y' ∈ ys)
-                   → Σ C (λ y → [ b₁ ∧ b₂ ⊨ inj₂ x ⇒ y ])
+                   → Σ (lift D) (λ y' → getFrom b₂ y' P≡ x × y' ∈ ys)
+                   → Σ (lift C) (λ y → [ b₁ ∧ b₂ ⊨ inj₂ x ⇒ y ])
 
     -- All D's seen
     run2 {m} {ℕzero} xs ys preL preD cntL cntD x x∉xs xPre with getTo b₁ (inj₂ x) | inspect (getTo b₁) (inj₂ x)
@@ -438,12 +446,61 @@ module InvolutionPrinciple
                 (y , (y↦x' , here Prefl))
     run2 {ℕsuc m} {ℕsuc n} xs ys preL preD cntL cntD x x∉xs xPre | inj₂ y | [ x↦y ] | no y∉ys | x' | [ y↦x' ] | (no x'∉xs) | z , zp = z , step x↦y y↦x' zp
 
-  {-# NON_TERMINATING #-}
-  run : ∀ {A B C D : Set} → (b₁ : (A ⊎ B) B≡ (C ⊎ D)) → (b₂ : B B≡ D) → (x : A ⊎ B) → Σ C (λ y → [ b₁ ∧ b₂ ⊨ x ⇒ y ])
-  run b₁ b₂ x with apply-with-proof (getTo b₁) x
-  run b₁ b₂ x | inj₁ y , yp = y , done yp
-  run b₁ b₂ x | inj₂ y , yp with run b₁ b₂ (inj₂ (getFrom b₂ y))
-  run b₁ b₂ x | inj₂ y , yp | (z , zp) = z , step yp Prefl zp
+
+    remove : ∀ {S : Set} {x} → (xs : List S) → (x ∈ xs) → List S
+    remove (x L∷ xs) (here p) = xs
+    remove (x L∷ xs) (there p) = x L∷ remove xs p
+
+    bring-to-front : ∀ {S : Set} {x} → (xs : List S) → (x ∈ xs) → List S
+    bring-to-front {S} {x} xs p = x L∷ remove xs p
+
+    ∈tail : ∀ {S : Set} {x : S} {xs : List S} {y} → y ∈ (x L∷ xs) → ¬ y P≡ x → y ∈ xs
+    ∈tail {S} {x} {xs} {y} (here p) q = ⊥-elim (q p)
+    ∈tail (there p) q = p
+
+    bring-to-front-exhaustive : ∀ {S : Set} {x} → (xs : List S) → (ex : (y : S) → y ∈ xs) → ((a b : S) → Dec (a P≡ b)) → ((y : S) → y ∈ bring-to-front xs (ex x))
+    bring-to-front-exhaustive {S} {x} xs ex _≟_ y with y ≟ x
+    bring-to-front-exhaustive {S} {x} xs ex _≟_ y | yes p = here p
+    bring-to-front-exhaustive {S} {x} xs ex _≟_ y | no ¬p = there (getit xs (ex x) (ex y))
+      where
+        getit : ∀ (ps : List S) → (x∈ps : x ∈ ps) → y ∈ ps → y ∈ remove ps x∈ps
+        getit (x₁ L∷ xs) (here px) (here px₁) = ⊥-elim (¬p (Ptrans px₁ (Psym px)))
+        getit (x₁ L∷ xs) (here px) (there y∈xs) = y∈xs
+        getit (x₁ L∷ xs) (there x∈xs) (here px) = here px
+        getit (x₁ L∷ xs) (there x∈xs) (there y∈xs) = there (getit xs x∈xs y∈xs)
+
+    nothing-in-empty : ∀ {A : Set} → (x : A) → (x ∈ L[] → ⊥)
+    nothing-in-empty x ()
+
+    explicit1 : ∀ {x} → (DecSetoid.setoid (record { Carrier = lift L ; _≈_ = _P≡_ ; isDecEquivalence = record { isEquivalence = record { refl = λ {x} → Prefl ; sym = Psym ; trans = Ptrans } ; _≟_ = equal L }}) Membership.∈ inj₁ x) L[] → ⊥
+    explicit1 ()
+
+    explicit2 : ∀ {y} → (DecSetoid.setoid (record { Carrier = lift D ; _≈_ = _P≡_ ; isDecEquivalence = record { isEquivalence = record { refl = λ {y} → Prefl ; sym = Psym ; trans = Ptrans } ; _≟_ = equal D }}) Membership.∈ y) L[] → ⊥
+    explicit2 ()
+
+    run : (x : lift A) → Σ (lift C) (λ y → [ b₁ ∧ b₂ ⊨ inj₁ x ⇒ y ])
+    run x with getTo b₁ (inj₁ x) | inspect (getTo b₁) (inj₁ x)
+    run x | inj₁ y | [ x→y ] = y , (done x→y)
+    run x | inj₂ y | [ x→y ] with getFrom b₂ y | inspect (getFrom b₂) y
+    run x | inj₂ y | [ x→y ] | x' | [ y→x' ]
+        with run2 (inj₁ x L∷ L[]) (y L∷ L[])
+                  (λ { .(inj₁ x) (here Prefl) (_ , ())
+                    ; _ (there ()) _
+                    })
+                  (λ { y' (here Prefl) → inj₁ x , x→y , here Prefl
+                    ; _ (there ())
+                    })
+                  (CntL.insert (CntL.emptyFromList (bring-to-front (generate (A + B)) (exhaustive (A + B) (inj₁ x))) (bring-to-front-exhaustive (generate (A + B)) (exhaustive (A + B)) (equal (A + B)))) (inj₁ x) explicit1)
+                  (CntD.insert (CntD.emptyFromList (bring-to-front (generate D) (exhaustive D y)) (bring-to-front-exhaustive (generate D) (exhaustive D) (equal D))) y explicit2)
+                  x' (λ { (here ()) ; (there ()) }) (y , y→x' , here Prefl)
+    run x | inj₂ y | [ x→y ] | x' | [ y→x' ] | (y' , prf) = y' , step x→y y→x' prf
+
+  -- {-# NON_TERMINATING #-}
+  -- run : ∀ {A B C D : Set} → (b₁ : (A ⊎ B) B≡ (C ⊎ D)) → (b₂ : B B≡ D) → (x : A ⊎ B) → Σ C (λ y → [ b₁ ∧ b₂ ⊨ x ⇒ y ])
+  -- run b₁ b₂ x with apply-with-proof (getTo b₁) x
+  -- run b₁ b₂ x | inj₁ y , yp = y , done yp
+  -- run b₁ b₂ x | inj₂ y , yp with run b₁ b₂ (inj₂ (getFrom b₂ y))
+  -- run b₁ b₂ x | inj₂ y , yp | (z , zp) = z , step yp Prefl zp
 
   +-inj₂ : ∀ {A B C D} → A ℕ+ B P≡ C ℕ+ D → A P≡ C → B P≡ D
   +-inj₂ {ℕzero} {B} {.0} {D} p Prefl = p
@@ -464,107 +521,137 @@ module InvolutionPrinciple
   +-cancel {A} {B} {C} {D} p q = axiom (+-inj₁ (toEquality p) (toEquality q)) (mkBij to from toFrom fromTo)
     where
 
-      open Run2 (lift A) {!!} (lift B) {!!} (lift C) (lift D) {!!} (toBijection p) (toBijection q)
+      -- module Forward where
+      --   open Run2 (lift A) (equal A) (lift B) (equal B) (lift C) (lift D) (equal D) (toBijection p) (toBijection q) public
 
-      is-not-empty : ∀ {sn} {S : Set} {s : S} → (ss : Vec S sn) → s ∈ (V.toList ss) → Σ ℕ (λ n → Vec S (ℕsuc n))
-      is-not-empty V[] ()
-      is-not-empty {ℕsuc n} (x V∷ ss) p = n , x V∷ ss
+      --   -- explicit1 : ∀ {x} → (DecSetoid.setoid (record { Carrier = L ; _≈_ = _P≡_ ; isDecEquivalence = record { isEquivalence = record { refl = λ {x} → Prefl ; sym = Psym ; trans = Ptrans } ; _≟_ = _L≟_}}) Membership.∈ inj₁ x) L[] → ⊥
+      --   -- explicit1 ()
 
-      -- fix : xs ⊕ n → 
-      -- fixL : (counted : List L) → (∀ x → x ∈ counted) → (∃ (λ x → x ∈ counted)) → Σ ℕ (λ n → L[] CntL.⊕ ℕsuc n)
-      -- fixL counted p q = {!!} , {!!} -- CntL.emptyFromList counted p
+      --   -- explicit2 : ∀ {y} → (DecSetoid.setoid (record { Carrier = lift D ; _≈_ = _P≡_ ; isDecEquivalence = record { isEquivalence = record { refl = λ {y} → Prefl ; sym = Psym ; trans = Ptrans } ; _≟_ = _D≟_}}) Membership.∈ y) L[] → ⊥
+      --   -- explicit2 ()
 
-      remove : ∀ {S : Set} {x} → (xs : List S) → (x ∈ xs) → List S
-      remove (x L∷ xs) (here p) = xs
-      remove (x L∷ xs) (there p) = x L∷ remove xs p
+      -- module Backward where
+      --   open Run2 (lift C) (equal C) (lift D) (equal D) (lift A) (lift B) (equal B) (Bsym (toBijection p)) (Bsym (toBijection q)) public
 
-      bring-to-front : ∀ {S : Set} {x} → (xs : List S) → (x ∈ xs) → List S
-      bring-to-front {S} {x} xs p = x L∷ remove xs p
+      --   -- explicit1 : ∀ {x} → (DecSetoid.setoid (record { Carrier = L ; _≈_ = _P≡_ ; isDecEquivalence = record { isEquivalence = record { refl = λ {x} → Prefl ; sym = Psym ; trans = Ptrans } ; _≟_ = _L≟_}}) Membership.∈ inj₁ x) L[] → ⊥
+      --   -- explicit1 ()
 
-      ∈tail : ∀ {S : Set} {x : S} {xs : List S} {y} → y ∈ (x L∷ xs) → ¬ y P≡ x → y ∈ xs
-      ∈tail {S} {x} {xs} {y} (here p) q = ⊥-elim (q p)
-      ∈tail (there p) q = p
+      --   -- explicit2 : ∀ {y} → (DecSetoid.setoid (record { Carrier = lift B ; _≈_ = _P≡_ ; isDecEquivalence = record { isEquivalence = record { refl = λ {y} → Prefl ; sym = Psym ; trans = Ptrans } ; _≟_ = _D≟_}}) Membership.∈ y) L[] → ⊥
+      --   -- explicit2 ()
 
-      bring-to-front-exhaustive : ∀ {S : Set} {x} → (xs : List S) → (ex : (y : S) → y ∈ xs) → ((a b : S) → Dec (a P≡ b)) → ((y : S) → y ∈ bring-to-front xs (ex x))
-      bring-to-front-exhaustive {S} {x} xs ex _≟_ y with y ≟ x
-      bring-to-front-exhaustive {S} {x} xs ex _≟_ y | yes p = here p
-      bring-to-front-exhaustive {S} {x} xs ex _≟_ y | no ¬p = there (getit xs (ex x) (ex y))
-        where
-          getit : ∀ (ps : List S) → (x∈ps : x ∈ ps) → y ∈ ps → y ∈ remove ps x∈ps
-          getit (x₁ L∷ xs) (here px) (here px₁) = ⊥-elim (¬p (Ptrans px₁ (Psym px)))
-          getit (x₁ L∷ xs) (here px) (there y∈xs) = y∈xs
-          getit (x₁ L∷ xs) (there x∈xs) (here px) = here px
-          getit (x₁ L∷ xs) (there x∈xs) (there y∈xs) = there (getit xs x∈xs y∈xs)
+      -- is-not-empty : ∀ {sn} {S : Set} {s : S} → (ss : Vec S sn) → s ∈ (V.toList ss) → Σ ℕ (λ n → Vec S (ℕsuc n))
+      -- is-not-empty V[] ()
+      -- is-not-empty {ℕsuc n} (x V∷ ss) p = n , x V∷ ss
 
-      nothing-in-empty : ∀ {A : Set} → (x : A) → (x ∈ L[] → ⊥)
-      nothing-in-empty x ()
+      -- -- fix : xs ⊕ n → 
+      -- -- fixL : (counted : List L) → (∀ x → x ∈ counted) → (∃ (λ x → x ∈ counted)) → Σ ℕ (λ n → L[] CntL.⊕ ℕsuc n)
+      -- -- fixL counted p q = {!!} , {!!} -- CntL.emptyFromList counted p
 
-      explicit1 : ∀ {x} → (DecSetoid.setoid (record { Carrier = L ; _≈_ = _P≡_ ; isDecEquivalence = record { isEquivalence = record { refl = λ {x} → Prefl ; sym = Psym ; trans = Ptrans } ; _≟_ = _L≟_}}) Membership.∈ inj₁ x) L[] → ⊥
-      explicit1 ()
+      -- remove : ∀ {S : Set} {x} → (xs : List S) → (x ∈ xs) → List S
+      -- remove (x L∷ xs) (here p) = xs
+      -- remove (x L∷ xs) (there p) = x L∷ remove xs p
 
-      explicit2 : ∀ {y} → (DecSetoid.setoid (record { Carrier = lift D ; _≈_ = _P≡_ ; isDecEquivalence = record { isEquivalence = record { refl = λ {y} → Prefl ; sym = Psym ; trans = Ptrans } ; _≟_ = _D≟_}}) Membership.∈ y) L[] → ⊥
-      explicit2 ()
+      -- bring-to-front : ∀ {S : Set} {x} → (xs : List S) → (x ∈ xs) → List S
+      -- bring-to-front {S} {x} xs p = x L∷ remove xs p
+
+      -- ∈tail : ∀ {S : Set} {x : S} {xs : List S} {y} → y ∈ (x L∷ xs) → ¬ y P≡ x → y ∈ xs
+      -- ∈tail {S} {x} {xs} {y} (here p) q = ⊥-elim (q p)
+      -- ∈tail (there p) q = p
+
+      -- bring-to-front-exhaustive : ∀ {S : Set} {x} → (xs : List S) → (ex : (y : S) → y ∈ xs) → ((a b : S) → Dec (a P≡ b)) → ((y : S) → y ∈ bring-to-front xs (ex x))
+      -- bring-to-front-exhaustive {S} {x} xs ex _≟_ y with y ≟ x
+      -- bring-to-front-exhaustive {S} {x} xs ex _≟_ y | yes p = here p
+      -- bring-to-front-exhaustive {S} {x} xs ex _≟_ y | no ¬p = there (getit xs (ex x) (ex y))
+      --   where
+      --     getit : ∀ (ps : List S) → (x∈ps : x ∈ ps) → y ∈ ps → y ∈ remove ps x∈ps
+      --     getit (x₁ L∷ xs) (here px) (here px₁) = ⊥-elim (¬p (Ptrans px₁ (Psym px)))
+      --     getit (x₁ L∷ xs) (here px) (there y∈xs) = y∈xs
+      --     getit (x₁ L∷ xs) (there x∈xs) (here px) = here px
+      --     getit (x₁ L∷ xs) (there x∈xs) (there y∈xs) = there (getit xs x∈xs y∈xs)
+
+      -- nothing-in-empty : ∀ {A : Set} → (x : A) → (x ∈ L[] → ⊥)
+      -- nothing-in-empty x ()
 
       to : lift A → lift C
-      to x with getTo (toBijection p) (inj₁ x) | inspect (getTo (toBijection p)) (inj₁ x)
-      to x | inj₁ y | [ x→y ] = y
-      to x | inj₂ y | [ x→y ] with getFrom (toBijection q) y | inspect (getFrom (toBijection q)) y
-      to x | inj₂ y | [ x→y ] | x' | [ y→x' ]
-          with run2 (inj₁ x L∷ L[]) (y L∷ L[])
-                    (λ { .(inj₁ x) (here Prefl) (_ , ())
-                      ; _ (there ()) _
-                      })
-                    (λ { y' (here Prefl) → inj₁ x , x→y , here Prefl
-                      ; _ (there ())
-                      })
-                    -- (CntL.insert (CntL.emptyFromList (bring-to-front (generate (A + B)) (exhaustive (A + B) (inj₁ x))) (bring-to-front-exhaustive (generate (A + B)) (exhaustive (A + B)) {!!})) (inj₁ x) (λ ()))
-                    (CntL.insert (CntL.emptyFromList (bring-to-front (generate (A + B)) (exhaustive (A + B) (inj₁ x))) (bring-to-front-exhaustive (generate (A + B)) (exhaustive (A + B)) {!!})) (inj₁ x) explicit1)
-                    (CntD.insert (CntD.emptyFromList (bring-to-front (generate D) (exhaustive D y)) (bring-to-front-exhaustive (generate D) (exhaustive D) {!!})) y explicit2)
-                    x' (λ { (here ()) ; (there ()) }) (y , y→x' , here Prefl)
-      to x | inj₂ y | [ x→y ] | x' | [ y→x' ] | (y' , _) = y'
+      to x with run x where open Run2 A B C D p q
+      to x | y , prf = y
 
--- → (xs : List B)
--- → (ys : List D)
--- → ((x' : B) → x' ∈ xs → Σ D (λ y' → getFrom b₂ y' P≡ x' × y' ∈ ys))
--- → ((y' : D) → y' ∈ ys → Σ B (λ x' → getTo b₁ (inj₂ x') P≡ (inj₂ y') × x' ∈ xs))
--- → xs CntB.⊕ m
--- → ys CntD.⊕ n
--- → (x : B)
--- → ¬ x ∈ xs
--- → Σ D (λ y' → getFrom b₂ y' P≡ x × y' ∈ ys)
--- → Σ C (λ y → [ b₁ ∧ b₂ ⊨ inj₂ x ⇒ y ])
-
-        -- Run2 (A : Set)
-        -- (B : Set) (_B≟_ : (x y : B) → Dec (x P≡ y))
-        -- (C : Set)
-        -- (D : Set) (_D≟_ : (x y : D) → Dec (x P≡ y))
-        -- -- (counted : List D)
-        -- -- (ex-counted : ∀ x → x ∈ counted) -- (x : D) → x ∈ counted
-        -- (b₁ : (A ⊎ B) B≡ (C ⊎ D))
-        -- (b₂ : B B≡ D)
-      -- to x with run (toBijection p) (toBijection q) (inj₁ x)
-      -- to x | y , prf = y
+      -- to x with getTo (toBijection p) (inj₁ x) | inspect (getTo (toBijection p)) (inj₁ x)
+      -- to x | inj₁ y | [ x→y ] = y
+      -- to x | inj₂ y | [ x→y ] with getFrom (toBijection q) y | inspect (getFrom (toBijection q)) y
+      -- to x | inj₂ y | [ x→y ] | x' | [ y→x' ]
+      --     with Forward.run2 (inj₁ x L∷ L[]) (y L∷ L[])
+      --               (λ { .(inj₁ x) (here Prefl) (_ , ())
+      --                 ; _ (there ()) _
+      --                 })
+      --               (λ { y' (here Prefl) → inj₁ x , x→y , here Prefl
+      --                 ; _ (there ())
+      --                 })
+      --               (Forward.CntL.insert (Forward.CntL.emptyFromList (bring-to-front (generate (A + B)) (exhaustive (A + B) (inj₁ x))) (bring-to-front-exhaustive (generate (A + B)) (exhaustive (A + B)) (equal (A + B)))) (inj₁ x) Forward.explicit1)
+      --               (Forward.CntD.insert (Forward.CntD.emptyFromList (bring-to-front (generate D) (exhaustive D y)) (bring-to-front-exhaustive (generate D) (exhaustive D) (equal D))) y Forward.explicit2)
+      --               x' (λ { (here ()) ; (there ()) }) (y , y→x' , here Prefl)
+      -- to x | inj₂ y | [ x→y ] | x' | [ y→x' ] | (y' , _) = y'
 
       from : lift C → lift A
-      from x = {!!}
-      -- from x with run (Bsym (toBijection p)) (Bsym (toBijection q)) (inj₁ x)
-      -- from x | y , prf = y
+      -- from x = {!!}
+      from y with run y where open Run2 C D A B (sym p) (sym q)
+      from y | x , prf = x
+
+      -- from x with getTo (Bsym (toBijection p)) (inj₁ x) | inspect (getTo (Bsym (toBijection p))) (inj₁ x)
+      -- from x | inj₁ y | [ x→y ] = y
+      -- from x | inj₂ y | [ x→y ] with getFrom (Bsym (toBijection q)) y | inspect (getFrom (Bsym (toBijection q))) y
+      -- from x | inj₂ y | [ x→y ] | x' | [ y→x' ]
+      --     with Backward.run2 (inj₁ x L∷ L[]) (y L∷ L[])
+      --               (λ { .(inj₁ x) (here Prefl) (_ , ())
+      --                 ; _ (there ()) _
+      --                 })
+      --               (λ { y' (here Prefl) → inj₁ x , x→y , here Prefl
+      --                 ; _ (there ())
+      --                 })
+      --               (Backward.CntL.insert (Backward.CntL.emptyFromList (bring-to-front (generate (C + D)) (exhaustive (C + D) (inj₁ x))) (bring-to-front-exhaustive (generate (C + D)) (exhaustive (C + D)) (equal (C + D)))) (inj₁ x) Backward.explicit1)
+      --               (Backward.CntD.insert (Backward.CntD.emptyFromList (bring-to-front (generate B) (exhaustive B y)) (bring-to-front-exhaustive (generate B) (exhaustive B) (equal B))) y Backward.explicit2)
+      --               x' (λ { (here ()) ; (there ()) }) (y , y→x' , here Prefl)
+      -- from x | inj₂ y | [ x→y ] | x' | [ y→x' ] | (y' , _) = y'
 
       toFrom : ∀ y → to (from y) P≡ y
-      toFrom y = {!!}
-      -- toFrom x with run (Bsym (toBijection p)) (Bsym (toBijection q)) (inj₁ x)
-      -- toFrom x | y , prf with run (toBijection p) (toBijection q) (inj₁ y)
-      -- toFrom x | y , prf | z , prf2 = bijective (toBijection p) (toBijection q) z (inj₁ y) x prf2 (fix (reverse (Bsym (toBijection p)) (Bsym (toBijection q)) x y prf))
+      toFrom y with run y where open Run2 C D A B (sym p) (sym q)
+      toFrom y | x , prf with run x where open Run2 A B C D p q
+      toFrom y | x , prf | z , prf2 = bijective (toBijection p) (toBijection q) z (inj₁ x) y prf2 (fix (reverse (Bsym (toBijection p)) (Bsym (toBijection q)) y x prf))
+        where
+          symsym : ∀ {A B} → (t : A B≡ B) → Bsym (Bsym t) P≡ t
+          symsym (mkBij to₁ from₁ x₁ x₂) = Prefl
+
+          fix : [ Bsym (Bsym (toBijection p)) ∧ Bsym (Bsym (toBijection q)) ⊨ inj₁ x ⇒ y ] → [ toBijection p ∧ toBijection q ⊨ inj₁ x ⇒ y ]
+          fix t rewrite symsym (toBijection p) | symsym (toBijection q) = t
+
+-- fromTo x = {!!}
+      fromTo : ∀ x → from (to x) P≡ x
+      -- fromTo x with run x where open Run2 A B C D p q
+      -- fromTo x | y , prf with run y where open Run2 C D A B (sym p) (sym q)
+      -- fromTo x | y , prf | z , prf2 = bijective (toBijection p) (toBijection q) z (inj₁ y) x prf2 (fix (reverse (Bsym (toBijection p)) (Bsym (toBijection q)) x y prf))
       --   where
       --     symsym : ∀ {A B} → (t : A B≡ B) → Bsym (Bsym t) P≡ t
       --     symsym (mkBij to₁ from₁ x₁ x₂) = Prefl
 
-      --     fix : [ Bsym (Bsym (toBijection p)) ∧ Bsym (Bsym (toBijection q)) ⊨ inj₁ y ⇒ x ] → [ toBijection p ∧ toBijection q ⊨ inj₁ y ⇒ x ]
+      --     fix : [ Bsym (Bsym (toBijection p)) ∧ Bsym (Bsym (toBijection q)) ⊨ inj₁ x ⇒ y ] → [ toBijection p ∧ toBijection q ⊨ inj₁ x ⇒ y ]
       --     fix t rewrite symsym (toBijection p) | symsym (toBijection q) = t
-
-      fromTo : ∀ x → from (to x) P≡ x
-      fromTo x = {!!}
-      -- fromTo x with run (toBijection p) (toBijection q) (inj₁ x)
-      -- fromTo x | y , prf with run (Bsym (toBijection p)) (Bsym (toBijection q)) (inj₁ y)
-      -- fromTo x | y , prf | z , prf2 = let test = reverse (toBijection p) (toBijection q) x y prf in bijective (Bsym (toBijection p)) (Bsym (toBijection q)) z (inj₁ y) x prf2 test
+      -- fromTo x with getTo (toBijection p) (inj₁ x) | inspect (getTo (toBijection p)) (inj₁ x)
+      -- fromTo x | inj₁ y | [ x→y ] = {!!}
+      -- fromTo x | inj₂ y | [ x→y ] = {!!}
+      -- fromTo x | inj₂ y | [ x→y ] with getFrom (toBijection q) y | inspect (getFrom (toBijection q)) y
+      -- fromTo x | inj₂ y | [ x→y ] | x' | [ y→x' ]
+      --     with Forward.run2 (inj₁ x L∷ L[]) (y L∷ L[])
+      --               (λ { .(inj₁ x) (here Prefl) (_ , ())
+      --                 ; _ (there ()) _
+      --                 })
+      --               (λ { y' (here Prefl) → inj₁ x , x→y , here Prefl
+      --                 ; _ (there ())
+      --                 })
+      --               (Forward.CntL.insert (Forward.CntL.emptyFromList (bring-to-front (generate (A + B)) (exhaustive (A + B) (inj₁ x))) (bring-to-front-exhaustive (generate (A + B)) (exhaustive (A + B)) (equal (A + B)))) (inj₁ x) Forward.explicit1)
+      --               (Forward.CntD.insert (Forward.CntD.emptyFromList (bring-to-front (generate D) (exhaustive D y)) (bring-to-front-exhaustive (generate D) (exhaustive D) (equal D))) y Forward.explicit2)
+      --               x' (λ { (here ()) ; (there ()) }) (y , y→x' , here Prefl)
+      -- fromTo x | inj₂ y | [ x→y ] | x' | [ y→x' ] | (y' , _) = ?
+      fromTo x with run x where open Run2 A B C D p q
+      fromTo x | y , prf with run y where open Run2 C D A B (sym p) (sym q)
+      fromTo x | y , prf | z , prf2 = let test = reverse (toBijection p) (toBijection q) x y prf in bijective (Bsym (toBijection p)) (Bsym (toBijection q)) z (inj₁ y) x prf2 test
 

@@ -47,5 +47,5 @@ direct []  = [[1]]
 direct par =
     let (m, i, p) = removeMax par
     in case break null p of
-         (q, [])   -> insertMax m i (bij q)
-         (q, [[]]) -> bij q ++ [[m+1]]
+         (q, [])   -> insertMax m i (direct q)
+         (q, [[]]) -> direct q ++ [[m+1]]

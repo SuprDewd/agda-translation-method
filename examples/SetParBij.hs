@@ -1,6 +1,7 @@
 import SetParData (pairing)
 import Data.List
 import Data.Maybe
+import Control.Monad
 
 type Par = [[Int]]
 
@@ -49,6 +50,32 @@ direct par =
     in case break null p of
          (q, [])   -> insertMax m i (direct q)
          (q, [[]]) -> direct q ++ [[m+1]]
+
+
+-- Direct implementation of bij
+direct2 :: Par -> (Par, [Int])
+direct2 []  = ([[1]], [0])
+direct2 par =
+    let (m, i, p) = removeMax par
+    in case break null p of
+         (q, [])   -> let (q', xs) = direct2 q
+                      in (insertMax m i q', xs ++ [i+1])
+         (q, [[]]) -> let (q', xs) = direct2 q
+                      in (q' ++ [[m+1]], xs ++ [0])
+
+code :: Par -> [Int]
+code [] = []
+code par =
+    let (_, i, p) = removeMax par
+    in case break null p of
+         (q, [])   -> let xs = code q in xs ++ [i+1]
+         (q, [[]]) -> let xs = code q in xs ++ [0]
+
+code' :: Par -> [Int]
+code' = snd . direct2
+
+testBijConj1 :: Par -> Bool
+testBijConj1 par = 0:code par == code' par
 
 showPar :: Par -> String
 showPar = intercalate "-" . map (concatMap show)

@@ -49,3 +49,19 @@ direct par =
     in case break null p of
          (q, [])   -> insertMax m i (direct q)
          (q, [[]]) -> direct q ++ [[m+1]]
+
+showPar :: Par -> String
+showPar = intercalate "-" . map (concatMap show)
+
+showParPair :: (Par, Par) -> String
+showParPair (p, q) = showPar p ++ " -> " ++ showPar q
+
+printBij :: Int -> IO ()
+printBij = mapM_ (putStrLn . showParPair) . (pairing !!)
+
+-- TODO: Look at the bijection give by Stanley: problem 108 in EC1 2nd ed
+-- (and it solution on p. 192). It's not the same as ours, e.g.
+-- We:       1456-2378 -> 157-2469-38
+-- Stanley:  1456-2378 -> 146-38-2579
+
+main = printBij 8

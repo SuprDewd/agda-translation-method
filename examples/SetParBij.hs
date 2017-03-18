@@ -86,6 +86,13 @@ showParPair (p, q) = showPar p ++ " -> " ++ showPar q
 printBij :: Int -> IO ()
 printBij = mapM_ (putStrLn . showParPair) . (pairing !!)
 
+zeros :: [Int] -> Int
+zeros = length . filter (==0)
+
+codes :: Int -> [[Int]]
+codes 0 = [[]]
+codes n = [ xs ++ [x] | xs <- codes (n-1), x <- [0 .. zeros xs] ]
+
 -- TODO: Look at the bijection give by Stanley: problem 108 in EC1 2nd ed
 -- (and it solution on p. 192). It's not the same as ours, e.g.
 -- We:       1456-2378 -> 157-2469-38

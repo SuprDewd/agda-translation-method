@@ -12,6 +12,8 @@ open import Translate.Axioms
 open import Translate.Bijection using (getTo)
 open import Translate.Tools
 
+import Data.Fin as F
+
 one = suc zero
 two = suc one
 three = suc two
@@ -188,6 +190,36 @@ thrice' {n} =
     (fib (ℕsuc (ℕsuc (ℕsuc n))) + fib (ℕsuc (ℕsuc n))) + fib n
   ≈⟨ +-cong (sym fib-def) refl ⟩
     fib (ℕsuc (ℕsuc (ℕsuc (ℕsuc n)))) + fib n
+  ∎
+
+∑ : (n : ℕ) → (Fin n → Expr) → Expr
+∑ ℕzero f = zero
+∑ (ℕsuc n) f = f Fzero + ∑ n (λ i → f (Fsuc i))
+
+-- ∑-pop : ∀ {n f} → ∑ (ℕsuc n) f ≡ ∑ n (λ i → f (F.inject₁ i)) + f (F.fromℕ n)
+-- ∑-pop {ℕzero} {f} = +-comm
+-- ∑-pop {ℕsuc n} {f} =
+--   begin
+--     f Fzero + (f (Fsuc Fzero) + ∑ n (λ i → f (Fsuc (Fsuc i))))
+--   ≈⟨ {!!} ⟩
+--     f Fzero + (∑ n (λ i → f (Fsuc (F.inject₁ i))) + f (Fsuc (F.fromℕ n)))
+--   ≈⟨ sym +-assoc ⟩
+--     (f Fzero + ∑ n (λ i → f (Fsuc (F.inject₁ i)))) + f (Fsuc (F.fromℕ n))
+--   ∎
+
+-- ∏ : (n : ℕ) → (Fin n → Expr) → Expr
+-- ∏ ℕzero f = one
+-- ∏ (ℕsuc n) f = f Fzero * ∏ n (λ i → f (Fsuc i))
+
+-- The more general "thrice"
+nce : ∀ {n} → fib (4 ℕ+ n) + ∑ n (λ fi → let i = 1 ℕ+ ℕsuc (F.toℕ fi) in nat i * fib i) ≡ nat (1 ℕ+ n) * fib (2 ℕ+ n) + nat 3
+nce {n} =
+  begin
+    fib (4 ℕ+ n) + ∑ n (λ fi → let i = 1 ℕ+ ℕsuc (F.toℕ fi) in nat i * fib i)
+  ≈⟨ {!!} ⟩
+    fib (4 ℕ+ n) + ∑ n (λ fi → let i = 1 ℕ+ ℕsuc (F.toℕ fi) in nat i * fib i)
+  ≈⟨ {!!} ⟩
+    nat (1 ℕ+ n) * fib (2 ℕ+ n) + nat 3
   ∎
 
 

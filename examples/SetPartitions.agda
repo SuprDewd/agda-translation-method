@@ -10,7 +10,7 @@ open import Translate.Tools
 import Data.List as L
 
 party : ∀ {l r} → S₂ l r ≡ CS₂ (ℕsuc l) r
-party {ℕzero} {ℕzero} = axiom Prefl (mkBij to from toFrom fromTo)
+party {ℕzero} {ℕzero} = proof Prefl (mkBij to from toFrom fromTo)
   where
     to : SetPartitionK ℕzero ℕzero → CSetPartitionK (ℕsuc ℕzero) ℕzero
     to empty = add empty
@@ -24,7 +24,7 @@ party {ℕzero} {ℕzero} = axiom Prefl (mkBij to from toFrom fromTo)
     fromTo : ∀ x → from (to x) P≡ x
     fromTo empty = Prefl
 
-party {ℕzero} {ℕsuc r} = axiom Prefl (mkBij to from toFrom fromTo)
+party {ℕzero} {ℕsuc r} = proof Prefl (mkBij to from toFrom fromTo)
   where
     to : SetPartitionK ℕzero (ℕsuc r) → CSetPartitionK (ℕsuc ℕzero) (ℕsuc r)
     to (insert () x₁)

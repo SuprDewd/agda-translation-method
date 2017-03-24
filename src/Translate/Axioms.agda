@@ -43,7 +43,7 @@ open import Translate.Common
 open import Translate.Types
 
 +-assoc : ∀ {a b c} → (a + b) + c ≡ a + (b + c)
-+-assoc {a} {b} {c} = axiom (NPS.+-assoc (value a) (value b) (value c)) (mkBij to from toFrom fromTo)
++-assoc {a} {b} {c} = proof (NPS.+-assoc (value a) (value b) (value c)) (mkBij to from toFrom fromTo)
   where
     -- TODO: is it cleaner to have these as lambdas?
     to : lift ((a + b) + c) → lift (a + (b + c))
@@ -67,7 +67,7 @@ open import Translate.Types
     fromTo (inj₂ y) = Prefl
 
 +-right-identity : ∀ {a} → a + zero ≡ a
-+-right-identity {a} = axiom (NPS.+-right-identity (value a)) (mkBij to from toFrom fromTo)
++-right-identity {a} = proof (NPS.+-right-identity (value a)) (mkBij to from toFrom fromTo)
   where
     to : lift (a + zero) → lift a
     to (inj₁ x) = x
@@ -84,7 +84,7 @@ open import Translate.Types
     fromTo (inj₂ ())
 
 +-suc : ∀ {a b} → a + suc b ≡ suc (a + b)
-+-suc {a} {b} = axiom (NPS.+-suc (value a) (value b)) (mkBij to from toFrom fromTo)
++-suc {a} {b} = proof (NPS.+-suc (value a) (value b)) (mkBij to from toFrom fromTo)
   where
     to : lift (a + suc b) → lift (suc (a + b))
     to (inj₁ x) = just (inj₁ x)
@@ -107,7 +107,7 @@ open import Translate.Types
     fromTo (inj₂ nothing) = Prefl
 
 +-comm : ∀ {a b} → a + b ≡ b + a
-+-comm {a} {b} = axiom (NPS.+-comm (value a) (value b)) (mkBij to from toFrom fromTo)
++-comm {a} {b} = proof (NPS.+-comm (value a) (value b)) (mkBij to from toFrom fromTo)
   where
     to : lift (a + b) → lift (b + a)
     to (inj₁ x) = inj₂ x
@@ -126,7 +126,7 @@ open import Translate.Types
     fromTo (inj₂ y) = Prefl
 
 +-*-suc : ∀ {a b} → a * suc b ≡ a + a * b
-+-*-suc {a} {b} = axiom (NPS.+-*-suc (value a) (value b)) (mkBij to from toFrom fromTo)
++-*-suc {a} {b} = proof (NPS.+-*-suc (value a) (value b)) (mkBij to from toFrom fromTo)
   where
     to : lift (a * suc b) → lift (a + a * b)
     to (l , nothing) = inj₁ l
@@ -145,7 +145,7 @@ open import Translate.Types
     fromTo (l , nothing) = Prefl
 
 *-right-zero : ∀ {a} → a * zero ≡ zero
-*-right-zero {a} = axiom (NPS.*-right-zero (value a)) (mkBij to from toFrom fromTo)
+*-right-zero {a} = proof (NPS.*-right-zero (value a)) (mkBij to from toFrom fromTo)
   where
     to : lift (a * zero) → lift zero
     to (l , ())
@@ -160,7 +160,7 @@ open import Translate.Types
     fromTo (l , ())
 
 *-right-identity : ∀ {a} → a * suc zero ≡ a
-*-right-identity {a} = axiom NP.*-right-identity (mkBij to from toFrom fromTo)
+*-right-identity {a} = proof NP.*-right-identity (mkBij to from toFrom fromTo)
   where
     to : lift (a * suc zero) → lift a
     to (l , nothing) = l
@@ -177,7 +177,7 @@ open import Translate.Types
     fromTo (l , nothing) = Prefl
 
 *-comm : ∀ {a b} → a * b ≡ b * a
-*-comm {a} {b} = axiom (NPS.*-comm (value a) (value b)) (mkBij to from toFrom fromTo)
+*-comm {a} {b} = proof (NPS.*-comm (value a) (value b)) (mkBij to from toFrom fromTo)
   where
     to : lift (a * b) → lift (b * a)
     to (l , r) = r , l
@@ -192,7 +192,7 @@ open import Translate.Types
     fromTo (l , r) = Prefl
 
 distribʳ-*-+ : ∀ {a b c} → (b + c) * a ≡ b * a + c * a
-distribʳ-*-+ {a} {b} {c} = axiom (NPS.distribʳ-*-+ (value a) (value b) (value c)) (mkBij to from toFrom fromTo)
+distribʳ-*-+ {a} {b} {c} = proof (NPS.distribʳ-*-+ (value a) (value b) (value c)) (mkBij to from toFrom fromTo)
   where
     to : lift ((b + c) * a) → lift (b * a + c * a)
     to ((inj₁ l) , r) = inj₁ (l , r)
@@ -211,7 +211,7 @@ distribʳ-*-+ {a} {b} {c} = axiom (NPS.distribʳ-*-+ (value a) (value b) (value 
     fromTo (inj₂ y , r) = Prefl
 
 distribˡ-*-+ : ∀ {a b c} → a * (b + c) ≡ a * b + a * c
-distribˡ-*-+ {a} {b} {c} = axiom (NP.distribˡ-*-+ (value a) (value b) (value c)) (mkBij to from toFrom fromTo)
+distribˡ-*-+ {a} {b} {c} = proof (NP.distribˡ-*-+ (value a) (value b) (value c)) (mkBij to from toFrom fromTo)
   where
     to : lift (a * (b + c)) → lift (a * b + a * c)
     to (l , (inj₁ r)) = inj₁ (l , r)
@@ -230,7 +230,7 @@ distribˡ-*-+ {a} {b} {c} = axiom (NP.distribˡ-*-+ (value a) (value b) (value c
     fromTo (l , inj₂ y) = Prefl
 
 *-assoc : ∀ {a b c} → (a * b) * c ≡ a * (b * c)
-*-assoc {a} {b} {c} = axiom (NPS.*-assoc (value a) (value b) (value c)) (mkBij to from toFrom fromTo)
+*-assoc {a} {b} {c} = proof (NPS.*-assoc (value a) (value b) (value c)) (mkBij to from toFrom fromTo)
   where
     to : lift ((a * b) * c) → lift (a * (b * c))
     to ((x , y) , z) = x , (y , z)
@@ -253,7 +253,7 @@ distribˡ-*-+ {a} {b} {c} = axiom (NP.distribˡ-*-+ (value a) (value b) (value c
           → value c P≡ value d
           → lift c B≡ lift d
           → a + c ≡ b + d
-    lemma a≡b (mkBij a→b b→a toFrom₁ fromTo₁) c≡d (mkBij c→d d→c toFrom₂ fromTo₂) = axiom prf (mkBij to from toFrom fromTo)
+    lemma a≡b (mkBij a→b b→a toFrom₁ fromTo₁) c≡d (mkBij c→d d→c toFrom₂ fromTo₂) = proof prf (mkBij to from toFrom fromTo)
       where
         prf : value (a + c) P≡ value (b + d)
         prf = Ptrans (Pcong (λ y → y ℕ+ value c) a≡b) (Pcong (λ y → value b ℕ+ y) c≡d)
@@ -283,7 +283,7 @@ distribˡ-*-+ {a} {b} {c} = axiom (NP.distribˡ-*-+ (value a) (value b) (value c
           → value c P≡ value d
           → lift c B≡ lift d
           → a * c ≡ b * d
-    lemma a≡b (mkBij a→b b→a toFrom₁ fromTo₁) c≡d (mkBij c→d d→c toFrom₂ fromTo₂) = axiom prf (mkBij to from toFrom fromTo)
+    lemma a≡b (mkBij a→b b→a toFrom₁ fromTo₁) c≡d (mkBij c→d d→c toFrom₂ fromTo₂) = proof prf (mkBij to from toFrom fromTo)
       where
         prf : value (a * c) P≡ value (b * d)
         prf = Ptrans (Pcong (λ y → y ℕ* value c) a≡b) (Pcong (λ y → value b ℕ* y) c≡d)

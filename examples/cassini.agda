@@ -53,7 +53,7 @@ mutual
 
   cassini-odd : ∀ k → fib (2 ℕ* k ℕ+ 2) * fib (2 ℕ* k)
                     ≡ fib (2 ℕ* k ℕ+ 1) * fib (2 ℕ* k ℕ+ 1) + one
-  cassini-odd ℕzero = axiom Prefl (mkBij to from toFrom fromTo)
+  cassini-odd ℕzero = proof Prefl (mkBij to from toFrom fromTo)
     where
       -- TODO: There are two possible base cases. Try both of them?
       to : (FibStr 2 × FibStr 0) → (FibStr 1 × FibStr 1 ⊎ Maybe ⊥)

@@ -22,25 +22,22 @@ infix 4 _≡_
 -- This may also be useful for the semiring solver (as otherwise it would have
 -- to find base cases by itself).
 data _≡_ : Expr → Expr → Set₂ where
-  refl : ∀ {a} → a ≡ a
-  sym : ∀ {a b} → a ≡ b → b ≡ a
-  trans : ∀ {a b c} → a ≡ b → b ≡ c → a ≡ c
-  axiom : ∀ {a b}
+  proof : ∀ {a b}
         → value a P≡ value b
         → lift a B≡ lift b
         → a ≡ b
 
--- The main translation methods
-
 toEquality : ∀ {a b} → a ≡ b → value a P≡ value b
-toEquality refl = Prefl
-toEquality (sym a≡b) = Psym (toEquality a≡b)
-toEquality (trans a≡b c≡d) = Ptrans (toEquality a≡b) (toEquality c≡d)
-toEquality (axiom prf _) = prf
+toEquality (proof prf _) = prf
 
 toBijection : ∀ {a b} → a ≡ b → lift a B≡ lift b
-toBijection refl = mkBij (λ x → x) (λ x → x) (λ y → Prefl) (λ x → Prefl)
-toBijection (sym a≡b) = Bsym (toBijection a≡b)
-toBijection (trans a≡b c≡d) = Btrans (toBijection a≡b) (toBijection c≡d)
-toBijection (axiom _ bij) = bij
+toBijection (proof _ bij) = bij
 
+refl : ∀ {a} → a ≡ a
+refl = proof Prefl Brefl
+
+sym : ∀ {a b} → a ≡ b → b ≡ a
+sym (proof a=b a≅b) = proof (Psym a=b) (Bsym a≅b)
+
+trans : ∀ {a b c} → a ≡ b → b ≡ c → a ≡ c
+trans (proof a=b a≅b) (proof b=c b≅c) = proof (Ptrans a=b b=c) (Btrans a≅b b≅c)

@@ -21,7 +21,7 @@ open import Translate.Bijection using (getTo; getFrom; getToFrom; getFromTo)
 -- Fibonacci strings
 
 fib-def : ∀ {n} → fib (ℕsuc (ℕsuc n)) ≡ fib (ℕsuc n) + fib n
-fib-def {n} = axiom Prefl (mkBij to from toFrom fromTo)
+fib-def {n} = proof Prefl (mkBij to from toFrom fromTo)
   where
     to : lift (fib (ℕsuc (ℕsuc n))) → lift (fib (ℕsuc n) + fib n)
     to (xs ∷1) = inj₁ xs
@@ -46,7 +46,7 @@ fib-cong Prefl = refl
 -- Binary strings
 
 2^-def : ∀ {n} → 2^ (ℕsuc n) ≡ nat 2 * 2^ n
-2^-def {n} = axiom Prefl (mkBij to from toFrom fromTo)
+2^-def {n} = proof Prefl (mkBij to from toFrom fromTo)
   where
     to : lift (2^ (ℕsuc n)) → lift (nat 2 * 2^ n)
     to (Fzero ∷ xs) = nothing , xs
@@ -75,7 +75,7 @@ fib-cong Prefl = refl
 -- Quaternary strings
 
 4^-def : ∀ {n} → 4^ (ℕsuc n) ≡ nat 4 * 4^ n
-4^-def {n} = axiom Prefl (mkBij to from toFrom fromTo)
+4^-def {n} = proof Prefl (mkBij to from toFrom fromTo)
   where
     to : lift (4^ (ℕsuc n)) → lift (nat 4 * 4^ n)
     to (Fzero ∷ xs) = nothing , xs
@@ -109,7 +109,7 @@ fib-cong Prefl = refl
 -- Set partitions
 
 S₂-def₁ : ∀ {l r} → S₂ (ℕsuc l) (ℕsuc r) ≡ (nat (ℕsuc l)) * S₂ (ℕsuc l) r + S₂ l (ℕsuc r)
-S₂-def₁ {l} {r} = axiom (Pcong (λ x → ℕS₂ (ℕsuc l) r ℕ+ x ℕ* ℕS₂ (ℕsuc l) r ℕ+ ℕS₂ l (ℕsuc r)) (Psym (nat-value l))) (mkBij to from toFrom fromTo)
+S₂-def₁ {l} {r} = proof (Pcong (λ x → ℕS₂ (ℕsuc l) r ℕ+ x ℕ* ℕS₂ (ℕsuc l) r ℕ+ ℕS₂ l (ℕsuc r)) (Psym (nat-value l))) (mkBij to from toFrom fromTo)
   where
     to : lift (S₂ (ℕsuc l) (ℕsuc r)) → lift ((nat (ℕsuc l)) * S₂ (ℕsuc l) r + S₂ l (ℕsuc r))
     to (add x) = inj₂ x
@@ -132,7 +132,7 @@ S₂-def₁ {l} {r} = axiom (Pcong (λ x → ℕS₂ (ℕsuc l) r ℕ+ x ℕ* �
     fromTo (insert (Fsuc x) x₁) = Pcong (λ t → insert (Fsuc t) x₁) (getToFrom (nat-lift l) x)
 
 S₂-def₂ : ∀ {l} → S₂ (ℕsuc l) ℕzero ≡ S₂ l ℕzero
-S₂-def₂ {l} = axiom Prefl (mkBij to from toFrom fromTo)
+S₂-def₂ {l} = proof Prefl (mkBij to from toFrom fromTo)
   where
     to : SetPartitionK (ℕsuc l) ℕzero → SetPartitionK l ℕzero
     to (add x) = x
@@ -150,7 +150,7 @@ S₂-def₂ {l} = axiom Prefl (mkBij to from toFrom fromTo)
 -- Set partitions with no consecutive numbers in a part
 
 CS₂-def₁ : ∀ {l r} → CS₂ (ℕsuc l) (ℕsuc r) ≡ (nat l) * CS₂ (ℕsuc l) r + CS₂ l (ℕsuc r)
-CS₂-def₁ {l} {r} = axiom (Pcong (λ x → x ℕ* ℕCS₂ (ℕsuc l) r ℕ+ ℕCS₂ l (ℕsuc r)) (Psym (nat-value l))) (mkBij to from toFrom fromTo)
+CS₂-def₁ {l} {r} = proof (Pcong (λ x → x ℕ* ℕCS₂ (ℕsuc l) r ℕ+ ℕCS₂ l (ℕsuc r)) (Psym (nat-value l))) (mkBij to from toFrom fromTo)
   where
     to : lift (CS₂ (ℕsuc l) (ℕsuc r)) → lift ((nat l) * CS₂ (ℕsuc l) r + CS₂ l (ℕsuc r))
     to (add x) = inj₂ x
@@ -169,7 +169,7 @@ CS₂-def₁ {l} {r} = axiom (Pcong (λ x → x ℕ* ℕCS₂ (ℕsuc l) r ℕ+ 
     fromTo (insert x x₁) = Pcong (λ t → insert t x₁) (getToFrom (nat-lift l) x)
 
 CS₂-def₂ : ∀ {l} → CS₂ (ℕsuc l) ℕzero ≡ CS₂ l ℕzero
-CS₂-def₂ {l} = axiom Prefl (mkBij to from toFrom fromTo)
+CS₂-def₂ {l} = proof Prefl (mkBij to from toFrom fromTo)
   where
     to : CSetPartitionK (ℕsuc l) ℕzero → CSetPartitionK l ℕzero
     to (add x) = x
@@ -187,7 +187,7 @@ CS₂-def₂ {l} = axiom Prefl (mkBij to from toFrom fromTo)
 -- Binary strings with l zeros and r ones
 
 choose-def₁ : ∀ {l r} → (ℕsuc l) choose (ℕsuc r) ≡ l choose (ℕsuc r) + (ℕsuc l) choose r
-choose-def₁ {l} {r} = axiom Prefl (mkBij to from toFrom fromTo)
+choose-def₁ {l} {r} = proof Prefl (mkBij to from toFrom fromTo)
   where
     to : lift ((ℕsuc l) choose (ℕsuc r)) → lift (l choose (ℕsuc r) + (ℕsuc l) choose r)
     to (0∷ x) = inj₁ x
@@ -206,7 +206,7 @@ choose-def₁ {l} {r} = axiom Prefl (mkBij to from toFrom fromTo)
     fromTo (1∷ x) = Prefl
 
 choose-def₂ : ∀ {r} → ℕzero choose (ℕsuc r) ≡ ℕzero choose r
-choose-def₂ {r} = axiom Prefl (mkBij to from toFrom fromTo)
+choose-def₂ {r} = proof Prefl (mkBij to from toFrom fromTo)
   where
     to : lift (ℕzero choose (ℕsuc r)) → lift (ℕzero choose r)
     to (1∷ x) = x
@@ -221,7 +221,7 @@ choose-def₂ {r} = axiom Prefl (mkBij to from toFrom fromTo)
     fromTo (1∷ x) = Prefl
 
 choose-def₃ : ∀ {l} → (ℕsuc l) choose ℕzero ≡ l choose ℕzero
-choose-def₃ {l} = axiom Prefl (mkBij to from toFrom fromTo)
+choose-def₃ {l} = proof Prefl (mkBij to from toFrom fromTo)
   where
     to : lift ((ℕsuc l) choose ℕzero) → lift (l choose ℕzero)
     to (0∷ x) = x
@@ -261,7 +261,7 @@ choose-def₃ {l} = axiom Prefl (mkBij to from toFrom fromTo)
 -- Axioms
 
 -- ^-def : ∀ {n} k → k ^ (ℕsuc n) ≡ (fin k) * (k ^ n)
--- ^-def {n} k = axiom Prefl $ mkBij
+-- ^-def {n} k = proof Prefl $ mkBij
 --   (λ { (x ∷ xs) → x , xs })
 --   (λ { (x , xs) → x ∷ xs })
 

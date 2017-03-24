@@ -90,6 +90,7 @@ data Fun : Set where
   4^' : (n : ℕ) → Fun
   S₂' : (l r : ℕ) → Fun
   CS₂' : (l r : ℕ) → Fun
+  _choose'_ : (l r : ℕ) → Fun
 
 data Expr : Set where
   zero : Expr
@@ -394,6 +395,57 @@ module QuadStrExpr where
   equal (Fsuc x ∷ xs) (Fzero ∷ ys) = no (λ ())
   equal (Fsuc (Fsuc (Fsuc (Fsuc ()))) ∷ xs) (Fsuc (Fsuc (Fsuc (Fsuc y))) ∷ ys)
 
+------------------------------------------------------------------------
+-- Binary strings with l zeros and r ones
+
+-- Enumeration
+
+ℕchoose : ℕ → ℕ → ℕ
+ℕchoose ℕzero ℕzero = 1
+ℕchoose (ℕsuc l) ℕzero = ℕchoose l ℕzero
+ℕchoose ℕzero (ℕsuc r) = ℕchoose ℕzero r
+ℕchoose (ℕsuc l) (ℕsuc r) = ℕchoose l (ℕsuc r) ℕ+ ℕchoose (ℕsuc l) r
+
+-- Combinatorial interpretation
+
+data BinStrK : (zeros : ℕ) → (ones : ℕ) → Set where
+  [] : BinStrK ℕzero ℕzero
+  0∷_ : ∀ {l r} → BinStrK l r → BinStrK (ℕsuc l) r
+  1∷_ : ∀ {l r} → BinStrK l r → BinStrK l (ℕsuc r)
+
+module BinStrKExpr where
+
+  show : ∀ {l r} → BinStrK l r → String
+  show [] = "[]"
+  show (0∷ xs) = "0∷ " ++ show xs
+  show (1∷ xs) = "1∷ " ++ show xs
+
+  generate : ∀ {l r} → List (BinStrK l r)
+  generate {ℕzero} {ℕzero} = [] L∷ L[]
+  generate {ℕzero} {ℕsuc r} = L.map 1∷_ (generate {ℕzero} {r})
+  generate {ℕsuc l} {ℕzero} = L.map 0∷_ (generate {l} {ℕzero})
+  generate {ℕsuc l} {ℕsuc r} = L.map 0∷_ (generate {l} {ℕsuc r}) L.++ L.map 1∷_ (generate {ℕsuc l} {r})
+
+  exhaustive : ∀ {l r} → (x : BinStrK l r) → x ∈ generate {l} {r}
+  exhaustive {ℕzero} {ℕzero} [] = here Prefl
+  exhaustive {ℕzero} {ℕsuc r} (1∷ x) = ∈map (exhaustive x)
+  exhaustive {ℕsuc l} {ℕzero} (0∷ x) = ∈map (exhaustive x)
+  exhaustive {ℕsuc l} {ℕsuc r} (0∷ x) = ∈++ˡ (∈map (exhaustive x))
+  exhaustive {ℕsuc l} {ℕsuc r} (1∷ x) = ∈++ʳ {_} {L.map 0∷_ (generate {l} {ℕsuc r})} (∈map (exhaustive x))
+
+  equal : ∀ {l r} → (x y : BinStrK l r) → Dec (x P≡ y)
+  equal [] [] = yes Prefl
+  equal (0∷ x) (0∷ y) with equal x y
+  equal (0∷ x) (0∷ y) | yes Prefl = yes Prefl
+  equal (0∷ x) (0∷ y) | no ¬p = no (λ { Prefl → ¬p Prefl })
+  equal (1∷ x) (1∷ y) with equal x y
+  equal (1∷ x) (1∷ y) | yes Prefl = yes Prefl
+  equal (1∷ x) (1∷ y) | no ¬p = no (λ { Prefl → ¬p Prefl })
+
+  equal (0∷ x) (1∷ y) = no (λ ())
+  equal (1∷ x) (0∷ y) = no (λ ())
+
+------------------------------------------------------------------------
 -- Shorthands
 
 fib : ℕ → Expr
@@ -411,6 +463,9 @@ S₂ l r = fun (S₂' l r)
 CS₂ : ℕ → ℕ → Expr
 CS₂ l r = fun (CS₂' l r)
 
+_choose_ : ℕ → ℕ → Expr
+l choose r = fun (l choose' r)
+
 ------------------------------------------------------------------------
 -- Evaluating and lifting
 
@@ -420,6 +475,7 @@ valueF (2^' n) = ℕ2^ n
 valueF (4^' n) = ℕ4^ n
 valueF (S₂' l r) = ℕS₂ l r
 valueF (CS₂' l r) = ℕCS₂ l r
+valueF (l choose' r) = ℕchoose l r
 
 liftF : Fun → Set
 liftF (fib' n) = FibStr n
@@ -427,6 +483,7 @@ liftF (2^' n) = BinStr n
 liftF (4^' n) = QuadStr n
 liftF (S₂' l r) = SetPartitionK l r
 liftF (CS₂' l r) = CSetPartitionK l r
+liftF (l choose' r) = BinStrK l r
 
 value : Expr → ℕ
 value zero = ℕzero
@@ -458,6 +515,7 @@ showF (2^' n) = BinStrExpr.show
 showF (4^' n) = QuadStrExpr.show
 showF (S₂' l r) = SetPartitionKExpr.show
 showF (CS₂' l r) = CSetPartitionKExpr.show
+showF (l choose' r) = BinStrKExpr.show
 
 show : (E : Expr) → (x : lift E) → String
 show (zero) ()
@@ -476,6 +534,7 @@ generateF (2^' n) = BinStrExpr.generate
 generateF (4^' n) = QuadStrExpr.generate
 generateF (S₂' l r) = SetPartitionKExpr.generate
 generateF (CS₂' l r) = CSetPartitionKExpr.generate
+generateF (l choose' r) = BinStrKExpr.generate
 
 exhaustiveF : (F : Fun) → (f : liftF F) → f ∈ generateF F
 exhaustiveF (fib' n) = FibStrExpr.exhaustive
@@ -483,6 +542,7 @@ exhaustiveF (2^' n) = BinStrExpr.exhaustive
 exhaustiveF (4^' n) = QuadStrExpr.exhaustive
 exhaustiveF (S₂' l r) = SetPartitionKExpr.exhaustive
 exhaustiveF (CS₂' l r) = CSetPartitionKExpr.exhaustive
+exhaustiveF (l choose' r) = BinStrKExpr.exhaustive
 
 generate : (E : Expr) → List (lift E)
 generate zero = L[]
@@ -511,6 +571,7 @@ equalF (2^' n) = BinStrExpr.equal
 equalF (4^' n) = QuadStrExpr.equal
 equalF (S₂' l r) = SetPartitionKExpr.equal
 equalF (CS₂' l r) = CSetPartitionKExpr.equal
+equalF (l choose' r) = BinStrKExpr.equal
 
 equal : (A : Expr) → (x y : lift A) → Dec (x P≡ y)
 equal zero () ()

@@ -184,6 +184,58 @@ CS₂-def₂ {l} = axiom Prefl (mkBij to from toFrom fromTo)
     fromTo (add x) = Prefl
 
 ------------------------------------------------------------------------
+-- Binary strings with l zeros and r ones
+
+choose-def₁ : ∀ {l r} → (ℕsuc l) choose (ℕsuc r) ≡ l choose (ℕsuc r) + (ℕsuc l) choose r
+choose-def₁ {l} {r} = axiom Prefl (mkBij to from toFrom fromTo)
+  where
+    to : lift ((ℕsuc l) choose (ℕsuc r)) → lift (l choose (ℕsuc r) + (ℕsuc l) choose r)
+    to (0∷ x) = inj₁ x
+    to (1∷ x) = inj₂ x
+
+    from : lift (l choose (ℕsuc r) + (ℕsuc l) choose r) → lift ((ℕsuc l) choose (ℕsuc r))
+    from (inj₁ x) = 0∷ x
+    from (inj₂ y) = 1∷ y
+
+    toFrom : ∀ y → to (from y) P≡ y
+    toFrom (inj₁ x) = Prefl
+    toFrom (inj₂ y) = Prefl
+
+    fromTo : ∀ x → from (to x) P≡ x
+    fromTo (0∷ x) = Prefl
+    fromTo (1∷ x) = Prefl
+
+choose-def₂ : ∀ {r} → ℕzero choose (ℕsuc r) ≡ ℕzero choose r
+choose-def₂ {r} = axiom Prefl (mkBij to from toFrom fromTo)
+  where
+    to : lift (ℕzero choose (ℕsuc r)) → lift (ℕzero choose r)
+    to (1∷ x) = x
+
+    from : lift (ℕzero choose r) → lift (ℕzero choose (ℕsuc r))
+    from x = 1∷ x
+
+    toFrom : ∀ y → to (from y) P≡ y
+    toFrom x = Prefl
+
+    fromTo : ∀ x → from (to x) P≡ x
+    fromTo (1∷ x) = Prefl
+
+choose-def₃ : ∀ {l} → (ℕsuc l) choose ℕzero ≡ l choose ℕzero
+choose-def₃ {l} = axiom Prefl (mkBij to from toFrom fromTo)
+  where
+    to : lift ((ℕsuc l) choose ℕzero) → lift (l choose ℕzero)
+    to (0∷ x) = x
+
+    from : lift (l choose ℕzero) → lift ((ℕsuc l) choose ℕzero)
+    from x = 0∷ x
+
+    toFrom : ∀ y → to (from y) P≡ y
+    toFrom x = Prefl
+
+    fromTo : ∀ x → from (to x) P≡ x
+    fromTo (0∷ x) = Prefl
+
+------------------------------------------------------------------------
 -- K-ary strings
 
 -- Enumeration

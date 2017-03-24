@@ -8,7 +8,7 @@ open import Translate.Solver
 open import Translate.Combinatorics
 open import Translate.Common
 open import Translate.EqReasoning
-open import Translate.Axioms
+open import Translate.Arithmetic
 open import Translate.Bijection using (getTo)
 open import Translate.Tools
 open import Data.Maybe

@@ -9,7 +9,7 @@ module Translate.Solver.Types where
 open import Translate.Common
 open import Translate.Base
 open import Translate.Types
-open import Translate.Axioms
+open import Translate.Arithmetic
 open import Coinduction
 open import Function
 open import Data.Vec

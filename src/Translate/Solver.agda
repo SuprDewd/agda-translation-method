@@ -5,7 +5,7 @@ open import Translate.Common
 open import Translate.Base
 open import Translate.EqReasoning
 open import Translate.Types
-open import Translate.Axioms
+open import Translate.Arithmetic
 open import Translate.Properties
 open import Translate.Combinatorics
 

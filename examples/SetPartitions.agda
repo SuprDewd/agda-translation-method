@@ -5,7 +5,7 @@ open import Translate
 open import Translate.Common
 open import Translate.EqReasoning
 open import Translate.Combinatorics
-open import Translate.Axioms
+open import Translate.Arithmetic
 open import Translate.Tools
 import Data.List as L
 

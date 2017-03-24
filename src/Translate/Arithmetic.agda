@@ -5,7 +5,7 @@
 ------------------------------------------------------------------------
 
 -- TODO: Should these be called something else? Laws?
-module Translate.Axioms where
+module Translate.Arithmetic where
 
 import Data.Nat.Properties.Simple as NPS
 

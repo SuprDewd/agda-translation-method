@@ -41,7 +41,6 @@ module NP where
 open import Translate.Base
 open import Translate.Support
 open import Translate.Types
-open import Translate.Semiring
 
 +-assoc : ∀ {a b c} → (a + b) + c ≡ a + (b + c)
 +-assoc {a} {b} {c} = axiom (NPS.+-assoc (value a) (value b) (value c)) (mkBij to from toFrom fromTo)
@@ -300,78 +299,4 @@ distribˡ-*-+ {a} {b} {c} = axiom (NP.distribˡ-*-+ (value a) (value b) (value c
 
         fromTo : ∀ x → from (to x) P≡ x
         fromTo (l , r) = Ptrans (Pcong (λ t → (t , d→c (c→d r))) (fromTo₁ l)) (Pcong (λ t → (l , t)) (fromTo₂ r))
-
-------------------------------------------------------------------------
--- Cancellation
-
-module AltIter where
-  {-# TERMINATING #-}
-  alt-iter : ∀ {a b c d}
-          → lift (a + c) B≡ lift (b + d)
-          → lift c B≡ lift d
-          → lift (a + c)
-          → lift b
-  alt-iter {a} {b} {c} {d} (mkBij a+c→b+d b+d→a+c toFrom fromTo) (mkBij c→d d→c toFrom₂ fromTo₂) x with a+c→b+d x
-  ... | inj₁ y = y
-  ... | inj₂ y = alt-iter {a} {b} {c} {d} (mkBij a+c→b+d b+d→a+c toFrom fromTo) (mkBij c→d d→c toFrom₂ fromTo₂) (inj₂ (d→c y))
-
-
-  -- alt-iter-to : ∀ {a b c d}
-  --             → (bij₁ : (lift a ⊎ lift c) B≡ (lift b ⊎ lift d))
-  --             → (bij₂ : lift c B≡ lift d)
-  --             → (y : lift b)
-  --             → alt-iter {a} {b} {c} {d} bij₁ bij₂ (inj₁ (alt-iter {b} {a} {d} {c} (Bsym bij₁) (Bsym bij₂) (inj₁ y))) P≡ y
-  -- alt-iter-to {a} {b} {c} {d} (mkBij a+c→b+d b+d→a+c toFrom fromTo) (mkBij c→d d→c toFrom₂ fromTo₂) y with a+c→b+d y
-  -- ... | inj₁ y = ?
-  -- ... | inj₂ y = ?
-
-  -- alt-iter-from : ∀ {a b c d}
-  --               → (bij₁ : (lift a ⊎ lift c) B≡ (lift b ⊎ lift d))
-  --               → (bij₂ : lift c B≡ lift d)
-  --               → (x : lift a)
-  --               → alt-iter {b} {a} {d} {c} (Bsym bij₁) (Bsym bij₂) (inj₁ (alt-iter {a} {b} {c} {d} bij₁ bij₂ (inj₁ x))) P≡ x
-  -- alt-iter-from {a} {b} {c} {d} (mkBij a+c→b+d b+d→a+c toFrom fromTo) (mkBij c→d d→c toFrom₂ fromTo₂) x with a+c→b+d (inj₁ x)
-  -- alt-iter-from {a} {b} {c} {d} (mkBij a+c→b+d b+d→a+c toFrom fromTo) (mkBij c→d d→c toFrom₂ fromTo₂) x | inj₁ y with b+d→a+c (inj₁ y)
-  -- alt-iter-from {a} {b} {c} {d} (mkBij a+c→b+d b+d→a+c toFrom fromTo) (mkBij c→d d→c toFrom₂ fromTo₂) x | inj₁ y | (inj₁ y₁) = {!!}
-  -- alt-iter-from {a} {b} {c} {d} (mkBij a+c→b+d b+d→a+c toFrom fromTo) (mkBij c→d d→c toFrom₂ fromTo₂) x | inj₁ y | (inj₂ y₁) = {!!}
-  -- alt-iter-from {a} {b} {c} {d} (mkBij a+c→b+d b+d→a+c toFrom fromTo) (mkBij c→d d→c toFrom₂ fromTo₂) x | inj₂ y = {!!}
-
-open AltIter
--- XXX: Don't use TrustMe!
-import Relation.Binary.PropositionalEquality.TrustMe
-
--- TODO: Rename this to something related to subtraction
-cancel : ∀ {a b c d} → a + c ≡ b + d → c ≡ d → a ≡ b
-cancel {a} {b} {c} {d} a+c≡b+d c≡d = lemma (toEquality a+c≡b+d) (toEquality c≡d) (toBijection a+c≡b+d) (toBijection c≡d)
-  where
-    lemma : value (a + c) P≡ value (b + d)
-          → value c P≡ value d
-          → lift (a + c) B≡ lift (b + d)
-          → lift c B≡ lift d
-          → a ≡ b
-    lemma p₁ p₂ bij₁ bij₂ = axiom (NP.+-cancel (value a) (value b) (value c) (value d) p₁ p₂) (mkBij to' from' toFrom' fromTo')
-      where
-        to' : lift a → lift b
-        to' x = alt-iter {a} {b} {c} {d} bij₁ bij₂ (inj₁ x)
-
-        from' : lift b → lift a
-        from' x = alt-iter {b} {a} {d} {c} (Bsym bij₁) (Bsym bij₂) (inj₁ x)
-
-        toFrom' : ∀ y → to' (from' y) P≡ y
-        toFrom' y = Relation.Binary.PropositionalEquality.TrustMe.trustMe -- alt-iter-to {a} {b} {c} {d} bij₁ bij₂ y
-
-        fromTo' : ∀ x → from' (to' x) P≡ x
-        fromTo' x = Relation.Binary.PropositionalEquality.TrustMe.trustMe -- alt-iter-from {a} {b} {c} {d} bij₁ bij₂ x
-
--- TODO: Implement rest of cancellation algorithms
-
-
-------------------------------------------------------------------------
--- ???
-
-fib-cong : ∀ {a b} → a P≡ b → (fib a) ≡ (fib b)
-fib-cong Prefl = refl
-
-2^-cong : ∀ {a b} → a P≡ b → (2^ a) ≡ (2^ b)
-2^-cong Prefl = refl
 

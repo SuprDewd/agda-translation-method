@@ -10,7 +10,6 @@ open import Translate.Support
 open import Translate.EqReasoning
 open import Translate.Axioms
 open import Translate.Bijection using (getTo)
-open import Translate.Bijection.Helpers
 open import Translate.Tools
 open import Data.Maybe
 

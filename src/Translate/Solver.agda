@@ -7,11 +7,9 @@ open import Translate.EqReasoning
 open import Translate.Support
 open import Translate.Types
 open import Translate.Axioms
-open import Translate.Semiring
 open import Translate.Properties
 open import Translate.Combinatorics
 
-open import Translate.Solver.Semiring
 open import Translate.Solver.Reflection
 open import Translate.Solver.Types public
 open import Translate.Solver.Combinatorics
@@ -27,10 +25,6 @@ open import Data.Fin.Properties using () renaming (_≟_ to _F≟_)
 open import Data.List.Properties
 
 import Relation.Binary.Reflection as Reflection
-
--- TODO: Can I combine function definitions and correctness proofs using something like CorrectTransform?
-
--- TODO: Clean this up and integrate into new AST design
 
 infixl 6 _C*_
 infixl 5 _C+_

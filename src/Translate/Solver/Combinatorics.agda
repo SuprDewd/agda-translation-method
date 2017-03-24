@@ -11,7 +11,6 @@ open import Translate.Support
 open import Translate.Combinatorics
 open import Translate.Types
 open import Translate.Solver.Types
-open import Translate.Solver.Semiring
 open import Coinduction
 
 -- uncon : ?

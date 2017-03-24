@@ -14,11 +14,6 @@ open import Translate.Types
 infix 4 _≡_
 
 ------------------------------------------------------------------------
--- Expressions
-
-
-
-------------------------------------------------------------------------
 -- Equivalence of expressions
 
 -- TODO: Make it possible to delay defining base cases. One way to achieve this

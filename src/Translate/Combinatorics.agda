@@ -7,7 +7,6 @@
 module Translate.Combinatorics where
 
 open import Translate.Base
-open import Translate.Semiring
 open import Translate.Support
 open import Translate.Types
 open import Function
@@ -17,32 +16,9 @@ open import Translate.Bijection using (getTo; getFrom; getToFrom; getFromTo)
 -- infixr 7 _^_
 -- TODO: infix? ? ∷
 
+
 ------------------------------------------------------------------------
 -- Fibonacci strings
-
--- Enumeration
-
--- ℕfib : ℕ → ℕ
--- ℕfib 0 = 1
--- ℕfib 1 = 1
--- ℕfib (ℕsuc (ℕsuc n)) = ℕfib (ℕsuc n) ℕ+ ℕfib n
-
--- -- Combinatorial interpretation
-
--- data FibStr : ℕ → Set where
---   [] : FibStr ℕzero
---   _∷1 : ∀ {n} → FibStr n → FibStr (ℕsuc n)
---   _∷2 : ∀ {n} → FibStr n → FibStr (ℕsuc (ℕsuc n))
-
--- Expressions
-
--- fib : ℕ → Expr
--- fib n = record
---   { value = ♯ ℕfib n
---   ; lift = FibStr n
---   }
-
--- Axioms
 
 fib-def : ∀ {n} → fib (ℕsuc (ℕsuc n)) ≡ fib (ℕsuc n) + fib n
 fib-def {n} = axiom Prefl (mkBij to from toFrom fromTo)
@@ -62,6 +38,9 @@ fib-def {n} = axiom Prefl (mkBij to from toFrom fromTo)
     fromTo : ∀ x → from (to x) P≡ x
     fromTo (x ∷1) = Prefl
     fromTo (x ∷2) = Prefl
+
+fib-cong : ∀ {a b} → a P≡ b → (fib a) ≡ (fib b)
+fib-cong Prefl = refl
 
 ------------------------------------------------------------------------
 -- Binary strings

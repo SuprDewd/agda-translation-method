@@ -47,7 +47,7 @@ private
       rec (x L∷ x₁ L∷ xs₁) = f x ++ ", " ++ rec (x₁ L∷ xs₁)
 
   -- TODO: Use the builtin ∈ helpers
-  ∈++ˡ : ∀  {S : Set} {A B : List S}{x : S} → x ∈ A → x ∈ (A L.++ B)
+  ∈++ˡ : ∀  {S : Set} {A B : List S} {x : S} → x ∈ A → x ∈ (A L.++ B)
   ∈++ˡ (here p) = here p
   ∈++ˡ (there p) = there (∈++ˡ p)
 

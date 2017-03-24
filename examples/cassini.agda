@@ -81,47 +81,47 @@ mutual
   cassini-odd (ℕsuc k) =
     begin
       fib (2 ℕ* (ℕsuc k) ℕ+ 2) * fib (2 ℕ* (ℕsuc k))
-    -- ≡⟨ Pcong (λ x → fib x * fib (2 ℕ* (ℕsuc k))) (NPS.+-comm (2 ℕ* (ℕsuc k)) 2) ⟩
+    -- P≡⟨ Pcong (λ x → fib x * fib (2 ℕ* (ℕsuc k))) (NPS.+-comm (2 ℕ* (ℕsuc k)) 2) ⟩
     --   (fib (ℕsuc (ℕsuc (2 ℕ* (ℕsuc k))))) * fib (2 ℕ* (ℕsuc k))
-    -- ≈⟨ *-cong fib-def refl ⟩
+    -- ≡⟨ *-cong fib-def refl ⟩
     --   (fib (ℕsuc (2 ℕ* (ℕsuc k))) + fib (2 ℕ* (ℕsuc k))) * fib (2 ℕ* (ℕsuc k))
-    -- ≈⟨ distribʳ-*-+ ⟩
+    -- ≡⟨ distribʳ-*-+ ⟩
     --   fib (ℕsuc (2 ℕ* (ℕsuc k))) * fib (2 ℕ* (ℕsuc k)) + fib (2 ℕ* (ℕsuc k)) * fib (2 ℕ* (ℕsuc k))
-    -- ≡⟨ Pcong (λ x → fib (ℕsuc (2 ℕ* (ℕsuc k))) * fib (2 ℕ* (ℕsuc k)) + fib x * fib (2 ℕ* (ℕsuc k))) (lem2 2 k) ⟩
+    -- P≡⟨ Pcong (λ x → fib (ℕsuc (2 ℕ* (ℕsuc k))) * fib (2 ℕ* (ℕsuc k)) + fib x * fib (2 ℕ* (ℕsuc k))) (lem2 2 k) ⟩
     --   fib (ℕsuc (2 ℕ* (ℕsuc k))) * fib (2 ℕ* (ℕsuc k)) + fib (2 ℕ* k ℕ+ 2) * fib (2 ℕ* (ℕsuc k))
-    -- ≡⟨ Pcong (λ x → fib (ℕsuc (2 ℕ* (ℕsuc k))) * fib (2 ℕ* (ℕsuc k)) + fib (2 ℕ* k ℕ+ 2) * fib x) (lem2 2 k) ⟩
-    ≈⟨ clem1 ⟩
+    -- P≡⟨ Pcong (λ x → fib (ℕsuc (2 ℕ* (ℕsuc k))) * fib (2 ℕ* (ℕsuc k)) + fib (2 ℕ* k ℕ+ 2) * fib x) (lem2 2 k) ⟩
+    ≡⟨ clem1 ⟩
       fib (ℕsuc (2 ℕ* (ℕsuc k))) * fib (2 ℕ* (ℕsuc k)) + fib (2 ℕ* k ℕ+ 2) * fib (2 ℕ* k ℕ+ 2)
-    ≈⟨ +-cong refl (cassini-even k) ⟩
+    ≡⟨ +-cong refl (cassini-even k) ⟩
       fib (ℕsuc (2 ℕ* (ℕsuc k))) * fib (2 ℕ* (ℕsuc k)) + (fib (2 ℕ* k ℕ+ 3) * fib (2 ℕ* k ℕ+ 1) + one)
-    ≈⟨ clem2 ⟩
-    -- ≈⟨ sym +-assoc ⟩
+    ≡⟨ clem2 ⟩
+    -- ≡⟨ sym +-assoc ⟩
     --   (fib (ℕsuc (2 ℕ* (ℕsuc k))) * fib (2 ℕ* (ℕsuc k)) + fib (2 ℕ* k ℕ+ 3) * fib (2 ℕ* k ℕ+ 1)) + one
-    -- ≡⟨ Pcong (λ x → (fib x * fib (2 ℕ* (ℕsuc k)) + fib (2 ℕ* k ℕ+ 3) * fib (2 ℕ* k ℕ+ 1)) + one) (NPS.+-comm 1 (2 ℕ* (ℕsuc k))) ⟩
+    -- P≡⟨ Pcong (λ x → (fib x * fib (2 ℕ* (ℕsuc k)) + fib (2 ℕ* k ℕ+ 3) * fib (2 ℕ* k ℕ+ 1)) + one) (NPS.+-comm 1 (2 ℕ* (ℕsuc k))) ⟩
     --   (fib ((2 ℕ* (ℕsuc k)) ℕ+ 1) * fib (2 ℕ* (ℕsuc k)) + fib (2 ℕ* k ℕ+ 3) * fib (2 ℕ* k ℕ+ 1)) + one
-    -- ≡⟨ Pcong (λ x → (fib (x ℕ+ 1) * fib (2 ℕ* (ℕsuc k)) + fib (2 ℕ* k ℕ+ 3) * fib (2 ℕ* k ℕ+ 1)) + one) (lem2 2 k) ⟩
+    -- P≡⟨ Pcong (λ x → (fib (x ℕ+ 1) * fib (2 ℕ* (ℕsuc k)) + fib (2 ℕ* k ℕ+ 3) * fib (2 ℕ* k ℕ+ 1)) + one) (lem2 2 k) ⟩
     --   (fib ((2 ℕ* k ℕ+ 2) ℕ+ 1) * fib (2 ℕ* (ℕsuc k)) + fib (2 ℕ* k ℕ+ 3) * fib (2 ℕ* k ℕ+ 1)) + one
-    -- ≡⟨ Pcong (λ x → (fib x * fib (2 ℕ* (ℕsuc k)) + fib (2 ℕ* k ℕ+ 3) * fib (2 ℕ* k ℕ+ 1)) + one) (NPS.+-assoc (2 ℕ* k) 2 1) ⟩
+    -- P≡⟨ Pcong (λ x → (fib x * fib (2 ℕ* (ℕsuc k)) + fib (2 ℕ* k ℕ+ 3) * fib (2 ℕ* k ℕ+ 1)) + one) (NPS.+-assoc (2 ℕ* k) 2 1) ⟩
     --   (fib (2 ℕ* k ℕ+ 3) * fib (2 ℕ* (ℕsuc k)) + fib (2 ℕ* k ℕ+ 3) * fib (2 ℕ* k ℕ+ 1)) + one
-    -- ≈⟨ +-cong (sym distribˡ-*-+) refl ⟩
+    -- ≡⟨ +-cong (sym distribˡ-*-+) refl ⟩
     --   fib (2 ℕ* k ℕ+ 3) * (fib (2 ℕ* (ℕsuc k)) + fib (2 ℕ* k ℕ+ 1)) + one
-    -- ≡⟨ Pcong (λ x → fib (2 ℕ* k ℕ+ 3) * (fib x + fib (2 ℕ* k ℕ+ 1)) + one) (lem2 2 k) ⟩
+    -- P≡⟨ Pcong (λ x → fib (2 ℕ* k ℕ+ 3) * (fib x + fib (2 ℕ* k ℕ+ 1)) + one) (lem2 2 k) ⟩
     --   fib (2 ℕ* k ℕ+ 3) * (fib (2 ℕ* k ℕ+ 2) + fib (2 ℕ* k ℕ+ 1)) + one
-    -- ≡⟨ Pcong (λ x → fib (2 ℕ* k ℕ+ 3) * (fib x + fib (2 ℕ* k ℕ+ 1)) + one) (NPS.+-suc (2 ℕ* k) 1) ⟩
+    -- P≡⟨ Pcong (λ x → fib (2 ℕ* k ℕ+ 3) * (fib x + fib (2 ℕ* k ℕ+ 1)) + one) (NPS.+-suc (2 ℕ* k) 1) ⟩
     --   fib (2 ℕ* k ℕ+ 3) * (fib (ℕsuc (2 ℕ* k ℕ+ 1)) + fib (2 ℕ* k ℕ+ 1)) + one
-    -- ≈⟨ +-cong (*-cong refl (sym fib-def)) refl ⟩
+    -- ≡⟨ +-cong (*-cong refl (sym fib-def)) refl ⟩
     --   fib (2 ℕ* k ℕ+ 3) * (fib (ℕsuc (ℕsuc (2 ℕ* k ℕ+ 1)))) + one
-    -- ≡⟨ Pcong (λ x → fib (2 ℕ* k ℕ+ 3) * (fib x) + one) (NPS.+-comm 2 (2 ℕ* k ℕ+ 1)) ⟩
+    -- P≡⟨ Pcong (λ x → fib (2 ℕ* k ℕ+ 3) * (fib x) + one) (NPS.+-comm 2 (2 ℕ* k ℕ+ 1)) ⟩
     --   fib (2 ℕ* k ℕ+ 3) * (fib ((2 ℕ* k ℕ+ 1) ℕ+ 2)) + one
-    -- ≡⟨ Pcong (λ x → fib (2 ℕ* k ℕ+ 3) * (fib x) + one) (NPS.+-assoc (2 ℕ* k) 1 2) ⟩
+    -- P≡⟨ Pcong (λ x → fib (2 ℕ* k ℕ+ 3) * (fib x) + one) (NPS.+-assoc (2 ℕ* k) 1 2) ⟩
     --   fib (2 ℕ* k ℕ+ 3) * fib (2 ℕ* k ℕ+ 3) + one
-    -- ≡⟨ Pcong (λ x → fib x * fib (2 ℕ* k ℕ+ 3) + one) (Psym (NPS.+-assoc (2 ℕ* k) 2 1)) ⟩
+    -- P≡⟨ Pcong (λ x → fib x * fib (2 ℕ* k ℕ+ 3) + one) (Psym (NPS.+-assoc (2 ℕ* k) 2 1)) ⟩
     --   fib ((2 ℕ* k ℕ+ 2) ℕ+ 1) * fib (2 ℕ* k ℕ+ 3) + one
-    -- ≡⟨ Pcong (λ x → fib (x ℕ+ 1) * fib (2 ℕ* k ℕ+ 3) + one) (Psym (lem2 2 k)) ⟩
+    -- P≡⟨ Pcong (λ x → fib (x ℕ+ 1) * fib (2 ℕ* k ℕ+ 3) + one) (Psym (lem2 2 k)) ⟩
     --   fib ((2 ℕ* (ℕsuc k)) ℕ+ 1) * fib (2 ℕ* k ℕ+ 3) + one
-    -- ≡⟨ Pcong (λ x → fib ((2 ℕ* (ℕsuc k)) ℕ+ 1) * fib x + one) (Psym (NPS.+-assoc (2 ℕ* k) 2 1)) ⟩
+    -- P≡⟨ Pcong (λ x → fib ((2 ℕ* (ℕsuc k)) ℕ+ 1) * fib x + one) (Psym (NPS.+-assoc (2 ℕ* k) 2 1)) ⟩
     --   fib ((2 ℕ* (ℕsuc k)) ℕ+ 1) * fib ((2 ℕ* k ℕ+ 2) ℕ+ 1) + one
-    -- ≡⟨ Pcong (λ x → fib ((2 ℕ* (ℕsuc k)) ℕ+ 1) * fib (x ℕ+ 1) + one) (Psym (lem2 2 k)) ⟩
+    -- P≡⟨ Pcong (λ x → fib ((2 ℕ* (ℕsuc k)) ℕ+ 1) * fib (x ℕ+ 1) + one) (Psym (lem2 2 k)) ⟩
       fib (2 ℕ* (ℕsuc k) ℕ+ 1) * fib (2 ℕ* (ℕsuc k) ℕ+ 1) + one
     ∎
     where
@@ -136,29 +136,29 @@ mutual
   cassini-even k =
     begin
       fib (2 ℕ* k ℕ+ 2) * fib (2 ℕ* k ℕ+ 2)
-    -- ≡⟨ Pcong (λ x → fib (2 ℕ* k ℕ+ 2) * fib x) (NPS.+-comm (2 ℕ* k) 2) ⟩
+    -- P≡⟨ Pcong (λ x → fib (2 ℕ* k ℕ+ 2) * fib x) (NPS.+-comm (2 ℕ* k) 2) ⟩
     --   fib (2 ℕ* k ℕ+ 2) * fib (ℕsuc (ℕsuc (2 ℕ* k)))
-    -- ≈⟨ *-cong refl fib-def ⟩
+    -- ≡⟨ *-cong refl fib-def ⟩
     --   fib (2 ℕ* k ℕ+ 2) * (fib (ℕsuc (2 ℕ* k)) + fib (2 ℕ* k))
-    -- ≈⟨ distribˡ-*-+ ⟩
-    ≈⟨ clem1 ⟩
+    -- ≡⟨ distribˡ-*-+ ⟩
+    ≡⟨ clem1 ⟩
       fib (2 ℕ* k ℕ+ 2) * fib (ℕsuc (2 ℕ* k)) + fib (2 ℕ* k ℕ+ 2) * fib (2 ℕ* k)
-    ≈⟨ +-cong refl (cassini-odd k) ⟩
+    ≡⟨ +-cong refl (cassini-odd k) ⟩
       fib (2 ℕ* k ℕ+ 2) * fib (ℕsuc (2 ℕ* k)) + (fib (2 ℕ* k ℕ+ 1) * fib (2 ℕ* k ℕ+ 1) + one)
-    ≈⟨ clem2 ⟩
-    -- ≈⟨ sym +-assoc ⟩
+    ≡⟨ clem2 ⟩
+    -- ≡⟨ sym +-assoc ⟩
     --   (fib (2 ℕ* k ℕ+ 2) * fib (ℕsuc (2 ℕ* k)) + fib (2 ℕ* k ℕ+ 1) * fib (2 ℕ* k ℕ+ 1)) + one
-    -- ≡⟨ Pcong (λ x → (fib (2 ℕ* k ℕ+ 2) * fib x + fib (2 ℕ* k ℕ+ 1) * fib (2 ℕ* k ℕ+ 1)) + one) (NPS.+-comm 1 (2 ℕ* k)) ⟩
+    -- P≡⟨ Pcong (λ x → (fib (2 ℕ* k ℕ+ 2) * fib x + fib (2 ℕ* k ℕ+ 1) * fib (2 ℕ* k ℕ+ 1)) + one) (NPS.+-comm 1 (2 ℕ* k)) ⟩
     --   (fib (2 ℕ* k ℕ+ 2) * fib (2 ℕ* k ℕ+ 1) + fib (2 ℕ* k ℕ+ 1) * fib (2 ℕ* k ℕ+ 1)) + one
-    -- ≈⟨ +-cong (sym distribʳ-*-+) refl ⟩
+    -- ≡⟨ +-cong (sym distribʳ-*-+) refl ⟩
     --   (fib (2 ℕ* k ℕ+ 2) + fib (2 ℕ* k ℕ+ 1)) * fib (2 ℕ* k ℕ+ 1) + one
-    --   ≡⟨ Pcong (λ x → (fib x + fib (2 ℕ* k ℕ+ 1)) * fib (2 ℕ* k ℕ+ 1) + one) (NPS.+-suc (2 ℕ* k) 1) ⟩
+    --   P≡⟨ Pcong (λ x → (fib x + fib (2 ℕ* k ℕ+ 1)) * fib (2 ℕ* k ℕ+ 1) + one) (NPS.+-suc (2 ℕ* k) 1) ⟩
     --   (fib (ℕsuc (2 ℕ* k ℕ+ 1)) + fib (2 ℕ* k ℕ+ 1)) * fib (2 ℕ* k ℕ+ 1) + one
-    -- ≈⟨ +-cong (*-cong (sym fib-def) refl) refl ⟩
+    -- ≡⟨ +-cong (*-cong (sym fib-def) refl) refl ⟩
     --   fib (ℕsuc (ℕsuc (2 ℕ* k ℕ+ 1))) * fib (2 ℕ* k ℕ+ 1) + one
-    -- ≡⟨ Pcong (λ x → fib x * fib (2 ℕ* k ℕ+ 1) + one) (NPS.+-comm 2 (k ℕ+ (k ℕ+ ℕzero) ℕ+ 1)) ⟩
+    -- P≡⟨ Pcong (λ x → fib x * fib (2 ℕ* k ℕ+ 1) + one) (NPS.+-comm 2 (k ℕ+ (k ℕ+ ℕzero) ℕ+ 1)) ⟩
     --   fib ((2 ℕ* k ℕ+ 1) ℕ+ 2) * fib (2 ℕ* k ℕ+ 1) + one
-    -- ≡⟨ Pcong (λ x → fib x * fib (2 ℕ* k ℕ+ 1) + one) (NPS.+-assoc (2 ℕ* k) 1 2) ⟩
+    -- P≡⟨ Pcong (λ x → fib x * fib (2 ℕ* k ℕ+ 1) + one) (NPS.+-assoc (2 ℕ* k) 1 2) ⟩
       fib (2 ℕ* k ℕ+ 3) * fib (2 ℕ* k ℕ+ 1) + one
     ∎
     where

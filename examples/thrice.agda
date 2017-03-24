@@ -57,23 +57,23 @@ thrice {1} = axiom Prefl (from-just (toBij {three * fib (ℕsuc (ℕsuc 1))}
 thrice {ℕsuc (ℕsuc n)} = -- rewrite fin-value n = solve 1 (λ x → :three :* :fib (:suc (:suc (:suc (:suc x)))) := :fib (:suc (:suc (:suc (:suc (:suc (:suc x)))))) :+ :fib (:suc (:suc x))) refl (fin n)
   begin
     three * fib (4 ℕ+ n)
-  ≈⟨ *-cong refl fib-def ⟩
+  ≡⟨ *-cong refl fib-def ⟩
     three * (fib (3 ℕ+ n) + fib (2 ℕ+ n))
-  ≈⟨ distribˡ-*-+ ⟩
+  ≡⟨ distribˡ-*-+ ⟩
     three * fib (3 ℕ+ n) + three * fib (2 ℕ+ n)
-  ≈⟨ +-cong thrice thrice ⟩
+  ≡⟨ +-cong thrice thrice ⟩
     (fib (5 ℕ+ n) + fib (1 ℕ+ n)) + (fib (4 ℕ+ n) + fib n)
-  ≈⟨ +-assoc ⟩
+  ≡⟨ +-assoc ⟩
     fib (5 ℕ+ n) + (fib (1 ℕ+ n) + (fib (4 ℕ+ n) + fib n))
-  ≈⟨ +-cong refl +-comm ⟩
+  ≡⟨ +-cong refl +-comm ⟩
     fib (5 ℕ+ n) + ((fib (4 ℕ+ n) + fib n) + fib (1 ℕ+ n))
-  ≈⟨ +-cong refl +-assoc ⟩
+  ≡⟨ +-cong refl +-assoc ⟩
     fib (5 ℕ+ n) + (fib (4 ℕ+ n) + (fib n + fib (1 ℕ+ n)))
-  ≈⟨ +-cong refl (+-cong refl +-comm) ⟩
+  ≡⟨ +-cong refl (+-cong refl +-comm) ⟩
     fib (5 ℕ+ n) + (fib (4 ℕ+ n) + (fib (1 ℕ+ n) + fib n))
-  ≈⟨ sym +-assoc ⟩
+  ≡⟨ sym +-assoc ⟩
     (fib (5 ℕ+ n) + fib (4 ℕ+ n)) + (fib (1 ℕ+ n) + fib n)
-  ≈⟨ +-cong (sym fib-def) (sym fib-def) ⟩
+  ≡⟨ +-cong (sym fib-def) (sym fib-def) ⟩
     fib (6 ℕ+ n) + fib (2 ℕ+ n)
   ∎
 
@@ -86,46 +86,46 @@ thrice' : ∀ {n} → three * fib (ℕsuc (ℕsuc n)) ≡ fib (ℕsuc (ℕsuc (�
 thrice' {n} =
   begin
     three * fib (ℕsuc (ℕsuc n))
-  ≈⟨ *-cong refl fib-def  ⟩
+  ≡⟨ *-cong refl fib-def  ⟩
     three * (fib (ℕsuc n) + fib n)
-  -- ≈⟨ distribˡ-*-+ ⟩
+  -- ≡⟨ distribˡ-*-+ ⟩
   --   three * fib (ℕsuc n) + three * fib n
-  -- ≈⟨ +-cong *-comm  *-comm ⟩
+  -- ≡⟨ +-cong *-comm  *-comm ⟩
   --   fib (ℕsuc n) * three + fib n * three
-  -- ≈⟨ +-cong +-*-suc +-*-suc ⟩
+  -- ≡⟨ +-cong +-*-suc +-*-suc ⟩
   --   (fib (ℕsuc n) + fib (ℕsuc n) * two) + (fib n + fib n * two)
-  -- ≈⟨ +-cong (+-cong refl +-*-suc) (+-cong refl +-*-suc) ⟩
+  -- ≡⟨ +-cong (+-cong refl +-*-suc) (+-cong refl +-*-suc) ⟩
   --   (fib (ℕsuc n) + (fib (ℕsuc n) + fib (ℕsuc n) * one)) + (fib n + (fib n + fib n * one))
-  -- ≈⟨ +-cong (+-cong refl (+-cong refl *-right-identity)) (+-cong refl (+-cong refl *-right-identity)) ⟩
+  -- ≡⟨ +-cong (+-cong refl (+-cong refl *-right-identity)) (+-cong refl (+-cong refl *-right-identity)) ⟩
   --   (fib (ℕsuc n) + (fib (ℕsuc n) + fib (ℕsuc n))) + (fib n + (fib n + fib n))
-  -- ≈⟨ +-assoc ⟩
+  -- ≡⟨ +-assoc ⟩
   --   fib (ℕsuc n) + ((fib (ℕsuc n) + fib (ℕsuc n)) + (fib n + (fib n + fib n)))
-  -- ≈⟨ +-cong refl (+-assoc) ⟩
+  -- ≡⟨ +-cong refl (+-assoc) ⟩
   --   fib (ℕsuc n) + (fib (ℕsuc n) + (fib (ℕsuc n) + (fib n + (fib n + fib n))))
-  -- ≈⟨ +-cong refl (+-cong refl (sym +-assoc)) ⟩
+  -- ≡⟨ +-cong refl (+-cong refl (sym +-assoc)) ⟩
   --   fib (ℕsuc n) + (fib (ℕsuc n) + ((fib (ℕsuc n) + fib n) + (fib n + fib n)))
-  -- ≈⟨ +-cong refl (+-cong refl (sym +-assoc)) ⟩
+  -- ≡⟨ +-cong refl (+-cong refl (sym +-assoc)) ⟩
   --   fib (ℕsuc n) + (fib (ℕsuc n) + (((fib (ℕsuc n) + fib n) + fib n) + fib n))
-  -- ≈⟨ +-cong refl (sym +-assoc) ⟩
+  -- ≡⟨ +-cong refl (sym +-assoc) ⟩
   --   fib (ℕsuc n) + ((fib (ℕsuc n) + ((fib (ℕsuc n) + fib n) + fib n)) + fib n)
-  -- ≈⟨ sym +-assoc ⟩
+  -- ≡⟨ sym +-assoc ⟩
   --   (fib (ℕsuc n) + (fib (ℕsuc n) + ((fib (ℕsuc n) + fib n) + fib n))) + fib n
-  -- ≈⟨ +-comm ⟩
+  -- ≡⟨ +-comm ⟩
   --   fib n + (fib (ℕsuc n) + (fib (ℕsuc n) + ((fib (ℕsuc n) + fib n) + fib n)))
-  -- ≈⟨ sym +-assoc ⟩
+  -- ≡⟨ sym +-assoc ⟩
   --   (fib n + fib (ℕsuc n)) + (fib (ℕsuc n) + ((fib (ℕsuc n) + fib n) + fib n))
-  -- ≈⟨ +-cong +-comm refl ⟩
+  -- ≡⟨ +-cong +-comm refl ⟩
   --   (fib (ℕsuc n) + fib n) + (fib (ℕsuc n) + ((fib (ℕsuc n) + fib n) + fib n))
-  -- ≈⟨ sym +-assoc ⟩
+  -- ≡⟨ sym +-assoc ⟩
   --   ((fib (ℕsuc n) + fib n) + fib (ℕsuc n)) + ((fib (ℕsuc n) + fib n) + fib n)
-  -- ≈⟨ sym +-assoc ⟩
-  ≈⟨ lemma ⟩
+  -- ≡⟨ sym +-assoc ⟩
+  ≡⟨ lemma ⟩
     (((fib (ℕsuc n) + fib n) + fib (ℕsuc n)) + (fib (ℕsuc n) + fib n)) + fib n
-  ≈⟨ +-cong (+-cong (+-cong (sym fib-def) refl) refl) refl ⟩
+  ≡⟨ +-cong (+-cong (+-cong (sym fib-def) refl) refl) refl ⟩
     ((fib (ℕsuc (ℕsuc n)) + fib (ℕsuc n)) + (fib (ℕsuc n) + fib n)) + fib n
-  ≈⟨ +-cong (+-cong (sym fib-def) (sym fib-def)) refl ⟩
+  ≡⟨ +-cong (+-cong (sym fib-def) (sym fib-def)) refl ⟩
     (fib (ℕsuc (ℕsuc (ℕsuc n))) + fib (ℕsuc (ℕsuc n))) + fib n
-  ≈⟨ +-cong (sym fib-def) refl ⟩
+  ≡⟨ +-cong (sym fib-def) refl ⟩
     fib (ℕsuc (ℕsuc (ℕsuc (ℕsuc n)))) + fib n
   ∎
 

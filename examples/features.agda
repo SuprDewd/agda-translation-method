@@ -19,11 +19,11 @@ ex1 a b c = trans +-comm (trans (+-cong +-comm refl) +-assoc)
 ex2 : ∀ a b c → a + (b + c) ≡ c + (b + a)
 ex2 a b c = begin
   a + (b + c)
-  ≈⟨ +-comm ⟩
+  ≡⟨ +-comm ⟩
   (b + c) + a
-  ≈⟨ +-cong +-comm refl ⟩
+  ≡⟨ +-cong +-comm refl ⟩
   (c + b) + a
-  ≈⟨ +-assoc ⟩
+  ≡⟨ +-assoc ⟩
   c + (b + a) ∎
 
 -- Proof using solver

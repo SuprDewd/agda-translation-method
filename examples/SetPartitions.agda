@@ -43,21 +43,21 @@ party {ℕzero} {ℕsuc r} = axiom Prefl (mkBij to from toFrom fromTo)
 party {ℕsuc l} {ℕzero} =
   begin
     S₂ (ℕsuc l) ℕzero
-  ≈⟨ S₂-def₂ ⟩
+  ≡⟨ S₂-def₂ ⟩
     S₂ l ℕzero
-  ≈⟨ party ⟩
+  ≡⟨ party ⟩
     CS₂ (ℕsuc l) ℕzero
-  ≈⟨ sym CS₂-def₂ ⟩
+  ≡⟨ sym CS₂-def₂ ⟩
     CS₂ (ℕsuc (ℕsuc l)) ℕzero
   ∎
 party {ℕsuc l} {ℕsuc r} =
   begin
     S₂ (ℕsuc l) (ℕsuc r)
-  ≈⟨ S₂-def₁ ⟩
+  ≡⟨ S₂-def₁ ⟩
     (nat (ℕsuc l)) * S₂ (ℕsuc l) r + S₂ l (ℕsuc r)
-  ≈⟨ +-cong (*-cong refl party) party ⟩
+  ≡⟨ +-cong (*-cong refl party) party ⟩
     (nat (ℕsuc l)) * CS₂ (ℕsuc (ℕsuc l)) r + CS₂ (ℕsuc l) (ℕsuc r)
-  ≈⟨ sym CS₂-def₁ ⟩
+  ≡⟨ sym CS₂-def₁ ⟩
     CS₂ (ℕsuc (ℕsuc l)) (ℕsuc r)
   ∎
 

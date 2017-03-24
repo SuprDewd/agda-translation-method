@@ -45,37 +45,65 @@ fib-cong Prefl = refl
 ------------------------------------------------------------------------
 -- Binary strings
 
--- Enumeration
+2^-def : ∀ {n} → 2^ (ℕsuc n) ≡ nat 2 * 2^ n
+2^-def {n} = axiom Prefl (mkBij to from toFrom fromTo)
+  where
+    to : lift (2^ (ℕsuc n)) → lift (nat 2 * 2^ n)
+    to (Fzero ∷ xs) = nothing , xs
+    to (Fsuc Fzero ∷ xs) = just nothing , xs
+    to (Fsuc (Fsuc ()) ∷ xs)
 
--- ℕ2^ : ℕ → ℕ
--- ℕ2^ 0 = 1
--- ℕ2^ (ℕsuc n) = ℕ2^ n ℕ+ ℕ2^ n
+    from : lift (nat 2 * 2^ n) → lift (2^ (ℕsuc n))
+    from (nothing , xs) = Fzero ∷ xs
+    from (just nothing , xs) = Fsuc Fzero ∷ xs
+    from (just (just ()) , xs)
 
--- -- Combinatorial interpretation
+    toFrom : ∀ y → to (from y) P≡ y
+    toFrom (just (just ()) , xs)
+    toFrom (just nothing , xs) = Prefl
+    toFrom (nothing , xs) = Prefl
 
--- data BinStr : ℕ → Set where
---   [] : BinStr ℕzero
---   _∷_ : ∀ {n} → Fin 2 → BinStr n → BinStr (ℕsuc n)
+    fromTo : ∀ x → from (to x) P≡ x
+    fromTo (Fzero ∷ xs) = Prefl
+    fromTo (Fsuc Fzero ∷ xs) = Prefl
+    fromTo (Fsuc (Fsuc ()) ∷ xs)
 
--- -- Expressions
+2^-cong : ∀ {a b} → a P≡ b → (2^ a) ≡ (2^ b)
+2^-cong Prefl = refl
 
--- 2^ : ℕ → Expr
--- 2^ n = record
---   { value = ♯ ℕ2^ n
---   ; lift = BinStr n
---   }
+------------------------------------------------------------------------
+-- Quaternary strings
 
--- Axioms
+4^-def : ∀ {n} → 4^ (ℕsuc n) ≡ nat 4 * 4^ n
+4^-def {n} = axiom Prefl (mkBij to from toFrom fromTo)
+  where
+    to : lift (4^ (ℕsuc n)) → lift (nat 4 * 4^ n)
+    to (Fzero ∷ xs) = nothing , xs
+    to (Fsuc Fzero ∷ xs) = just nothing , xs
+    to (Fsuc (Fsuc Fzero) ∷ xs) = just (just nothing) , xs
+    to (Fsuc (Fsuc (Fsuc Fzero)) ∷ xs) = just (just (just nothing)) , xs
+    to (Fsuc (Fsuc (Fsuc (Fsuc ()))) ∷ xs)
 
--- 2^-def : ∀ {n} → 2^ (ℕsuc n) ≡ 2^ n + 2^ n
--- 2^-def {n} = axiom Prefl $ mkBij
---   (λ { (Fzero ∷ xs) → inj₁ xs
---      ; (Fsuc Fzero ∷ xs) → inj₂ xs
---      ; (Fsuc (Fsuc ()) ∷ _)
---      })
---   (λ { (inj₁ xs) → Fzero ∷ xs
---      ; (inj₂ xs) → Fsuc Fzero ∷ xs
---      })
+    from : lift (nat 4 * 4^ n) → lift (4^ (ℕsuc n))
+    from (just (just (just (just ()))) , xs)
+    from (just (just (just nothing)) , xs) = Fsuc (Fsuc (Fsuc Fzero)) ∷ xs
+    from (just (just nothing) , xs) = Fsuc (Fsuc Fzero) ∷ xs
+    from (just nothing , xs) = Fsuc Fzero ∷ xs
+    from (nothing , xs) = Fzero ∷ xs
+
+    toFrom : ∀ y → to (from y) P≡ y
+    toFrom (just (just (just (just ()))) , xs)
+    toFrom (just (just (just nothing)) , xs) = Prefl
+    toFrom (just (just nothing) , xs) = Prefl
+    toFrom (just nothing , xs) = Prefl
+    toFrom (nothing , xs) = Prefl
+
+    fromTo : ∀ x → from (to x) P≡ x
+    fromTo (Fzero ∷ xs) = Prefl
+    fromTo (Fsuc Fzero ∷ xs) = Prefl
+    fromTo (Fsuc (Fsuc Fzero) ∷ xs) = Prefl
+    fromTo (Fsuc (Fsuc (Fsuc Fzero)) ∷ xs) = Prefl
+    fromTo (Fsuc (Fsuc (Fsuc (Fsuc ()))) ∷ xs)
 
 ------------------------------------------------------------------------
 -- Set partitions

@@ -87,6 +87,7 @@ infixl 5 _+_
 data Fun : Set where
   fib' : (n : ℕ) → Fun
   2^' : (n : ℕ) → Fun
+  4^' : (n : ℕ) → Fun
   S₂' : (l r : ℕ) → Fun
   CS₂' : (l r : ℕ) → Fun
 
@@ -129,7 +130,6 @@ data FibStr : ℕ → Set where
   _∷2 : ∀ {n} → FibStr n → FibStr (ℕsuc (ℕsuc n))
 
 module FibStrExpr where
-
   show : ∀ {n} → FibStr n → String
   show [] = "[]"
   show (x ∷1) = show x ++ " ∷1"
@@ -288,7 +288,7 @@ module CSetPartitionKExpr where
 
 ℕ2^ : ℕ → ℕ
 ℕ2^ 0 = 1
-ℕ2^ (ℕsuc n) = ℕ2^ n ℕ+ ℕ2^ n
+ℕ2^ (ℕsuc n) = 2 ℕ* ℕ2^ n
 
 -- Combinatorial interpretation
 
@@ -329,6 +329,71 @@ module BinStrExpr where
   equal (Fsuc (Fsuc ()) ∷ xs) (Fsuc (Fsuc y) ∷ ys)
 
 ------------------------------------------------------------------------
+-- Quaternary strings
+
+-- Enumeration
+
+ℕ4^ : ℕ → ℕ
+ℕ4^ 0 = 1
+ℕ4^ (ℕsuc n) = 4 ℕ* ℕ4^ n
+
+-- Combinatorial interpretation
+
+data QuadStr : ℕ → Set where
+  [] : QuadStr ℕzero
+  _∷_ : ∀ {n} → Fin 4 → QuadStr n → QuadStr (ℕsuc n)
+
+module QuadStrExpr where
+
+  show : ∀ {n} → QuadStr n → String
+  show [] = "[]"
+  show (Fzero ∷ x₁) = "0 ∷ " ++ show x₁
+  show (Fsuc Fzero ∷ x₁) = "1 ∷ " ++ show x₁
+  show (Fsuc (Fsuc Fzero) ∷ x₁) = "2 ∷ " ++ show x₁
+  show (Fsuc (Fsuc (Fsuc Fzero)) ∷ x₁) = "3 ∷ " ++ show x₁
+  show (Fsuc (Fsuc (Fsuc (Fsuc ()))) ∷ _)
+
+  generate : ∀ {n} → List (QuadStr n)
+  generate {ℕzero} = [] L∷ L[]
+  generate {ℕsuc n} = L.map (_∷_ Fzero) (generate {n}) L.++ (L.map (_∷_ (Fsuc Fzero)) (generate {n}) L.++ (L.map (_∷_ (Fsuc (Fsuc Fzero))) (generate {n}) L.++ L.map (_∷_ (Fsuc (Fsuc (Fsuc Fzero)))) (generate {n})))
+
+  exhaustive : ∀ {n} → (x : QuadStr n) → x ∈ generate {n}
+  exhaustive {ℕzero} [] = here Prefl
+  exhaustive {ℕsuc n} (Fzero ∷ x) = ∈++ˡ {QuadStr (ℕsuc n)} (∈map (exhaustive x))
+  exhaustive {ℕsuc n} (Fsuc Fzero ∷ x) = ∈++ʳ {QuadStr (ℕsuc n)} {L.map (_∷_ Fzero) (generate {n})} (∈++ˡ (∈map (exhaustive x)))
+  exhaustive {ℕsuc n} (Fsuc (Fsuc Fzero) ∷ x) = ∈++ʳ {QuadStr (ℕsuc n)} {L.map (_∷_ Fzero) (generate {n})}
+                                                (∈++ʳ {QuadStr (ℕsuc n)} {L.map (_∷_ (Fsuc Fzero)) (generate {n})}
+                                                (∈++ˡ (∈map (exhaustive x))))
+  exhaustive {ℕsuc n} (Fsuc (Fsuc (Fsuc Fzero)) ∷ x) = ∈++ʳ {QuadStr (ℕsuc n)} {L.map (_∷_ Fzero) (generate {n})}
+                                                       (∈++ʳ {QuadStr (ℕsuc n)} {L.map (_∷_ (Fsuc Fzero)) (generate {n})}
+                                                       (∈++ʳ {QuadStr (ℕsuc n)} {L.map (_∷_ (Fsuc (Fsuc Fzero))) (generate {n})}
+                                                       (∈map (exhaustive x))))
+  exhaustive {ℕsuc n} (Fsuc (Fsuc (Fsuc (Fsuc ()))) ∷ _)
+
+  equal : ∀ {n} → (x y : QuadStr n) → Dec (x P≡ y)
+  equal [] [] = yes Prefl
+  equal (Fzero ∷ xs) (Fzero ∷ ys) with equal xs ys
+  equal (Fzero ∷ xs) (Fzero ∷ .xs) | yes Prefl = yes Prefl
+  equal (Fzero ∷ xs) (Fzero ∷ ys) | no ¬p = no (λ { Prefl → ¬p Prefl })
+  equal (Fsuc Fzero ∷ xs) (Fsuc Fzero ∷ ys) with equal xs ys
+  equal (Fsuc Fzero ∷ xs) (Fsuc Fzero ∷ ys) | yes Prefl = yes Prefl
+  equal (Fsuc Fzero ∷ xs) (Fsuc Fzero ∷ ys) | no ¬p = no (λ { Prefl → ¬p Prefl })
+  equal (Fsuc (Fsuc Fzero) ∷ xs) (Fsuc (Fsuc Fzero) ∷ ys) with equal xs ys
+  equal (Fsuc (Fsuc Fzero) ∷ xs) (Fsuc (Fsuc Fzero) ∷ ys) | yes Prefl = yes Prefl
+  equal (Fsuc (Fsuc Fzero) ∷ xs) (Fsuc (Fsuc Fzero) ∷ ys) | no ¬p = no (λ { Prefl → ¬p Prefl })
+  equal (Fsuc (Fsuc (Fsuc Fzero)) ∷ xs) (Fsuc (Fsuc (Fsuc Fzero)) ∷ ys) with equal xs ys
+  equal (Fsuc (Fsuc (Fsuc Fzero)) ∷ xs) (Fsuc (Fsuc (Fsuc Fzero)) ∷ ys) | yes Prefl = yes Prefl
+  equal (Fsuc (Fsuc (Fsuc Fzero)) ∷ xs) (Fsuc (Fsuc (Fsuc Fzero)) ∷ ys) | no ¬p = no (λ { Prefl → ¬p Prefl })
+  equal (Fsuc (Fsuc (Fsuc Fzero)) ∷ xs) (Fsuc (Fsuc (Fsuc (Fsuc y))) ∷ ys) = no (λ ())
+  equal (Fsuc (Fsuc (Fsuc (Fsuc x))) ∷ xs) (Fsuc (Fsuc (Fsuc Fzero)) ∷ ys) = no (λ ())
+  equal (Fsuc (Fsuc Fzero) ∷ xs) (Fsuc (Fsuc (Fsuc y)) ∷ ys) = no (λ ())
+  equal (Fsuc (Fsuc (Fsuc x)) ∷ xs) (Fsuc (Fsuc Fzero) ∷ ys) = no (λ ())
+  equal (Fsuc Fzero ∷ xs) (Fsuc (Fsuc y) ∷ ys) = no (λ ())
+  equal (Fsuc (Fsuc x) ∷ xs) (Fsuc Fzero ∷ ys) = no (λ ())
+  equal (Fzero ∷ xs) (Fsuc y ∷ ys) = no (λ ())
+  equal (Fsuc x ∷ xs) (Fzero ∷ ys) = no (λ ())
+  equal (Fsuc (Fsuc (Fsuc (Fsuc ()))) ∷ xs) (Fsuc (Fsuc (Fsuc (Fsuc y))) ∷ ys)
+
 -- Shorthands
 
 fib : ℕ → Expr
@@ -336,6 +401,9 @@ fib n = fun (fib' n)
 
 2^ : ℕ → Expr
 2^ n = fun (2^' n)
+
+4^ : ℕ → Expr
+4^ n = fun (4^' n)
 
 S₂ : ℕ → ℕ → Expr
 S₂ l r = fun (S₂' l r)
@@ -349,12 +417,14 @@ CS₂ l r = fun (CS₂' l r)
 valueF : Fun → ℕ
 valueF (fib' n) = ℕfib n
 valueF (2^' n) = ℕ2^ n
+valueF (4^' n) = ℕ4^ n
 valueF (S₂' l r) = ℕS₂ l r
 valueF (CS₂' l r) = ℕCS₂ l r
 
 liftF : Fun → Set
 liftF (fib' n) = FibStr n
 liftF (2^' n) = BinStr n
+liftF (4^' n) = QuadStr n
 liftF (S₂' l r) = SetPartitionK l r
 liftF (CS₂' l r) = CSetPartitionK l r
 
@@ -385,6 +455,7 @@ lift (fun f) = liftF f
 showF : (F : Fun) → (x : liftF F) → String
 showF (fib' n) = FibStrExpr.show
 showF (2^' n) = BinStrExpr.show
+showF (4^' n) = QuadStrExpr.show
 showF (S₂' l r) = SetPartitionKExpr.show
 showF (CS₂' l r) = CSetPartitionKExpr.show
 
@@ -402,12 +473,14 @@ show (fun f) = showF f
 generateF : (F : Fun) → List (liftF F)
 generateF (fib' n) = FibStrExpr.generate
 generateF (2^' n) = BinStrExpr.generate
+generateF (4^' n) = QuadStrExpr.generate
 generateF (S₂' l r) = SetPartitionKExpr.generate
 generateF (CS₂' l r) = CSetPartitionKExpr.generate
 
 exhaustiveF : (F : Fun) → (f : liftF F) → f ∈ generateF F
 exhaustiveF (fib' n) = FibStrExpr.exhaustive
 exhaustiveF (2^' n) = BinStrExpr.exhaustive
+exhaustiveF (4^' n) = QuadStrExpr.exhaustive
 exhaustiveF (S₂' l r) = SetPartitionKExpr.exhaustive
 exhaustiveF (CS₂' l r) = CSetPartitionKExpr.exhaustive
 
@@ -435,6 +508,7 @@ exhaustive (fun f) = exhaustiveF f
 equalF : (A : Fun) → (x y : liftF A) → Dec (x P≡ y)
 equalF (fib' n) = FibStrExpr.equal
 equalF (2^' n) = BinStrExpr.equal
+equalF (4^' n) = QuadStrExpr.equal
 equalF (S₂' l r) = SetPartitionKExpr.equal
 equalF (CS₂' l r) = CSetPartitionKExpr.equal
 

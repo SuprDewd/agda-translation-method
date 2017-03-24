@@ -2,7 +2,7 @@ module SetPartitions where
 
 open import Function
 open import Translate
-open import Translate.Support
+open import Translate.Common
 open import Translate.EqReasoning
 open import Translate.Combinatorics
 open import Translate.Axioms

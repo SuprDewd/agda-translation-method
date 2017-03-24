@@ -4,7 +4,7 @@ open import Function
 
 open import Translate
 -- open import Translate.Fibonacci
-open import Translate.Support
+open import Translate.Common
 open import Translate.EqReasoning
 open import Translate.Axioms
 open import Translate.Bijection using (getTo)

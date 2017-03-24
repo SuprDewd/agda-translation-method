@@ -7,7 +7,7 @@
 module Translate.Solver.Combinatorics where
 
 open import Translate.Base
-open import Translate.Support
+open import Translate.Common
 open import Translate.Combinatorics
 open import Translate.Types
 open import Translate.Solver.Types

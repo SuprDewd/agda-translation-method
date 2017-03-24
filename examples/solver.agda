@@ -76,7 +76,7 @@ meow' = solve 3 (λ x y z → x :+ (y :+ z) := z :+ (y :+ x)) refl
 lem2 : (four + six ≡ ten)
 lem2 = solve 0 (:four :+ :six := :ten) refl
 
-open import Translate.Support
+open import Translate.Common
 lem2-bij : lift (four + six) → lift (ten)
 lem2-bij = getTo (toBijection lem2)
 

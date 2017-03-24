@@ -1,10 +1,9 @@
 
 module Translate.Solver where
 
-open import Translate.Support
+open import Translate.Common
 open import Translate.Base
 open import Translate.EqReasoning
-open import Translate.Support
 open import Translate.Types
 open import Translate.Axioms
 open import Translate.Properties

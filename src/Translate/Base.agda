@@ -8,7 +8,7 @@ module Translate.Base where
 
 open import Function
 open import Coinduction
-open import Translate.Support
+open import Translate.Common
 open import Translate.Types
 
 infix 4 _≡_

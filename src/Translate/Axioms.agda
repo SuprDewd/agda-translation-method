@@ -39,7 +39,7 @@ module NP where
     m * n + m * o ∎
 
 open import Translate.Base
-open import Translate.Support
+open import Translate.Common
 open import Translate.Types
 
 +-assoc : ∀ {a b c} → (a + b) + c ≡ a + (b + c)

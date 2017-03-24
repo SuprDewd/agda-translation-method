@@ -6,7 +6,7 @@
 
 module Translate.Solver.Types where
 
-open import Translate.Support
+open import Translate.Common
 open import Translate.Base
 open import Translate.Types
 open import Translate.Axioms

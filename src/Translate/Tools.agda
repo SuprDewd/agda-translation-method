@@ -4,7 +4,7 @@ open import Function
 
 open import Translate.Base
 open import Translate.Types
-open import Translate.Support
+open import Translate.Common
 open import Translate.Bijection using (getTo)
 
 open import Data.Product

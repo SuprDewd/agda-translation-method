@@ -5,7 +5,7 @@ open import Function
 open import Translate.Base
 open import Translate.Types
 open import Translate.Combinatorics
-open import Translate.Support
+open import Translate.Common
 open import Translate.Axioms
 open import Translate.Bijection using (getTo; getFrom; getToFrom; getFromTo)
 open import Translate.Tools

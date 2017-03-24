@@ -7,7 +7,7 @@
 module Translate.Combinatorics where
 
 open import Translate.Base
-open import Translate.Support
+open import Translate.Common
 open import Translate.Types
 open import Function
 import Data.Fin as F

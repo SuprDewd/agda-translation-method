@@ -6,7 +6,7 @@
 
 module Translate.Properties where
 
-open import Translate.Axioms
+open import Translate.Arithmetic
 open import Translate.Base
 open import Translate.Types
 open import Relation.Binary

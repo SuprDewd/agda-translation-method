@@ -1,7 +1,7 @@
 
 module Translate.Types where
 
-open import Translate.Support
+open import Translate.Common
 open import Function
 open import Coinduction
 open import Data.String
@@ -98,9 +98,6 @@ data Expr : Set where
 
   _+_ : (l r : Expr) → Expr
   _*_ : (l r : Expr) → Expr
-
-  ∑ : (n : ℕ) → (Fin n → Expr) → Expr
-  ∏ : (n : ℕ) → (Fin n → Expr) → Expr
 
   fun : (f : Fun) → Expr
 
@@ -490,11 +487,6 @@ value zero = ℕzero
 value (suc x) = ℕsuc (value x)
 value (l + r) = value l ℕ+ value r
 value (l * r) = value l ℕ* value r
--- value (∑ 0 f) = 0
--- value (∑ (ℕsuc n) f) = value (∑ n (λ x → f (F.inject₁ x))) ℕ+ value (f (F.fromℕ n))
--- value (∑ n f) = L.foldr (_ℕ+_) 0 (L.map value (L.map f (generateFin {n})))
-value (∑ n f) = L.foldr (_ℕ+_ ∘ value ∘ f) 0 (generateFin {n})
-value (∏ n f) = {!!}
 value (fun f) = valueF f
 
 lift : Expr → Set
@@ -502,8 +494,6 @@ lift zero = ⊥
 lift (suc x) = Maybe (lift x)
 lift (l + r) = lift l ⊎ lift r
 lift (l * r) = lift l × lift r
-lift (∑ n f) = Σ (Fin n) (λ x → {!!})
-lift (∏ n f) = (Fin n → {!!})
 lift (fun f) = liftF f
 
 ------------------------------------------------------------------------
@@ -524,8 +514,6 @@ show (suc E) nothing = "nothing"
 show (E + E₁) (inj₁ x) = "inj₁ " ++ paren (show E x)
 show (E + E₁) (inj₂ y) = "inj₂ " ++ paren (show E₁ y)
 show (E * E₁) (a , b) = paren (show E a) ++ " , " ++ paren (show E₁ b)
-show (∑ n f) = {!!}
-show (∏ n f) = {!!}
 show (fun f) = showF f
 
 generateF : (F : Fun) → List (liftF F)
@@ -549,8 +537,6 @@ generate zero = L[]
 generate (suc E) = nothing L∷ L.map just (generate E)
 generate (E + E₁) = L.map inj₁ (generate E) L.++ L.map inj₂ (generate E₁)
 generate (E * E₁) = L.concatMap (λ l → L.concatMap (λ r → (l , r) L∷ L[]) (generate E₁)) (generate E)
-generate (∑ n f) = {!!}
-generate (∏ n f) = {!!}
 generate (fun f) = generateF f
 
 exhaustive : (E : Expr) → (e : lift E) → e ∈ generate E
@@ -561,8 +547,6 @@ exhaustive (E + E₁) (inj₁ x) = ∈++ˡ (∈map (exhaustive E x))
 exhaustive (E + E₁) (inj₂ y) = ∈++ʳ {lift (E + E₁)} {L.map inj₁ (generate E)} (∈map (exhaustive E₁ y))
 exhaustive (E * E₁) (x , y) = ∈concatMap {lift E} {lift (E * E₁)} {x} {x , y} {generate E} {λ l → L.concatMap (λ r → (l , r) L∷ L[]) (generate E₁)} (exhaustive E x)
   (∈concatMap {lift E₁} {lift (E * E₁)} {y} {x , y} {generate E₁} {λ r → (x , r) L∷ L[]} (exhaustive E₁ y) (here Prefl))
-exhaustive (∑ n f) = {!!}
-exhaustive (∏ n f) = {!!}
 exhaustive (fun f) = exhaustiveF f
 
 equalF : (A : Fun) → (x y : liftF A) → Dec (x P≡ y)
@@ -594,8 +578,6 @@ equal (A₁ * A₂) (x₁ , x₂) (.x₁ , .x₂) | yes Prefl | (yes Prefl) = ye
 equal (A₁ * A₂) (x₁ , x₂) (y₁ , y₂) | yes p | no ¬p = no (λ { Prefl → ¬p Prefl })
 equal (A₁ * A₂) (x₁ , x₂) (y₁ , y₂) | no ¬p | yes p = no (λ { Prefl → ¬p Prefl })
 equal (A₁ * A₂) (x₁ , x₂) (y₁ , y₂) | no ¬p | no ¬p₁ = no (λ { Prefl → ¬p Prefl })
-equal (∑ n f) = {!!}
-equal (∏ n f) = {!!}
 equal (fun f) x y = equalF f x y
 
 ------------------------------------------------------------------------

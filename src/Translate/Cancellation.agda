@@ -5,8 +5,8 @@ open import Function
 open import Translate.Base
 open import Translate.Types
 open import Translate.Combinatorics
-open import Translate.Support
-open import Translate.Axioms
+open import Translate.Common
+open import Translate.Arithmetic
 open import Translate.Bijection using (getTo; getFrom; getToFrom; getFromTo)
 open import Translate.Tools
 import Relation.Binary.PropositionalEquality
@@ -369,7 +369,7 @@ private
     ∎) q
 
 +-cancel : ∀ {A B C D} → A + B ≡ C + D → B ≡ D → A ≡ C
-+-cancel {A} {B} {C} {D} p q = axiom (+-inj₁ (toEquality p) (toEquality q)) (mkBij to from toFrom fromTo)
++-cancel {A} {B} {C} {D} p q = proof (+-inj₁ (toEquality p) (toEquality q)) (mkBij to from toFrom fromTo)
   where
 
     to : lift A → lift C
@@ -380,10 +380,14 @@ private
     from y with run y where open Run2 C D A B (sym p) (sym q)
     from y | x , prf = x
 
+    symFix : ∀ {A B C D : Expr} (p : (A + B) ≡ (C + D)) (q : B ≡ D) → ∀ x y → [ toBijection (sym p) ∧ toBijection (sym q) ⊨ inj₁ y ⇒ x ] → [ Bsym (toBijection p) ∧ Bsym (toBijection q) ⊨ inj₁ y ⇒ x ]
+    symFix (proof x₁ x₂) (proof x₃ x₄) x y (step x₅ x₆ prf) = step x₅ x₆ prf
+    symFix (proof x₁ x₂) q₁ x y (done x₃) = done x₃
+
     toFrom : ∀ y → to (from y) P≡ y
     toFrom y with run y where open Run2 C D A B (sym p) (sym q)
     toFrom y | x , prf with run x where open Run2 A B C D p q
-    toFrom y | x , prf | z , prf2 = bijective (toBijection p) (toBijection q) z (inj₁ x) y prf2 (fix (reverse (Bsym (toBijection p)) (Bsym (toBijection q)) y x prf))
+    toFrom y | x , prf | z , prf2 = bijective (toBijection p) (toBijection q) z (inj₁ x) y prf2 (fix (reverse (Bsym (toBijection p)) (Bsym (toBijection q)) y x (symFix p q x y prf)))
       where
         symsym : ∀ {A B} → (t : A B≡ B) → Bsym (Bsym t) P≡ t
         symsym (mkBij to₁ from₁ x₁ x₂) = Prefl
@@ -394,4 +398,4 @@ private
     fromTo : ∀ x → from (to x) P≡ x
     fromTo x with run x where open Run2 A B C D p q
     fromTo x | y , prf with run y where open Run2 C D A B (sym p) (sym q)
-    fromTo x | y , prf | z , prf2 = bijective (Bsym (toBijection p)) (Bsym (toBijection q)) z (inj₁ y) x prf2 (reverse (toBijection p) (toBijection q) x y prf)
+    fromTo x | y , prf | z , prf2 = bijective (Bsym (toBijection p)) (Bsym (toBijection q)) z (inj₁ y) x (symFix p q z y prf2) (reverse (toBijection p) (toBijection q) x y prf)

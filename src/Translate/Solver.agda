@@ -1,12 +1,11 @@
 
 module Translate.Solver where
 
-open import Translate.Support
+open import Translate.Common
 open import Translate.Base
 open import Translate.EqReasoning
-open import Translate.Support
 open import Translate.Types
-open import Translate.Axioms
+open import Translate.Arithmetic
 open import Translate.Properties
 open import Translate.Combinatorics
 
@@ -33,7 +32,7 @@ infixl 5 _C+_
 private
 
   suc-distrib : ∀ {x} → suc x ≡ suc zero + x
-  suc-distrib {x} = axiom Prefl (mkBij to from toFrom fromTo)
+  suc-distrib {x} = proof Prefl (mkBij to from toFrom fromTo)
     where
       to : lift (suc x) → lift (suc zero + x)
       to (just y) = inj₂ y
@@ -54,7 +53,7 @@ private
       fromTo nothing = Prefl
 
   suc-pull : ∀ {a b} → suc a + b ≡ suc (a + b)
-  suc-pull {a} {b} = axiom Prefl (mkBij to from toFrom fromTo)
+  suc-pull {a} {b} = proof Prefl (mkBij to from toFrom fromTo)
     where
       to : lift (suc a + b) → lift (suc (a + b))
       to (inj₁ (just x)) = just (inj₁ x)
@@ -78,7 +77,7 @@ private
 
   suc-cong : ∀ {a b} → a ≡ b → suc a ≡ suc b
   suc-cong p with (toEquality p) | (toBijection p)
-  suc-cong {a} {b} p | q | mkBij t f tf ft = axiom (Pcong (λ x → ℕsuc x) q) (mkBij to from toFrom fromTo)
+  suc-cong {a} {b} p | q | mkBij t f tf ft = proof (Pcong (λ x → ℕsuc x) q) (mkBij to from toFrom fromTo)
     where
       to : lift (suc a) → lift (suc b)
       to (just x) = just (t x)
@@ -97,7 +96,7 @@ private
       fromTo nothing = Prefl
 
   suc-* : ∀ {a b} → suc a * b ≡ b + a * b
-  suc-* {a} {b} = axiom Prefl (mkBij to from toFrom fromTo)
+  suc-* {a} {b} = proof Prefl (mkBij to from toFrom fromTo)
     where
       to : lift (suc a * b) → lift (b + a * b)
       to (just x , y) = inj₂ (x , y)

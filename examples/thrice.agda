@@ -6,9 +6,9 @@ open import Translate
 open import Translate.Solver
 -- open import Translate.Fibonacci
 open import Translate.Combinatorics
-open import Translate.Support
+open import Translate.Common
 open import Translate.EqReasoning
-open import Translate.Axioms
+open import Translate.Arithmetic
 open import Translate.Bijection using (getTo)
 open import Translate.Tools
 open import Data.Maybe
@@ -33,7 +33,7 @@ fin-value ℕzero = Prefl
 fin-value (ℕsuc n) rewrite Psym (fin-value n) = Prefl
 
 thrice : ∀ {n} → three * fib (ℕsuc (ℕsuc n)) ≡ fib (ℕsuc (ℕsuc (ℕsuc (ℕsuc n)))) + fib n
-thrice {0} = axiom Prefl (from-just (toBij {three * fib (ℕsuc (ℕsuc 0))}
+thrice {0} = proof Prefl (from-just (toBij {three * fib (ℕsuc (ℕsuc 0))}
                                            {fib (ℕsuc (ℕsuc (ℕsuc (ℕsuc 0)))) + fib 0} (
     ((nothing             , [] ∷1 ∷1) , inj₁ ([] ∷1 ∷1 ∷1 ∷1)) L∷
     ((nothing             , [] ∷2)    , inj₁ ([] ∷1 ∷1 ∷2)) L∷
@@ -42,7 +42,7 @@ thrice {0} = axiom Prefl (from-just (toBij {three * fib (ℕsuc (ℕsuc 0))}
     ((just (just nothing) , [] ∷1 ∷1) , inj₁ ([] ∷1 ∷2 ∷1)) L∷
     ((just (just nothing) , [] ∷2)    , inj₂ []) L∷ L[]
   )))
-thrice {1} = axiom Prefl (from-just (toBij {three * fib (ℕsuc (ℕsuc 1))}
+thrice {1} = proof Prefl (from-just (toBij {three * fib (ℕsuc (ℕsuc 1))}
                                            {fib (ℕsuc (ℕsuc (ℕsuc (ℕsuc 1)))) + fib 1} (
     ((nothing             , [] ∷1 ∷1 ∷1) , inj₁ ([] ∷1 ∷1 ∷1 ∷1 ∷1)) L∷
     ((nothing             , [] ∷1 ∷2)    , inj₁ ([] ∷1 ∷1 ∷1 ∷2)) L∷
@@ -127,36 +127,6 @@ thrice' {n} =
     (fib (ℕsuc (ℕsuc (ℕsuc n))) + fib (ℕsuc (ℕsuc n))) + fib n
   ≡⟨ +-cong (sym fib-def) refl ⟩
     fib (ℕsuc (ℕsuc (ℕsuc (ℕsuc n)))) + fib n
-  ∎
-
-∑ : (n : ℕ) → (Fin n → Expr) → Expr
-∑ ℕzero f = zero
-∑ (ℕsuc n) f = f Fzero + ∑ n (λ i → f (Fsuc i))
-
--- ∑-pop : ∀ {n f} → ∑ (ℕsuc n) f ≡ ∑ n (λ i → f (F.inject₁ i)) + f (F.fromℕ n)
--- ∑-pop {ℕzero} {f} = +-comm
--- ∑-pop {ℕsuc n} {f} =
---   begin
---     f Fzero + (f (Fsuc Fzero) + ∑ n (λ i → f (Fsuc (Fsuc i))))
---   ≈⟨ {!!} ⟩
---     f Fzero + (∑ n (λ i → f (Fsuc (F.inject₁ i))) + f (Fsuc (F.fromℕ n)))
---   ≈⟨ sym +-assoc ⟩
---     (f Fzero + ∑ n (λ i → f (Fsuc (F.inject₁ i)))) + f (Fsuc (F.fromℕ n))
---   ∎
-
--- ∏ : (n : ℕ) → (Fin n → Expr) → Expr
--- ∏ ℕzero f = one
--- ∏ (ℕsuc n) f = f Fzero * ∏ n (λ i → f (Fsuc i))
-
--- The more general "thrice"
-nce : ∀ {n} → fib (4 ℕ+ n) + ∑ n (λ fi → let i = 1 ℕ+ ℕsuc (F.toℕ fi) in nat i * fib i) ≡ nat (1 ℕ+ n) * fib (2 ℕ+ n) + nat 3
-nce {n} =
-  begin
-    fib (4 ℕ+ n) + ∑ n (λ fi → let i = 1 ℕ+ ℕsuc (F.toℕ fi) in nat i * fib i)
-  ≈⟨ {!!} ⟩
-    fib (4 ℕ+ n) + ∑ n (λ fi → let i = 1 ℕ+ ℕsuc (F.toℕ fi) in nat i * fib i)
-  ≈⟨ {!!} ⟩
-    nat (1 ℕ+ n) * fib (2 ℕ+ n) + nat 3
   ∎
 
 

@@ -5,7 +5,7 @@
 -- library
 ------------------------------------------------------------------------
 
-module Translate.Support where
+module Translate.Common where
 
 open import Data.Maybe public
   using ( Maybe

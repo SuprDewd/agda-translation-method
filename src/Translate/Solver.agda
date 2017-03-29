@@ -349,15 +349,15 @@ insert-lf-correct Γ x (x₁ ∷ xs) with :FunnLt x x₁
 insert-lf-correct Γ x (x₁ ∷ xs) | true = refl
 insert-lf-correct Γ x (x₁ ∷ xs) | false =
   begin
-    fun (⟦ x₁ ⟧F Γ) * ⟦ insert-lf x xs ⟧LF Γ
+    (⟦ x₁ ⟧F Γ) * ⟦ insert-lf x xs ⟧LF Γ
   ≡⟨ *-cong refl (insert-lf-correct Γ x xs) ⟩
-    fun (⟦ x₁ ⟧F Γ) * (fun (⟦ x ⟧F Γ) * ⟦ xs ⟧LF Γ)
+    (⟦ x₁ ⟧F Γ) * ((⟦ x ⟧F Γ) * ⟦ xs ⟧LF Γ)
   ≡⟨ sym *-assoc ⟩
-    (fun (⟦ x₁ ⟧F Γ) * fun (⟦ x ⟧F Γ)) * ⟦ xs ⟧LF Γ
+    ((⟦ x₁ ⟧F Γ) * (⟦ x ⟧F Γ)) * ⟦ xs ⟧LF Γ
   ≡⟨ *-cong *-comm refl ⟩
-    (fun (⟦ x ⟧F Γ) * fun (⟦ x₁ ⟧F Γ)) * ⟦ xs ⟧LF Γ
+    ((⟦ x ⟧F Γ) * (⟦ x₁ ⟧F Γ)) * ⟦ xs ⟧LF Γ
   ≡⟨ *-assoc ⟩
-    fun (⟦ x ⟧F Γ) * (fun (⟦ x₁ ⟧F Γ) * ⟦ xs ⟧LF Γ)
+    (⟦ x ⟧F Γ) * ((⟦ x₁ ⟧F Γ) * ⟦ xs ⟧LF Γ)
   ∎
 
 sort-lf : ∀ {n} → List (:Fun n) → List (:Fun n)
@@ -370,9 +370,9 @@ sort-lf-correct Γ (x ∷ xs) =
   begin
     ⟦ insert-lf x (sort-lf xs) ⟧LF Γ
   ≡⟨ insert-lf-correct Γ x (sort-lf xs) ⟩
-    fun (⟦ x ⟧F Γ) * ⟦ sort-lf xs ⟧LF Γ
+    (⟦ x ⟧F Γ) * ⟦ sort-lf xs ⟧LF Γ
   ≡⟨ *-cong refl (sort-lf-correct Γ xs) ⟩
-    fun (⟦ x ⟧F Γ) * ⟦ xs ⟧LF Γ
+    (⟦ x ⟧F Γ) * ⟦ xs ⟧LF Γ
   ∎
 
 combine-snormalized-monomials : ∀ {n} → SnormalizedMonomial n → SnormalizedMonomial n → SnormalizedMonomial n
@@ -397,27 +397,27 @@ combine-snormalized-monomials-correct Γ (mon x [] (x₁ ∷ fs)) (mon x₂ vs f
   ≡⟨ combine-snormalized-monomials-correct Γ (mon x [] fs) (mon x₂ vs (x₁ ∷ fs₁)) ⟩
     ⟦ mon x [] fs ⟧SNM Γ * ⟦ mon x₂ vs (x₁ ∷ fs₁) ⟧SNM Γ
   P≡⟨⟩
-    (⟦ x ⟧C * (suc zero * ⟦ fs ⟧LF Γ)) * (⟦ x₂ ⟧C * (⟦ vs ⟧LV Γ * (fun (⟦ x₁ ⟧F Γ) * ⟦ fs₁ ⟧LF Γ)))
+    (⟦ x ⟧C * (suc zero * ⟦ fs ⟧LF Γ)) * (⟦ x₂ ⟧C * (⟦ vs ⟧LV Γ * ((⟦ x₁ ⟧F Γ) * ⟦ fs₁ ⟧LF Γ)))
   ≡⟨ *-cong refl (*-cong refl (sym *-assoc)) ⟩
-    (⟦ x ⟧C * (suc zero * ⟦ fs ⟧LF Γ)) * (⟦ x₂ ⟧C * ((⟦ vs ⟧LV Γ * fun (⟦ x₁ ⟧F Γ)) * ⟦ fs₁ ⟧LF Γ))
+    (⟦ x ⟧C * (suc zero * ⟦ fs ⟧LF Γ)) * (⟦ x₂ ⟧C * ((⟦ vs ⟧LV Γ * (⟦ x₁ ⟧F Γ)) * ⟦ fs₁ ⟧LF Γ))
   ≡⟨ *-cong refl (*-cong refl (*-cong *-comm refl)) ⟩
-    (⟦ x ⟧C * (suc zero * ⟦ fs ⟧LF Γ)) * (⟦ x₂ ⟧C * ((fun (⟦ x₁ ⟧F Γ) * ⟦ vs ⟧LV Γ) * ⟦ fs₁ ⟧LF Γ))
+    (⟦ x ⟧C * (suc zero * ⟦ fs ⟧LF Γ)) * (⟦ x₂ ⟧C * (((⟦ x₁ ⟧F Γ) * ⟦ vs ⟧LV Γ) * ⟦ fs₁ ⟧LF Γ))
   ≡⟨ *-cong refl (*-cong refl (*-assoc)) ⟩
-    (⟦ x ⟧C * (suc zero * ⟦ fs ⟧LF Γ)) * (⟦ x₂ ⟧C * (fun (⟦ x₁ ⟧F Γ) * (⟦ vs ⟧LV Γ * ⟦ fs₁ ⟧LF Γ)))
+    (⟦ x ⟧C * (suc zero * ⟦ fs ⟧LF Γ)) * (⟦ x₂ ⟧C * ((⟦ x₁ ⟧F Γ) * (⟦ vs ⟧LV Γ * ⟦ fs₁ ⟧LF Γ)))
   ≡⟨ *-cong refl (sym *-assoc) ⟩
-    (⟦ x ⟧C * (suc zero * ⟦ fs ⟧LF Γ)) * ((⟦ x₂ ⟧C * fun (⟦ x₁ ⟧F Γ)) * (⟦ vs ⟧LV Γ * ⟦ fs₁ ⟧LF Γ))
+    (⟦ x ⟧C * (suc zero * ⟦ fs ⟧LF Γ)) * ((⟦ x₂ ⟧C * (⟦ x₁ ⟧F Γ)) * (⟦ vs ⟧LV Γ * ⟦ fs₁ ⟧LF Γ))
   ≡⟨ *-cong refl (*-cong *-comm refl) ⟩
-    (⟦ x ⟧C * (suc zero * ⟦ fs ⟧LF Γ)) * ((fun (⟦ x₁ ⟧F Γ) * ⟦ x₂ ⟧C) * (⟦ vs ⟧LV Γ * ⟦ fs₁ ⟧LF Γ))
+    (⟦ x ⟧C * (suc zero * ⟦ fs ⟧LF Γ)) * (((⟦ x₁ ⟧F Γ) * ⟦ x₂ ⟧C) * (⟦ vs ⟧LV Γ * ⟦ fs₁ ⟧LF Γ))
   ≡⟨ *-cong refl *-assoc ⟩
-    (⟦ x ⟧C * (suc zero * ⟦ fs ⟧LF Γ)) * (fun (⟦ x₁ ⟧F Γ) * (⟦ x₂ ⟧C * (⟦ vs ⟧LV Γ * ⟦ fs₁ ⟧LF Γ)))
+    (⟦ x ⟧C * (suc zero * ⟦ fs ⟧LF Γ)) * ((⟦ x₁ ⟧F Γ) * (⟦ x₂ ⟧C * (⟦ vs ⟧LV Γ * ⟦ fs₁ ⟧LF Γ)))
   ≡⟨ sym *-assoc ⟩
-    ((⟦ x ⟧C * (suc zero * ⟦ fs ⟧LF Γ)) * fun (⟦ x₁ ⟧F Γ)) * (⟦ x₂ ⟧C * (⟦ vs ⟧LV Γ * ⟦ fs₁ ⟧LF Γ))
+    ((⟦ x ⟧C * (suc zero * ⟦ fs ⟧LF Γ)) * (⟦ x₁ ⟧F Γ)) * (⟦ x₂ ⟧C * (⟦ vs ⟧LV Γ * ⟦ fs₁ ⟧LF Γ))
   ≡⟨ *-cong *-assoc refl ⟩
-    (⟦ x ⟧C * ((suc zero * ⟦ fs ⟧LF Γ) * fun (⟦ x₁ ⟧F Γ))) * (⟦ x₂ ⟧C * (⟦ vs ⟧LV Γ * ⟦ fs₁ ⟧LF Γ))
+    (⟦ x ⟧C * ((suc zero * ⟦ fs ⟧LF Γ) * (⟦ x₁ ⟧F Γ))) * (⟦ x₂ ⟧C * (⟦ vs ⟧LV Γ * ⟦ fs₁ ⟧LF Γ))
   ≡⟨ *-cong (*-cong refl *-assoc) refl ⟩
-    (⟦ x ⟧C * (suc zero * (⟦ fs ⟧LF Γ * fun (⟦ x₁ ⟧F Γ)))) * (⟦ x₂ ⟧C * (⟦ vs ⟧LV Γ * ⟦ fs₁ ⟧LF Γ))
+    (⟦ x ⟧C * (suc zero * (⟦ fs ⟧LF Γ * (⟦ x₁ ⟧F Γ)))) * (⟦ x₂ ⟧C * (⟦ vs ⟧LV Γ * ⟦ fs₁ ⟧LF Γ))
   ≡⟨ *-cong (*-cong refl (*-cong refl *-comm)) refl ⟩
-    (⟦ x ⟧C * (suc zero * (fun (⟦ x₁ ⟧F Γ) * ⟦ fs ⟧LF Γ))) * (⟦ x₂ ⟧C * (⟦ vs ⟧LV Γ * ⟦ fs₁ ⟧LF Γ))
+    (⟦ x ⟧C * (suc zero * ((⟦ x₁ ⟧F Γ) * ⟦ fs ⟧LF Γ))) * (⟦ x₂ ⟧C * (⟦ vs ⟧LV Γ * ⟦ fs₁ ⟧LF Γ))
   ∎
 combine-snormalized-monomials-correct Γ (mon x (x₁ ∷ vs) fs) (mon x₂ vs₁ fs₁) =
   begin
@@ -473,17 +473,17 @@ snormalize-monomial-correct Γ (var x) =
   ∎
 snormalize-monomial-correct Γ (fun x) =
   begin
-    suc zero * (suc zero * (fun (⟦ x ⟧F Γ) * suc zero))
+    suc zero * (suc zero * ((⟦ x ⟧F Γ) * suc zero))
   ≡⟨ *-comm ⟩
-    (suc zero * (fun (⟦ x ⟧F Γ) * suc zero)) * suc zero
+    (suc zero * ((⟦ x ⟧F Γ) * suc zero)) * suc zero
   ≡⟨ *-right-identity ⟩
-    (suc zero * (fun (⟦ x ⟧F Γ) * suc zero))
+    (suc zero * ((⟦ x ⟧F Γ) * suc zero))
   ≡⟨ *-comm ⟩
-    (fun (⟦ x ⟧F Γ) * suc zero) * suc zero
+    ((⟦ x ⟧F Γ) * suc zero) * suc zero
   ≡⟨ *-right-identity ⟩
-    (fun (⟦ x ⟧F Γ) * suc zero)
+    ((⟦ x ⟧F Γ) * suc zero)
   ≡⟨ *-right-identity ⟩
-    fun (⟦ x ⟧F Γ)
+    (⟦ x ⟧F Γ)
   ∎
 snormalize-monomial-correct Γ (x :* x₁) =
   begin

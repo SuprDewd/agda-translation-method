@@ -51,9 +51,9 @@ Env : ℕ → Set
 Env = Vec Expr
 
 mutual
-  ⟦_⟧F : ∀ {n} → (x : :Fun n) → (Γ : Env n) → Fun
-  ⟦ :fib' n ⟧F Γ = fib' (value (⟦ n ⟧ Γ))
-  ⟦ :2^' n ⟧F Γ = 2^' (value (⟦ n ⟧ Γ))
+  ⟦_⟧F : ∀ {n} → (x : :Fun n) → (Γ : Env n) → Expr
+  ⟦ :fib' n ⟧F Γ = fib (value (⟦ n ⟧ Γ))
+  ⟦ :2^' n ⟧F Γ = 2^ (value (⟦ n ⟧ Γ))
 
   ⟦_⟧ : ∀ {n} → (x : :Expr n) → (Γ : Env n) → Expr
   ⟦ :var x ⟧ Γ = lookup x Γ
@@ -61,7 +61,7 @@ mutual
   ⟦ :suc x ⟧ Γ = suc (⟦ x ⟧ Γ)
   ⟦ l :+ r ⟧ Γ = ⟦ l ⟧ Γ + ⟦ r ⟧ Γ
   ⟦ l :* r ⟧ Γ = ⟦ l ⟧ Γ * ⟦ r ⟧ Γ
-  ⟦ :fun f ⟧ Γ = fun (⟦ f ⟧F Γ)
+  ⟦ :fun f ⟧ Γ = (⟦ f ⟧F Γ)
 
 
 data NormalizedConstant : Set where

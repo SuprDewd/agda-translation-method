@@ -84,14 +84,6 @@ private
 infixl 6 _*_
 infixl 5 _+_
 
-data Fun : Set where
-  fib' : (n : ℕ) → Fun
-  2^' : (n : ℕ) → Fun
-  4^' : (n : ℕ) → Fun
-  S₂' : (l r : ℕ) → Fun
-  CS₂' : (l r : ℕ) → Fun
-  _choose'_ : (l r : ℕ) → Fun
-
 data Expr : Set where
   zero : Expr
   suc : (x : Expr) → Expr
@@ -99,7 +91,12 @@ data Expr : Set where
   _+_ : (l r : Expr) → Expr
   _*_ : (l r : Expr) → Expr
 
-  fun : (f : Fun) → Expr
+  fib : (n : ℕ) → Expr
+  2^ : (n : ℕ) → Expr
+  4^ : (n : ℕ) → Expr
+  S₂ : (l r : ℕ) → Expr
+  CS₂ : (l r : ℕ) → Expr
+  _choose_ : (l r : ℕ) → Expr
 
 
 ------------------------------------------------------------------------
@@ -443,69 +440,34 @@ module BinStrKExpr where
   equal (1∷ x) (0∷ y) = no (λ ())
 
 ------------------------------------------------------------------------
--- Shorthands
-
-fib : ℕ → Expr
-fib n = fun (fib' n)
-
-2^ : ℕ → Expr
-2^ n = fun (2^' n)
-
-4^ : ℕ → Expr
-4^ n = fun (4^' n)
-
-S₂ : ℕ → ℕ → Expr
-S₂ l r = fun (S₂' l r)
-
-CS₂ : ℕ → ℕ → Expr
-CS₂ l r = fun (CS₂' l r)
-
-_choose_ : ℕ → ℕ → Expr
-l choose r = fun (l choose' r)
-
-------------------------------------------------------------------------
 -- Evaluating and lifting
-
-valueF : Fun → ℕ
-valueF (fib' n) = ℕfib n
-valueF (2^' n) = ℕ2^ n
-valueF (4^' n) = ℕ4^ n
-valueF (S₂' l r) = ℕS₂ l r
-valueF (CS₂' l r) = ℕCS₂ l r
-valueF (l choose' r) = ℕchoose l r
-
-liftF : Fun → Set
-liftF (fib' n) = FibStr n
-liftF (2^' n) = BinStr n
-liftF (4^' n) = QuadStr n
-liftF (S₂' l r) = SetPartitionK l r
-liftF (CS₂' l r) = CSetPartitionK l r
-liftF (l choose' r) = BinStrK l r
 
 value : Expr → ℕ
 value zero = ℕzero
 value (suc x) = ℕsuc (value x)
 value (l + r) = value l ℕ+ value r
 value (l * r) = value l ℕ* value r
-value (fun f) = valueF f
+value (fib n) = ℕfib n
+value (2^ n) = ℕ2^ n
+value (4^ n) = ℕ4^ n
+value (S₂ l r) = ℕS₂ l r
+value (CS₂ l r) = ℕCS₂ l r
+value (l choose r) = ℕchoose l r
 
 lift : Expr → Set
 lift zero = ⊥
 lift (suc x) = Maybe (lift x)
 lift (l + r) = lift l ⊎ lift r
 lift (l * r) = lift l × lift r
-lift (fun f) = liftF f
+lift (fib n) = FibStr n
+lift (2^ n) = BinStr n
+lift (4^ n) = QuadStr n
+lift (S₂ l r) = SetPartitionK l r
+lift (CS₂ l r) = CSetPartitionK l r
+lift (l choose r) = BinStrK l r
 
 ------------------------------------------------------------------------
 -- Various tools
-
-showF : (F : Fun) → (x : liftF F) → String
-showF (fib' n) = FibStrExpr.show
-showF (2^' n) = BinStrExpr.show
-showF (4^' n) = QuadStrExpr.show
-showF (S₂' l r) = SetPartitionKExpr.show
-showF (CS₂' l r) = CSetPartitionKExpr.show
-showF (l choose' r) = BinStrKExpr.show
 
 show : (E : Expr) → (x : lift E) → String
 show (zero) ()
@@ -514,30 +476,24 @@ show (suc E) nothing = "nothing"
 show (E + E₁) (inj₁ x) = "inj₁ " ++ paren (show E x)
 show (E + E₁) (inj₂ y) = "inj₂ " ++ paren (show E₁ y)
 show (E * E₁) (a , b) = paren (show E a) ++ " , " ++ paren (show E₁ b)
-show (fun f) = showF f
-
-generateF : (F : Fun) → List (liftF F)
-generateF (fib' n) = FibStrExpr.generate
-generateF (2^' n) = BinStrExpr.generate
-generateF (4^' n) = QuadStrExpr.generate
-generateF (S₂' l r) = SetPartitionKExpr.generate
-generateF (CS₂' l r) = CSetPartitionKExpr.generate
-generateF (l choose' r) = BinStrKExpr.generate
-
-exhaustiveF : (F : Fun) → (f : liftF F) → f ∈ generateF F
-exhaustiveF (fib' n) = FibStrExpr.exhaustive
-exhaustiveF (2^' n) = BinStrExpr.exhaustive
-exhaustiveF (4^' n) = QuadStrExpr.exhaustive
-exhaustiveF (S₂' l r) = SetPartitionKExpr.exhaustive
-exhaustiveF (CS₂' l r) = CSetPartitionKExpr.exhaustive
-exhaustiveF (l choose' r) = BinStrKExpr.exhaustive
+show (fib n) = FibStrExpr.show
+show (2^ n) = BinStrExpr.show
+show (4^ n) = QuadStrExpr.show
+show (S₂ l r) = SetPartitionKExpr.show
+show (CS₂ l r) = CSetPartitionKExpr.show
+show (l choose r) = BinStrKExpr.show
 
 generate : (E : Expr) → List (lift E)
 generate zero = L[]
 generate (suc E) = nothing L∷ L.map just (generate E)
 generate (E + E₁) = L.map inj₁ (generate E) L.++ L.map inj₂ (generate E₁)
 generate (E * E₁) = L.concatMap (λ l → L.concatMap (λ r → (l , r) L∷ L[]) (generate E₁)) (generate E)
-generate (fun f) = generateF f
+generate (fib n) = FibStrExpr.generate
+generate (2^ n) = BinStrExpr.generate
+generate (4^ n) = QuadStrExpr.generate
+generate (S₂ l r) = SetPartitionKExpr.generate
+generate (CS₂ l r) = CSetPartitionKExpr.generate
+generate (l choose r) = BinStrKExpr.generate
 
 exhaustive : (E : Expr) → (e : lift E) → e ∈ generate E
 exhaustive zero ()
@@ -547,15 +503,12 @@ exhaustive (E + E₁) (inj₁ x) = ∈++ˡ (∈map (exhaustive E x))
 exhaustive (E + E₁) (inj₂ y) = ∈++ʳ {lift (E + E₁)} {L.map inj₁ (generate E)} (∈map (exhaustive E₁ y))
 exhaustive (E * E₁) (x , y) = ∈concatMap {lift E} {lift (E * E₁)} {x} {x , y} {generate E} {λ l → L.concatMap (λ r → (l , r) L∷ L[]) (generate E₁)} (exhaustive E x)
   (∈concatMap {lift E₁} {lift (E * E₁)} {y} {x , y} {generate E₁} {λ r → (x , r) L∷ L[]} (exhaustive E₁ y) (here Prefl))
-exhaustive (fun f) = exhaustiveF f
-
-equalF : (A : Fun) → (x y : liftF A) → Dec (x P≡ y)
-equalF (fib' n) = FibStrExpr.equal
-equalF (2^' n) = BinStrExpr.equal
-equalF (4^' n) = QuadStrExpr.equal
-equalF (S₂' l r) = SetPartitionKExpr.equal
-equalF (CS₂' l r) = CSetPartitionKExpr.equal
-equalF (l choose' r) = BinStrKExpr.equal
+exhaustive (fib n) = FibStrExpr.exhaustive
+exhaustive (2^ n) = BinStrExpr.exhaustive
+exhaustive (4^ n) = QuadStrExpr.exhaustive
+exhaustive (S₂ l r) = SetPartitionKExpr.exhaustive
+exhaustive (CS₂ l r) = CSetPartitionKExpr.exhaustive
+exhaustive (l choose r) = BinStrKExpr.exhaustive
 
 equal : (A : Expr) → (x y : lift A) → Dec (x P≡ y)
 equal zero () ()
@@ -578,7 +531,12 @@ equal (A₁ * A₂) (x₁ , x₂) (.x₁ , .x₂) | yes Prefl | (yes Prefl) = ye
 equal (A₁ * A₂) (x₁ , x₂) (y₁ , y₂) | yes p | no ¬p = no (λ { Prefl → ¬p Prefl })
 equal (A₁ * A₂) (x₁ , x₂) (y₁ , y₂) | no ¬p | yes p = no (λ { Prefl → ¬p Prefl })
 equal (A₁ * A₂) (x₁ , x₂) (y₁ , y₂) | no ¬p | no ¬p₁ = no (λ { Prefl → ¬p Prefl })
-equal (fun f) x y = equalF f x y
+equal (fib n) = FibStrExpr.equal
+equal (2^ n) = BinStrExpr.equal
+equal (4^ n) = QuadStrExpr.equal
+equal (S₂ l r) = SetPartitionKExpr.equal
+equal (CS₂ l r) = CSetPartitionKExpr.equal
+equal (l choose r) = BinStrKExpr.equal
 
 ------------------------------------------------------------------------
 -- Properties

@@ -33,7 +33,7 @@ private
 -- Show an ≡ relation (starting with small values, and going up)
 
 show≡ : ∀ {A B : Expr} → A ≡ B → IO ⊤
-show≡ {A} {B} p = mapM′ (proj (getTo (toBijection p))) (CL.fromList (generate A)) >>' return tt
+show≡ {A} {B} p = mapM′ (proj (getTo (bijection p))) (CL.fromList (generate A)) >>' return tt
   where
     proj : (lift A → lift B) → lift A → IO ⊤
     proj f x =
@@ -45,7 +45,7 @@ show≡ {A} {B} p = mapM′ (proj (getTo (toBijection p))) (CL.fromList (generat
 -- Compare an ≡ relation to a given direct bijection (starting with small values, and going up), printing all counterexamples it finds
 
 check≡ : ∀ {A B : Expr} → A ≡ B → (lift A → lift B) → IO ⊤
-check≡ {A} {B} p to = mapM′ (check (getTo (toBijection p))) (CL.fromList (generate A)) >>' return tt
+check≡ {A} {B} p to = mapM′ (check (getTo (bijection p))) (CL.fromList (generate A)) >>' return tt
   where
     check : (lift A → lift B) → lift A → IO ⊤
     check f x =
@@ -61,7 +61,7 @@ check≡ {A} {B} p to = mapM′ (check (getTo (toBijection p))) (CL.fromList (ge
 
 -- Creating a Bijection from a list of pairs
 
-toBij : ∀ {A B : Expr} → List (lift A × lift B) → Maybe (lift A B≡ lift B)
+toBij : ∀ {A B : Expr} → List (lift A × lift B) → Maybe (lift A ≅ lift B)
 toBij {A} {B} lst with all (λ x → any (λ { (x' , y) → equal A x x' }) lst) (generate A)
                      | all (λ y → any (λ { (x , y') → equal B y y' }) lst) (generate B)
 toBij {A} {B} lst | _ | no _ = nothing
@@ -69,13 +69,13 @@ toBij {A} {B} lst | no _ | _ = nothing
 toBij {A} {B} lst | yes p | yes q =
     case all (λ x → equal A (from (to x)) x) (generate A)
     of (λ { (no _) → nothing
-          ; (yes fromTo) →
+          ; (yes from-to) →
               case all (λ y → equal B (to (from y)) y) (generate B)
               of (λ { (no _) → nothing
-                    ; (yes toFrom) → just (mkBij to
+                    ; (yes to-from) → just (mkBij to
                                                  from
-                                                 (λ y → lookup toFrom (exhaustive B y))
-                                                 (λ x → lookup fromTo (exhaustive A x)))
+                                                 (λ y → lookup to-from (exhaustive B y))
+                                                 (λ x → lookup from-to (exhaustive A x)))
                     })
           })
   where

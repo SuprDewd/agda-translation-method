@@ -16,13 +16,13 @@ data F : ℕ → Set where
   _∷1 : ∀ {n} → F n → F (suc n)
   _∷2 : ∀ {n} → F n → F (suc (suc n))
 
-f : ∀ k → F (suc k) → F k ⊎ Maybe ⊥
+f : ∀ k → F (suc k) → F k ⊔ Maybe ⊥
 f zero a = inj₂ nothing
 f k (xs ∷1) = inj₂ nothing
 -- to (suc k) xs = inj₂ nothing  -- This is fine
 f (suc k) = λ xs → inj₂ nothing  -- This segfaults
 
-myshow : F 1 ⊎ Maybe ⊥ → String
+myshow : F 1 ⊔ Maybe ⊥ → String
 -- myshow (inj₁ b) = ""        -- This is fine
 myshow (inj₁ (b ∷1)) = ""      -- This segfaults
 myshow _ = ""

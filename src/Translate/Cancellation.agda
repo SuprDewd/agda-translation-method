@@ -37,27 +37,27 @@ private
   inj₂-inj Prefl = Prefl
 
   -- Represents a valid iteration sequence produced by the involution principle
-  data [_∧_⊨_⇒_] {A B C D : Set} (b₁ : (A ⊎ B) B≡ (C ⊎ D)) (b₂ : B B≡ D) : (A ⊎ B) → C → Set where
+  data [_∧_⊨_⇒_] {A B C D : Set} (b₁ : (A ⊔ B) ≅ (C ⊔ D)) (b₂ : B ≅ D) : (A ⊔ B) → C → Set where
     step : ∀ {p q r s} → (getTo b₁ p P≡ inj₂ q) → (getFrom b₂ q P≡ r) → [ b₁ ∧ b₂ ⊨ inj₂ r ⇒ s ] → [ b₁ ∧ b₂ ⊨ p ⇒ s ]
     done : ∀ {p q} → (getTo b₁ p P≡ inj₁ q) → [ b₁ ∧ b₂ ⊨ p ⇒ q ]
 
-  reverse : ∀ {A B C D} (b₁ : (A ⊎ B) B≡ (C ⊎ D)) (b₂ : B B≡ D) x y → [ b₁ ∧ b₂ ⊨ inj₁ x ⇒ y ] → [ (Bsym b₁) ∧ (Bsym b₂) ⊨ inj₁ y ⇒ x ]
-  reverse (mkBij to from toFrom fromTo) (mkBij to₁ from₁ toFrom₁ fromTo₁) x y (done p) = done (
+  reverse : ∀ {A B C D} (b₁ : (A ⊔ B) ≅ (C ⊔ D)) (b₂ : B ≅ D) x y → [ b₁ ∧ b₂ ⊨ inj₁ x ⇒ y ] → [ (Bsym b₁) ∧ (Bsym b₂) ⊨ inj₁ y ⇒ x ]
+  reverse (mkBij to from to-from from-to) (mkBij to₁ from₁ to-from₁ from-to₁) x y (done p) = done (
       begin
         from (inj₁ y)
       ≡⟨ Pcong from (Psym p) ⟩
         from (to (inj₁ x))
-      ≡⟨ fromTo (inj₁ x) ⟩
+      ≡⟨ from-to (inj₁ x) ⟩
         inj₁ x
       ∎
     )
-  reverse b₁@(mkBij to₁ from₁ toFrom₁ fromTo₁)
-          b₂@(mkBij to₂ from₂ toFrom₂ fromTo₂)
+  reverse b₁@(mkBij to₁ from₁ to-from₁ from-to₁)
+          b₂@(mkBij to₂ from₂ to-from₂ from-to₂)
           x y (step {dp} {dq} {dr} {ds} p₁ p₂ p) = rev dr dq p₂ p (done (begin
             from₁ (inj₂ dq)
           ≡⟨ Pcong from₁ (Psym p₁) ⟩
             from₁ (to₁ (inj₁ x))
-          ≡⟨ fromTo₁ (inj₁ x) ⟩
+          ≡⟨ from-to₁ (inj₁ x) ⟩
             inj₁ x
           ∎))
     where
@@ -68,14 +68,14 @@ private
           from₁ (inj₁ y)
         ≡⟨ Pcong from₁ (Psym p) ⟩
           from₁ (to₁ (inj₂ z₁))
-        ≡⟨ fromTo₁ (inj₂ z₁) ⟩
+        ≡⟨ from-to₁ (inj₂ z₁) ⟩
           inj₂ z₁
         ∎)
         (begin
           to₂ z₁
         ≡⟨ Pcong to₂ (Psym zp) ⟩
           to₂ (from₂ z₂)
-        ≡⟨ toFrom₂ z₂ ⟩
+        ≡⟨ to-from₂ z₂ ⟩
           z₂
         ∎)
         q
@@ -85,21 +85,21 @@ private
           from₁ (inj₂ dq)
         ≡⟨ Pcong from₁ (Psym p₁) ⟩
           from₁ (to₁ (inj₂ z₁))
-        ≡⟨ fromTo₁ (inj₂ z₁) ⟩
+        ≡⟨ from-to₁ (inj₂ z₁) ⟩
           inj₂ z₁
         ∎)
         (begin
           to₂ z₁
         ≡⟨ Pcong to₂ (Psym zp) ⟩
           to₂ (from₂ z₂)
-        ≡⟨ toFrom₂ z₂ ⟩
+        ≡⟨ to-from₂ z₂ ⟩
           z₂
         ∎)
         q)
 
-  bijective : ∀ {A B C D} (b₁ : (A ⊎ B) B≡ (C ⊎ D)) (b₂ : B B≡ D) x y z → [ b₁ ∧ b₂ ⊨ y ⇒ x ] → [ b₁ ∧ b₂ ⊨ y ⇒ z ] → x P≡ z
-  bijective (mkBij to₁ from₁ toFrom₁ fromTo₁)
-            (mkBij to₂ from₂ toFrom₂ fromTo₂)
+  bijective : ∀ {A B C D} (b₁ : (A ⊔ B) ≅ (C ⊔ D)) (b₂ : B ≅ D) x y z → [ b₁ ∧ b₂ ⊨ y ⇒ x ] → [ b₁ ∧ b₂ ⊨ y ⇒ z ] → x P≡ z
+  bijective (mkBij to₁ from₁ to-from₁ from-to₁)
+            (mkBij to₂ from₂ to-from₂ from-to₂)
             x y z (done p) (done q) =
     inj₁-inj (begin
         inj₁ x
@@ -108,8 +108,8 @@ private
       ≡⟨ q ⟩
         inj₁ z
       ∎)
-  bijective b₁@(mkBij to₁ from₁ toFrom₁ fromTo₁)
-            b₂@(mkBij to₂ from₂ toFrom₂ fromTo₂)
+  bijective b₁@(mkBij to₁ from₁ to-from₁ from-to₁)
+            b₂@(mkBij to₂ from₂ to-from₂ from-to₂)
             x y z
             (step {pp} {pq} {pr} {ps} p₁ p₂ p)
             (step {qp} {qq} {qr} {qs} q₁ q₂ q) = bijective b₁ b₂ x (inj₂ qr) z (fix p) q
@@ -131,21 +131,21 @@ private
           pr
         ∎) = t
 
-  bijective (mkBij to₁ from₁ toFrom₁ fromTo₁) (mkBij to₂ from₂ toFrom₂ fromTo₂) x y z (done p) (step {dp} {dq} {dr} {ds} q₁ q₂ q) with Ptrans (Psym p) q₁
+  bijective (mkBij to₁ from₁ to-from₁ from-to₁) (mkBij to₂ from₂ to-from₂ from-to₂) x y z (done p) (step {dp} {dq} {dr} {ds} q₁ q₂ q) with Ptrans (Psym p) q₁
   ... | ()
-  bijective (mkBij to₁ from₁ toFrom₁ fromTo₁) (mkBij to₂ from₂ toFrom₂ fromTo₂) x y z (step p₁ p₂ p) (done q) with Ptrans (Psym p₁) q
+  bijective (mkBij to₁ from₁ to-from₁ from-to₁) (mkBij to₂ from₂ to-from₂ from-to₂) x y z (step p₁ p₂ p) (done q) with Ptrans (Psym p₁) q
   ... | ()
 
   module Run2 (A B C D : Expr)
-              (A+B≡C+D : A + B ≡ C + D)
-              (B≡D : B ≡ D)
+              (A+≅C+D : A + B ≡ C + D)
+              (≅D : B ≡ D)
               where
 
-    b₁ : lift (A + B) B≡ lift (C + D)
-    b₁ = toBijection A+B≡C+D
+    b₁ : lift (A + B) ≅ lift (C + D)
+    b₁ = bijection A+≅C+D
 
-    b₂ : lift B B≡ lift D
-    b₂ = toBijection B≡D
+    b₂ : lift B ≅ lift D
+    b₂ = bijection ≅D
 
     L : Expr
     L = A + B
@@ -369,7 +369,7 @@ private
     ∎) q
 
 +-cancel : ∀ {A B C D} → A + B ≡ C + D → B ≡ D → A ≡ C
-+-cancel {A} {B} {C} {D} p q = proof (+-inj₁ (toEquality p) (toEquality q)) (mkBij to from toFrom fromTo)
++-cancel {A} {B} {C} {D} p q = proof (+-inj₁ (equality p) (equality q)) (mkBij to from to-from from-to)
   where
 
     to : lift A → lift C
@@ -380,22 +380,22 @@ private
     from y with run y where open Run2 C D A B (sym p) (sym q)
     from y | x , prf = x
 
-    symFix : ∀ {A B C D : Expr} (p : (A + B) ≡ (C + D)) (q : B ≡ D) → ∀ x y → [ toBijection (sym p) ∧ toBijection (sym q) ⊨ inj₁ y ⇒ x ] → [ Bsym (toBijection p) ∧ Bsym (toBijection q) ⊨ inj₁ y ⇒ x ]
+    symFix : ∀ {A B C D : Expr} (p : (A + B) ≡ (C + D)) (q : B ≡ D) → ∀ x y → [ bijection (sym p) ∧ bijection (sym q) ⊨ inj₁ y ⇒ x ] → [ Bsym (bijection p) ∧ Bsym (bijection q) ⊨ inj₁ y ⇒ x ]
     symFix (proof x₁ x₂) (proof x₃ x₄) x y (step x₅ x₆ prf) = step x₅ x₆ prf
     symFix (proof x₁ x₂) q₁ x y (done x₃) = done x₃
 
-    toFrom : ∀ y → to (from y) P≡ y
-    toFrom y with run y where open Run2 C D A B (sym p) (sym q)
-    toFrom y | x , prf with run x where open Run2 A B C D p q
-    toFrom y | x , prf | z , prf2 = bijective (toBijection p) (toBijection q) z (inj₁ x) y prf2 (fix (reverse (Bsym (toBijection p)) (Bsym (toBijection q)) y x (symFix p q x y prf)))
+    to-from : ∀ y → to (from y) P≡ y
+    to-from y with run y where open Run2 C D A B (sym p) (sym q)
+    to-from y | x , prf with run x where open Run2 A B C D p q
+    to-from y | x , prf | z , prf2 = bijective (bijection p) (bijection q) z (inj₁ x) y prf2 (fix (reverse (Bsym (bijection p)) (Bsym (bijection q)) y x (symFix p q x y prf)))
       where
-        symsym : ∀ {A B} → (t : A B≡ B) → Bsym (Bsym t) P≡ t
+        symsym : ∀ {A B} → (t : A ≅ B) → Bsym (Bsym t) P≡ t
         symsym (mkBij to₁ from₁ x₁ x₂) = Prefl
 
-        fix : [ Bsym (Bsym (toBijection p)) ∧ Bsym (Bsym (toBijection q)) ⊨ inj₁ x ⇒ y ] → [ toBijection p ∧ toBijection q ⊨ inj₁ x ⇒ y ]
-        fix t rewrite symsym (toBijection p) | symsym (toBijection q) = t
+        fix : [ Bsym (Bsym (bijection p)) ∧ Bsym (Bsym (bijection q)) ⊨ inj₁ x ⇒ y ] → [ bijection p ∧ bijection q ⊨ inj₁ x ⇒ y ]
+        fix t rewrite symsym (bijection p) | symsym (bijection q) = t
 
-    fromTo : ∀ x → from (to x) P≡ x
-    fromTo x with run x where open Run2 A B C D p q
-    fromTo x | y , prf with run y where open Run2 C D A B (sym p) (sym q)
-    fromTo x | y , prf | z , prf2 = bijective (Bsym (toBijection p)) (Bsym (toBijection q)) z (inj₁ y) x (symFix p q z y prf2) (reverse (toBijection p) (toBijection q) x y prf)
+    from-to : ∀ x → from (to x) P≡ x
+    from-to x with run x where open Run2 A B C D p q
+    from-to x | y , prf with run y where open Run2 C D A B (sym p) (sym q)
+    from-to x | y , prf | z , prf2 = bijective (Bsym (bijection p)) (Bsym (bijection q)) z (inj₁ y) x (symFix p q z y prf2) (reverse (bijection p) (bijection q) x y prf)

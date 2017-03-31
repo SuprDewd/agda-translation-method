@@ -108,8 +108,8 @@ open import Translate.EqReasoning
 --   = (λ { (:fib' n) → :fun (:fib' (norm n))
 --        ; (:2^' n) → :fun (:2^' (norm n))
 --        })
---   , (λ { Γ (:fib' n) → fib-cong (toEquality (norm-correct Γ n))
---        ; Γ (:2^' n) → 2^-cong (toEquality (norm-correct Γ n))
+--   , (λ { Γ (:fib' n) → fib-cong (equality (norm-correct Γ n))
+--        ; Γ (:2^' n) → 2^-cong (equality (norm-correct Γ n))
 --        })
 
 

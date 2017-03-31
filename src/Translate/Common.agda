@@ -21,15 +21,14 @@ open import Data.Product public
         )
 
 open import Data.Sum public
-  using ( _⊎_
-        ; inj₁
+  using ( inj₁
         ; inj₂
         )
+  renaming (_⊎_ to _⊔_)
 
 open import Translate.Bijection public
-  using (mkBij)
-  renaming ( _≡_ to _B≡_
-           ; refl to Brefl
+  using (mkBij; _≅_)
+  renaming ( refl to Brefl
            ; sym to Bsym
            ; trans to Btrans
            )

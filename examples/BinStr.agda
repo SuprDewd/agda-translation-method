@@ -21,7 +21,7 @@ phi : ∀ {n} → 2^ n * 2^ n ≡ 4^ n
 phi {ℕzero} = proof Prefl (from-just (toBij {2^ 0 * 2^ 0} {4^ 0} (
     (([] , []) , []) L∷ L[]
   )))
--- phi {ℕzero} = proof Prefl (mkBij to from toFrom fromTo)
+-- phi {ℕzero} = proof Prefl (mkBij to from to-from from-to)
 --   where
 --     to : lift (2^ ℕzero * 2^ ℕzero) → lift (4^ ℕzero)
 --     to ([] , []) = []
@@ -29,11 +29,11 @@ phi {ℕzero} = proof Prefl (from-just (toBij {2^ 0 * 2^ 0} {4^ 0} (
 --     from : lift (4^ ℕzero) → lift (2^ ℕzero * 2^ ℕzero)
 --     from [] = [] , []
 
---     toFrom : ∀ y → to (from y) P≡ y
---     toFrom [] = Prefl
+--     to-from : ∀ y → to (from y) P≡ y
+--     to-from [] = Prefl
 
---     fromTo : ∀ x → from (to x) P≡ x
---     fromTo ([] , []) = Prefl
+--     from-to : ∀ x → from (to x) P≡ x
+--     from-to ([] , []) = Prefl
 
 phi {ℕsuc n} = begin
     2^ (ℕsuc n) * 2^ (ℕsuc n)       ≡⟨ *-cong 2^-def 2^-def ⟩

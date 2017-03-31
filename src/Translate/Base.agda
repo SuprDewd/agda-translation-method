@@ -23,14 +23,14 @@ infix 4 _≡_
 -- to find base cases by itself).
 data _≡_ (a b : Expr) : Set₂ where
   proof : value a P≡ value b
-        → lift a B≡ lift b
+        → lift a ≅ lift b
         → a ≡ b
 
-toEquality : ∀ {a b} → a ≡ b → value a P≡ value b
-toEquality (proof prf _) = prf
+equality : ∀ {a b} → a ≡ b → value a P≡ value b
+equality (proof prf _) = prf
 
-toBijection : ∀ {a b} → a ≡ b → lift a B≡ lift b
-toBijection (proof _ bij) = bij
+bijection : ∀ {a b} → a ≡ b → lift a ≅ lift b
+bijection (proof _ bij) = bij
 
 refl : ∀ {a} → a ≡ a
 refl = proof Prefl Brefl

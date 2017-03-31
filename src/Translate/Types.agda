@@ -457,7 +457,7 @@ value (l choose r) = ℕchoose l r
 lift : Expr → Set
 lift zero = ⊥
 lift (suc x) = Maybe (lift x)
-lift (l + r) = lift l ⊎ lift r
+lift (l + r) = lift l ⊔ lift r
 lift (l * r) = lift l × lift r
 lift (fib n) = FibStr n
 lift (2^ n) = BinStr n
@@ -545,9 +545,9 @@ nat-value : ∀ n → value (nat n) P≡ n
 nat-value ℕzero = Prefl
 nat-value (ℕsuc n) = Pcong ℕsuc (nat-value n)
 
-nat-lift : ∀ n → lift (nat n) B≡ Fin n
+nat-lift : ∀ n → lift (nat n) ≅ Fin n
 nat-lift ℕzero = mkBij (λ ()) (λ ()) (λ ()) (λ ())
-nat-lift (ℕsuc n) = mkBij to from toFrom (fromTo {n})
+nat-lift (ℕsuc n) = mkBij to from to-from (from-to {n})
   where
     to : ∀ {n} → Maybe (lift (nat n)) → Fin (ℕsuc n)
     to {ℕzero} (just ())
@@ -561,15 +561,15 @@ nat-lift (ℕsuc n) = mkBij to from toFrom (fromTo {n})
     from {ℕsuc n} Fzero = nothing
     from {ℕsuc n} (Fsuc x) = just (from x)
 
-    toFrom : ∀ {n} y → to {n} (from {n} y) P≡ y
-    toFrom {ℕzero} (Fsuc ())
-    toFrom {ℕzero} Fzero = Prefl
-    toFrom {ℕsuc n} Fzero = Prefl
-    toFrom {ℕsuc n} (Fsuc y) = Pcong Fsuc (toFrom {n} y)
+    to-from : ∀ {n} y → to {n} (from {n} y) P≡ y
+    to-from {ℕzero} (Fsuc ())
+    to-from {ℕzero} Fzero = Prefl
+    to-from {ℕsuc n} Fzero = Prefl
+    to-from {ℕsuc n} (Fsuc y) = Pcong Fsuc (to-from {n} y)
 
-    fromTo : ∀ {n} x → from {n} (to {n} x) P≡ x
-    fromTo {ℕzero} (just ())
-    fromTo {ℕzero} nothing = Prefl
-    fromTo {ℕsuc n} nothing = Prefl
-    fromTo {ℕsuc n} (just x) = Pcong just (fromTo {n} x)
+    from-to : ∀ {n} x → from {n} (to {n} x) P≡ x
+    from-to {ℕzero} (just ())
+    from-to {ℕzero} nothing = Prefl
+    from-to {ℕsuc n} nothing = Prefl
+    from-to {ℕsuc n} (just x) = Pcong just (from-to {n} x)
 

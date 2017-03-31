@@ -43,7 +43,7 @@ open import Translate.Common
 open import Translate.Types
 
 +-assoc : ∀ {a b c} → (a + b) + c ≡ a + (b + c)
-+-assoc {a} {b} {c} = proof (NPS.+-assoc (value a) (value b) (value c)) (mkBij to from toFrom fromTo)
++-assoc {a} {b} {c} = proof (NPS.+-assoc (value a) (value b) (value c)) (mkBij to from to-from from-to)
   where
     -- TODO: is it cleaner to have these as lambdas?
     to : lift ((a + b) + c) → lift (a + (b + c))
@@ -56,18 +56,18 @@ open import Translate.Types
     from (inj₂ (inj₁ x)) = inj₁ (inj₂ x)
     from (inj₂ (inj₂ x)) = inj₂ x
 
-    toFrom : ∀ y → to (from y) P≡ y
-    toFrom (inj₁ x) = Prefl
-    toFrom (inj₂ (inj₁ x)) = Prefl
-    toFrom (inj₂ (inj₂ y)) = Prefl
+    to-from : ∀ y → to (from y) P≡ y
+    to-from (inj₁ x) = Prefl
+    to-from (inj₂ (inj₁ x)) = Prefl
+    to-from (inj₂ (inj₂ y)) = Prefl
 
-    fromTo : ∀ x → from (to x) P≡ x
-    fromTo (inj₁ (inj₁ x)) = Prefl
-    fromTo (inj₁ (inj₂ y)) = Prefl
-    fromTo (inj₂ y) = Prefl
+    from-to : ∀ x → from (to x) P≡ x
+    from-to (inj₁ (inj₁ x)) = Prefl
+    from-to (inj₁ (inj₂ y)) = Prefl
+    from-to (inj₂ y) = Prefl
 
 +-right-identity : ∀ {a} → a + zero ≡ a
-+-right-identity {a} = proof (NPS.+-right-identity (value a)) (mkBij to from toFrom fromTo)
++-right-identity {a} = proof (NPS.+-right-identity (value a)) (mkBij to from to-from from-to)
   where
     to : lift (a + zero) → lift a
     to (inj₁ x) = x
@@ -76,15 +76,15 @@ open import Translate.Types
     from : lift a → lift (a + zero)
     from x = inj₁ x
 
-    toFrom : ∀ y → to (from y) P≡ y
-    toFrom y = Prefl
+    to-from : ∀ y → to (from y) P≡ y
+    to-from y = Prefl
 
-    fromTo : ∀ x → from (to x) P≡ x
-    fromTo (inj₁ x) = Prefl
-    fromTo (inj₂ ())
+    from-to : ∀ x → from (to x) P≡ x
+    from-to (inj₁ x) = Prefl
+    from-to (inj₂ ())
 
 +-suc : ∀ {a b} → a + suc b ≡ suc (a + b)
-+-suc {a} {b} = proof (NPS.+-suc (value a) (value b)) (mkBij to from toFrom fromTo)
++-suc {a} {b} = proof (NPS.+-suc (value a) (value b)) (mkBij to from to-from from-to)
   where
     to : lift (a + suc b) → lift (suc (a + b))
     to (inj₁ x) = just (inj₁ x)
@@ -96,18 +96,18 @@ open import Translate.Types
     from (just (inj₁ x)) = inj₁ x
     from (just (inj₂ x)) = inj₂ (just x)
 
-    toFrom : ∀ y → to (from y) P≡ y
-    toFrom (just (inj₁ x)) = Prefl
-    toFrom (just (inj₂ y)) = Prefl
-    toFrom nothing = Prefl
+    to-from : ∀ y → to (from y) P≡ y
+    to-from (just (inj₁ x)) = Prefl
+    to-from (just (inj₂ y)) = Prefl
+    to-from nothing = Prefl
 
-    fromTo : ∀ x → from (to x) P≡ x
-    fromTo (inj₁ x) = Prefl
-    fromTo (inj₂ (just x)) = Prefl
-    fromTo (inj₂ nothing) = Prefl
+    from-to : ∀ x → from (to x) P≡ x
+    from-to (inj₁ x) = Prefl
+    from-to (inj₂ (just x)) = Prefl
+    from-to (inj₂ nothing) = Prefl
 
 +-comm : ∀ {a b} → a + b ≡ b + a
-+-comm {a} {b} = proof (NPS.+-comm (value a) (value b)) (mkBij to from toFrom fromTo)
++-comm {a} {b} = proof (NPS.+-comm (value a) (value b)) (mkBij to from to-from from-to)
   where
     to : lift (a + b) → lift (b + a)
     to (inj₁ x) = inj₂ x
@@ -117,16 +117,16 @@ open import Translate.Types
     from (inj₁ y) = inj₂ y
     from (inj₂ y) = inj₁ y
 
-    toFrom : ∀ y → to (from y) P≡ y
-    toFrom (inj₁ x) = Prefl
-    toFrom (inj₂ y) = Prefl
+    to-from : ∀ y → to (from y) P≡ y
+    to-from (inj₁ x) = Prefl
+    to-from (inj₂ y) = Prefl
 
-    fromTo : ∀ x → from (to x) P≡ x
-    fromTo (inj₁ x) = Prefl
-    fromTo (inj₂ y) = Prefl
+    from-to : ∀ x → from (to x) P≡ x
+    from-to (inj₁ x) = Prefl
+    from-to (inj₂ y) = Prefl
 
 +-*-suc : ∀ {a b} → a * suc b ≡ a + a * b
-+-*-suc {a} {b} = proof (NPS.+-*-suc (value a) (value b)) (mkBij to from toFrom fromTo)
++-*-suc {a} {b} = proof (NPS.+-*-suc (value a) (value b)) (mkBij to from to-from from-to)
   where
     to : lift (a * suc b) → lift (a + a * b)
     to (l , nothing) = inj₁ l
@@ -136,16 +136,16 @@ open import Translate.Types
     from (inj₁ l) = l , nothing
     from (inj₂ (l , r)) = l , (just r)
 
-    toFrom : ∀ y → to (from y) P≡ y
-    toFrom (inj₁ x) = Prefl
-    toFrom (inj₂ (l , r)) = Prefl
+    to-from : ∀ y → to (from y) P≡ y
+    to-from (inj₁ x) = Prefl
+    to-from (inj₂ (l , r)) = Prefl
 
-    fromTo : ∀ x → from (to x) P≡ x
-    fromTo (l , just x) = Prefl
-    fromTo (l , nothing) = Prefl
+    from-to : ∀ x → from (to x) P≡ x
+    from-to (l , just x) = Prefl
+    from-to (l , nothing) = Prefl
 
 *-right-zero : ∀ {a} → a * zero ≡ zero
-*-right-zero {a} = proof (NPS.*-right-zero (value a)) (mkBij to from toFrom fromTo)
+*-right-zero {a} = proof (NPS.*-right-zero (value a)) (mkBij to from to-from from-to)
   where
     to : lift (a * zero) → lift zero
     to (l , ())
@@ -153,14 +153,14 @@ open import Translate.Types
     from : lift zero → lift (a * zero)
     from ()
 
-    toFrom : ∀ y → to (from y) P≡ y
-    toFrom ()
+    to-from : ∀ y → to (from y) P≡ y
+    to-from ()
 
-    fromTo : ∀ x → from (to x) P≡ x
-    fromTo (l , ())
+    from-to : ∀ x → from (to x) P≡ x
+    from-to (l , ())
 
 *-right-identity : ∀ {a} → a * suc zero ≡ a
-*-right-identity {a} = proof NP.*-right-identity (mkBij to from toFrom fromTo)
+*-right-identity {a} = proof NP.*-right-identity (mkBij to from to-from from-to)
   where
     to : lift (a * suc zero) → lift a
     to (l , nothing) = l
@@ -169,15 +169,15 @@ open import Translate.Types
     from : lift a → lift (a * suc zero)
     from l = (l , nothing)
 
-    toFrom : ∀ y → to (from y) P≡ y
-    toFrom y = Prefl
+    to-from : ∀ y → to (from y) P≡ y
+    to-from y = Prefl
 
-    fromTo : ∀ x → from (to x) P≡ x
-    fromTo (l , just ())
-    fromTo (l , nothing) = Prefl
+    from-to : ∀ x → from (to x) P≡ x
+    from-to (l , just ())
+    from-to (l , nothing) = Prefl
 
 *-comm : ∀ {a b} → a * b ≡ b * a
-*-comm {a} {b} = proof (NPS.*-comm (value a) (value b)) (mkBij to from toFrom fromTo)
+*-comm {a} {b} = proof (NPS.*-comm (value a) (value b)) (mkBij to from to-from from-to)
   where
     to : lift (a * b) → lift (b * a)
     to (l , r) = r , l
@@ -185,14 +185,14 @@ open import Translate.Types
     from : lift (b * a) → lift (a * b)
     from (l , r) = r , l
 
-    toFrom : ∀ y → to (from y) P≡ y
-    toFrom (l , r) = Prefl
+    to-from : ∀ y → to (from y) P≡ y
+    to-from (l , r) = Prefl
 
-    fromTo : ∀ x → from (to x) P≡ x
-    fromTo (l , r) = Prefl
+    from-to : ∀ x → from (to x) P≡ x
+    from-to (l , r) = Prefl
 
 distribʳ-*-+ : ∀ {a b c} → (b + c) * a ≡ b * a + c * a
-distribʳ-*-+ {a} {b} {c} = proof (NPS.distribʳ-*-+ (value a) (value b) (value c)) (mkBij to from toFrom fromTo)
+distribʳ-*-+ {a} {b} {c} = proof (NPS.distribʳ-*-+ (value a) (value b) (value c)) (mkBij to from to-from from-to)
   where
     to : lift ((b + c) * a) → lift (b * a + c * a)
     to ((inj₁ l) , r) = inj₁ (l , r)
@@ -202,16 +202,16 @@ distribʳ-*-+ {a} {b} {c} = proof (NPS.distribʳ-*-+ (value a) (value b) (value 
     from (inj₁ (l , r)) = (inj₁ l) , r
     from (inj₂ (l , r)) = (inj₂ l) , r
 
-    toFrom : ∀ y → to (from y) P≡ y
-    toFrom (inj₁ (l , r)) = Prefl
-    toFrom (inj₂ (l , r)) = Prefl
+    to-from : ∀ y → to (from y) P≡ y
+    to-from (inj₁ (l , r)) = Prefl
+    to-from (inj₂ (l , r)) = Prefl
 
-    fromTo : ∀ x → from (to x) P≡ x
-    fromTo (inj₁ x , r) = Prefl
-    fromTo (inj₂ y , r) = Prefl
+    from-to : ∀ x → from (to x) P≡ x
+    from-to (inj₁ x , r) = Prefl
+    from-to (inj₂ y , r) = Prefl
 
 distribˡ-*-+ : ∀ {a b c} → a * (b + c) ≡ a * b + a * c
-distribˡ-*-+ {a} {b} {c} = proof (NP.distribˡ-*-+ (value a) (value b) (value c)) (mkBij to from toFrom fromTo)
+distribˡ-*-+ {a} {b} {c} = proof (NP.distribˡ-*-+ (value a) (value b) (value c)) (mkBij to from to-from from-to)
   where
     to : lift (a * (b + c)) → lift (a * b + a * c)
     to (l , (inj₁ r)) = inj₁ (l , r)
@@ -221,16 +221,16 @@ distribˡ-*-+ {a} {b} {c} = proof (NP.distribˡ-*-+ (value a) (value b) (value c
     from (inj₁ (l , r)) = l , (inj₁ r)
     from (inj₂ (l , r)) = l , (inj₂ r)
 
-    toFrom : ∀ y → to (from y) P≡ y
-    toFrom (inj₁ (l , r)) = Prefl
-    toFrom (inj₂ (l , r)) = Prefl
+    to-from : ∀ y → to (from y) P≡ y
+    to-from (inj₁ (l , r)) = Prefl
+    to-from (inj₂ (l , r)) = Prefl
 
-    fromTo : ∀ x → from (to x) P≡ x
-    fromTo (l , inj₁ x) = Prefl
-    fromTo (l , inj₂ y) = Prefl
+    from-to : ∀ x → from (to x) P≡ x
+    from-to (l , inj₁ x) = Prefl
+    from-to (l , inj₂ y) = Prefl
 
 *-assoc : ∀ {a b c} → (a * b) * c ≡ a * (b * c)
-*-assoc {a} {b} {c} = proof (NPS.*-assoc (value a) (value b) (value c)) (mkBij to from toFrom fromTo)
+*-assoc {a} {b} {c} = proof (NPS.*-assoc (value a) (value b) (value c)) (mkBij to from to-from from-to)
   where
     to : lift ((a * b) * c) → lift (a * (b * c))
     to ((x , y) , z) = x , (y , z)
@@ -238,22 +238,22 @@ distribˡ-*-+ {a} {b} {c} = proof (NP.distribˡ-*-+ (value a) (value b) (value c
     from : lift (a * (b * c)) → lift ((a * b) * c)
     from (x , (y , z)) = (x , y) , z
 
-    toFrom : ∀ y → to (from y) P≡ y
-    toFrom (a , b , c) = Prefl
+    to-from : ∀ y → to (from y) P≡ y
+    to-from (a , b , c) = Prefl
 
-    fromTo : ∀ x → from (to x) P≡ x
-    fromTo ((a , b) , c) = Prefl
+    from-to : ∀ x → from (to x) P≡ x
+    from-to ((a , b) , c) = Prefl
 
 +-cong : ∀ {a b c d} → a ≡ b → c ≡ d → a + c ≡ b + d
 +-cong {a} {b} {c} {d} a≡b c≡d
-  = lemma (toEquality a≡b) (toBijection a≡b) (toEquality c≡d) (toBijection c≡d)
+  = lemma (equality a≡b) (bijection a≡b) (equality c≡d) (bijection c≡d)
   where
     lemma : value a P≡ value b
-          → lift a B≡ lift b
+          → lift a ≅ lift b
           → value c P≡ value d
-          → lift c B≡ lift d
+          → lift c ≅ lift d
           → a + c ≡ b + d
-    lemma a≡b (mkBij a→b b→a toFrom₁ fromTo₁) c≡d (mkBij c→d d→c toFrom₂ fromTo₂) = proof prf (mkBij to from toFrom fromTo)
+    lemma a≡b (mkBij a→b b→a to-from₁ from-to₁) c≡d (mkBij c→d d→c to-from₂ from-to₂) = proof prf (mkBij to from to-from from-to)
       where
         prf : value (a + c) P≡ value (b + d)
         prf = Ptrans (Pcong (λ y → y ℕ+ value c) a≡b) (Pcong (λ y → value b ℕ+ y) c≡d)
@@ -266,24 +266,24 @@ distribˡ-*-+ {a} {b} {c} = proof (NP.distribˡ-*-+ (value a) (value b) (value c
         from (inj₁ x) = inj₁ (b→a x)
         from (inj₂ x) = inj₂ (d→c x)
 
-        toFrom : ∀ y → to (from y) P≡ y
-        toFrom (inj₁ x) = Pcong inj₁ (toFrom₁ x)
-        toFrom (inj₂ y) = Pcong inj₂ (toFrom₂ y)
+        to-from : ∀ y → to (from y) P≡ y
+        to-from (inj₁ x) = Pcong inj₁ (to-from₁ x)
+        to-from (inj₂ y) = Pcong inj₂ (to-from₂ y)
 
-        fromTo : ∀ x → from (to x) P≡ x
-        fromTo (inj₁ x) = Pcong inj₁ (fromTo₁ x)
-        fromTo (inj₂ y) = Pcong inj₂ (fromTo₂ y)
+        from-to : ∀ x → from (to x) P≡ x
+        from-to (inj₁ x) = Pcong inj₁ (from-to₁ x)
+        from-to (inj₂ y) = Pcong inj₂ (from-to₂ y)
 
 *-cong : ∀ {a b c d} → a ≡ b → c ≡ d → a * c ≡ b * d
 *-cong {a} {b} {c} {d} a≡b c≡d
-  = lemma (toEquality a≡b) (toBijection a≡b) (toEquality c≡d) (toBijection c≡d)
+  = lemma (equality a≡b) (bijection a≡b) (equality c≡d) (bijection c≡d)
   where
     lemma : value a P≡ value b
-          → lift a B≡ lift b
+          → lift a ≅ lift b
           → value c P≡ value d
-          → lift c B≡ lift d
+          → lift c ≅ lift d
           → a * c ≡ b * d
-    lemma a≡b (mkBij a→b b→a toFrom₁ fromTo₁) c≡d (mkBij c→d d→c toFrom₂ fromTo₂) = proof prf (mkBij to from toFrom fromTo)
+    lemma a≡b (mkBij a→b b→a to-from₁ from-to₁) c≡d (mkBij c→d d→c to-from₂ from-to₂) = proof prf (mkBij to from to-from from-to)
       where
         prf : value (a * c) P≡ value (b * d)
         prf = Ptrans (Pcong (λ y → y ℕ* value c) a≡b) (Pcong (λ y → value b ℕ* y) c≡d)
@@ -294,9 +294,9 @@ distribˡ-*-+ {a} {b} {c} = proof (NP.distribˡ-*-+ (value a) (value b) (value c
         from : lift (b * d) → lift (a * c)
         from (x , y) = (b→a x) , (d→c y)
 
-        toFrom : ∀ y → to (from y) P≡ y
-        toFrom (l , r) = Ptrans (Pcong (λ t → (t , c→d (d→c r))) (toFrom₁ l)) (Pcong (λ t → (l , t)) (toFrom₂ r))
+        to-from : ∀ y → to (from y) P≡ y
+        to-from (l , r) = Ptrans (Pcong (λ t → (t , c→d (d→c r))) (to-from₁ l)) (Pcong (λ t → (l , t)) (to-from₂ r))
 
-        fromTo : ∀ x → from (to x) P≡ x
-        fromTo (l , r) = Ptrans (Pcong (λ t → (t , d→c (c→d r))) (fromTo₁ l)) (Pcong (λ t → (l , t)) (fromTo₂ r))
+        from-to : ∀ x → from (to x) P≡ x
+        from-to (l , r) = Ptrans (Pcong (λ t → (t , d→c (c→d r))) (from-to₁ l)) (Pcong (λ t → (l , t)) (from-to₂ r))
 

@@ -32,7 +32,7 @@ infixl 5 _C+_
 private
 
   suc-distrib : ∀ {x} → suc x ≡ suc zero + x
-  suc-distrib {x} = proof Prefl (mkBij to from toFrom fromTo)
+  suc-distrib {x} = proof Prefl (mkBij to from to-from from-to)
     where
       to : lift (suc x) → lift (suc zero + x)
       to (just y) = inj₂ y
@@ -43,17 +43,17 @@ private
       from (inj₁ nothing) = nothing
       from (inj₂ y) = just y
 
-      toFrom : ∀ y → to (from y) P≡ y
-      toFrom (inj₁ (just ()))
-      toFrom (inj₁ nothing) = Prefl
-      toFrom (inj₂ y) = Prefl
+      to-from : ∀ y → to (from y) P≡ y
+      to-from (inj₁ (just ()))
+      to-from (inj₁ nothing) = Prefl
+      to-from (inj₂ y) = Prefl
 
-      fromTo : ∀ x → from (to x) P≡ x
-      fromTo (just x₁) = Prefl
-      fromTo nothing = Prefl
+      from-to : ∀ x → from (to x) P≡ x
+      from-to (just x₁) = Prefl
+      from-to nothing = Prefl
 
   suc-pull : ∀ {a b} → suc a + b ≡ suc (a + b)
-  suc-pull {a} {b} = proof Prefl (mkBij to from toFrom fromTo)
+  suc-pull {a} {b} = proof Prefl (mkBij to from to-from from-to)
     where
       to : lift (suc a + b) → lift (suc (a + b))
       to (inj₁ (just x)) = just (inj₁ x)
@@ -65,19 +65,19 @@ private
       from nothing = inj₁ nothing
       from (just (inj₂ y)) = inj₂ y
 
-      toFrom : ∀ y → to (from y) P≡ y
-      toFrom (just (inj₁ x)) = Prefl
-      toFrom (just (inj₂ y)) = Prefl
-      toFrom nothing = Prefl
+      to-from : ∀ y → to (from y) P≡ y
+      to-from (just (inj₁ x)) = Prefl
+      to-from (just (inj₂ y)) = Prefl
+      to-from nothing = Prefl
 
-      fromTo : ∀ x → from (to x) P≡ x
-      fromTo (inj₁ (just x)) = Prefl
-      fromTo (inj₁ nothing) = Prefl
-      fromTo (inj₂ y) = Prefl
+      from-to : ∀ x → from (to x) P≡ x
+      from-to (inj₁ (just x)) = Prefl
+      from-to (inj₁ nothing) = Prefl
+      from-to (inj₂ y) = Prefl
 
   suc-cong : ∀ {a b} → a ≡ b → suc a ≡ suc b
-  suc-cong p with (toEquality p) | (toBijection p)
-  suc-cong {a} {b} p | q | mkBij t f tf ft = proof (Pcong (λ x → ℕsuc x) q) (mkBij to from toFrom fromTo)
+  suc-cong p with (equality p) | (bijection p)
+  suc-cong {a} {b} p | q | mkBij t f tf ft = proof (Pcong (λ x → ℕsuc x) q) (mkBij to from to-from from-to)
     where
       to : lift (suc a) → lift (suc b)
       to (just x) = just (t x)
@@ -87,16 +87,16 @@ private
       from (just x) = just (f x)
       from nothing = nothing
 
-      toFrom : ∀ y → to (from y) P≡ y
-      toFrom (just x) = Pcong just (tf x)
-      toFrom nothing = Prefl
+      to-from : ∀ y → to (from y) P≡ y
+      to-from (just x) = Pcong just (tf x)
+      to-from nothing = Prefl
 
-      fromTo : ∀ x → from (to x) P≡ x
-      fromTo (just x) = Pcong just (ft x)
-      fromTo nothing = Prefl
+      from-to : ∀ x → from (to x) P≡ x
+      from-to (just x) = Pcong just (ft x)
+      from-to nothing = Prefl
 
   suc-* : ∀ {a b} → suc a * b ≡ b + a * b
-  suc-* {a} {b} = proof Prefl (mkBij to from toFrom fromTo)
+  suc-* {a} {b} = proof Prefl (mkBij to from to-from from-to)
     where
       to : lift (suc a * b) → lift (b + a * b)
       to (just x , y) = inj₂ (x , y)
@@ -106,13 +106,13 @@ private
       from (inj₁ y) = nothing , y
       from (inj₂ (x , y)) = just x , y
 
-      toFrom : ∀ y → to (from y) P≡ y
-      toFrom (inj₁ x) = Prefl
-      toFrom (inj₂ (x , y)) = Prefl
+      to-from : ∀ y → to (from y) P≡ y
+      to-from (inj₁ x) = Prefl
+      to-from (inj₂ (x , y)) = Prefl
 
-      fromTo : ∀ x → from (to x) P≡ x
-      fromTo (just x , y) = Prefl
-      fromTo (nothing , y) = Prefl
+      from-to : ∀ x → from (to x) P≡ x
+      from-to (just x , y) = Prefl
+      from-to (nothing , y) = Prefl
 
 ------------------------------------------------------------------------
 -- Expansion by distributivity
@@ -827,8 +827,8 @@ mutual
 
   expand-correct : ∀ {n} → (Γ : Env n) → (f : :Fun n) → ⟦ expand f ⟧ Γ ≡ ⟦ :fun f ⟧ Γ
   expand-correct Γ (:fib' n) with uncon n | uncon-correct Γ n
-  expand-correct Γ (:fib' n) | :zero , x | p rewrite toEquality (correct x Γ) | toEquality p = refl
-  expand-correct Γ (:fib' n) | :suc :zero , x | p rewrite toEquality (correct (:suc :zero :+ x) Γ) | toEquality p = refl
+  expand-correct Γ (:fib' n) | :zero , x | p rewrite equality (correct x Γ) | equality p = refl
+  expand-correct Γ (:fib' n) | :suc :zero , x | p rewrite equality (correct (:suc :zero :+ x) Γ) | equality p = refl
   expand-correct Γ (:fib' n) | :suc (:suc c) , x | p =
     begin
       ⟦ :⟦ :fib (:suc (:⟦ c ⟧NC :+ x)) :+ :fib (:⟦ c ⟧NC :+ x) ⇓⟧ ⟧ Γ
@@ -838,7 +838,7 @@ mutual
       ⟦ :fib (:suc (:suc (:⟦ c ⟧NC :+ x))) ⟧ Γ
     P≡⟨⟩
       fib (ℕsuc (ℕsuc (value (⟦ c ⟧NC Γ) ℕ+ value (⟦ x ⟧ Γ))))
-    P≡⟨ Pcong (λ t → fib t) (toEquality p) ⟩
+    P≡⟨ Pcong (λ t → fib t) (equality p) ⟩
       fib (value (⟦ n ⟧ Γ))
     ∎
   expand-correct Γ (:2^' n) = refl

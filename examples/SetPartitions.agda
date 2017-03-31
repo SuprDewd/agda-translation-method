@@ -10,7 +10,7 @@ open import Translate.Tools
 import Data.List as L
 
 party : ∀ {l r} → S₂ l r ≡ CS₂ (ℕsuc l) r
-party {ℕzero} {ℕzero} = proof Prefl (mkBij to from toFrom fromTo)
+party {ℕzero} {ℕzero} = proof Prefl (mkBij to from to-from from-to)
   where
     to : SetPartitionK ℕzero ℕzero → CSetPartitionK (ℕsuc ℕzero) ℕzero
     to empty = add empty
@@ -18,13 +18,13 @@ party {ℕzero} {ℕzero} = proof Prefl (mkBij to from toFrom fromTo)
     from : CSetPartitionK (ℕsuc ℕzero) ℕzero → SetPartitionK ℕzero ℕzero
     from (add empty) = empty
 
-    toFrom : ∀ y → to (from y) P≡ y
-    toFrom (add empty) = Prefl
+    to-from : ∀ y → to (from y) P≡ y
+    to-from (add empty) = Prefl
 
-    fromTo : ∀ x → from (to x) P≡ x
-    fromTo empty = Prefl
+    from-to : ∀ x → from (to x) P≡ x
+    from-to empty = Prefl
 
-party {ℕzero} {ℕsuc r} = proof Prefl (mkBij to from toFrom fromTo)
+party {ℕzero} {ℕsuc r} = proof Prefl (mkBij to from to-from from-to)
   where
     to : SetPartitionK ℕzero (ℕsuc r) → CSetPartitionK (ℕsuc ℕzero) (ℕsuc r)
     to (insert () x₁)
@@ -33,12 +33,12 @@ party {ℕzero} {ℕsuc r} = proof Prefl (mkBij to from toFrom fromTo)
     from (add ())
     from (insert () x₁)
 
-    toFrom : ∀ y → to (from y) P≡ y
-    toFrom (add ())
-    toFrom (insert () y)
+    to-from : ∀ y → to (from y) P≡ y
+    to-from (add ())
+    to-from (insert () y)
 
-    fromTo : ∀ x → from (to x) P≡ x
-    fromTo (insert () x₁)
+    from-to : ∀ x → from (to x) P≡ x
+    from-to (insert () x₁)
 
 party {ℕsuc l} {ℕzero} =
   begin

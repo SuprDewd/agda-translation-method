@@ -78,7 +78,7 @@ lem2 = solve 0 (:four :+ :six := :ten) refl
 
 open import Translate.Common
 lem2-bij : lift (four + six) → lift (ten)
-lem2-bij = getTo (toBijection lem2)
+lem2-bij = getTo (bijection lem2)
 
 lem3 : ∀ x → (two * (x + four) ≡ eight + two * x)
 lem3 = solve 1 (λ x’ → :two :* (x’ :+ :four) := :eight :+ :two :* x’) refl

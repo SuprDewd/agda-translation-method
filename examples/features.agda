@@ -44,6 +44,6 @@ fin : ℕ → Expr
 fin ℕzero = zero
 fin (ℕsuc n) = suc (fin n)
 
-meow : (MyFin 3) ⊎ ((MyFin 2) ⊎ (MyFin 4)) → (MyFin 4) ⊎ ((MyFin 2) ⊎ (MyFin 3))
-meow = getTo (toBijection (ex3 (fin 3) (fin 2) (fin 4)))
+meow : (MyFin 3) ⊔ ((MyFin 2) ⊔ (MyFin 4)) → (MyFin 4) ⊔ ((MyFin 2) ⊔ (MyFin 3))
+meow = getTo (bijection (ex3 (fin 3) (fin 2) (fin 4)))
 

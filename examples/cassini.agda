@@ -53,30 +53,30 @@ mutual
 
   cassini-odd : ∀ k → fib (2 ℕ* k ℕ+ 2) * fib (2 ℕ* k)
                     ≡ fib (2 ℕ* k ℕ+ 1) * fib (2 ℕ* k ℕ+ 1) + one
-  cassini-odd ℕzero = proof Prefl (mkBij to from toFrom fromTo)
+  cassini-odd ℕzero = proof Prefl (mkBij to from to-from from-to)
     where
       -- TODO: There are two possible base cases. Try both of them?
-      to : (FibStr 2 × FibStr 0) → (FibStr 1 × FibStr 1 ⊎ Maybe ⊥)
+      to : (FibStr 2 × FibStr 0) → (FibStr 1 × FibStr 1 ⊔ Maybe ⊥)
       -- to (([] ∷1 ∷1) , []) = inj₂ nothing
       -- to (([] ∷2) , []) = inj₁ (([] ∷1) , ([] ∷1))
       to (([] ∷1 ∷1) , []) = inj₁ (([] ∷1) , ([] ∷1))
       to (([] ∷2) , []) = inj₂ nothing
 
-      from : (FibStr 1 × FibStr 1 ⊎ Maybe ⊥) → (FibStr 2 × FibStr 0)
+      from : (FibStr 1 × FibStr 1 ⊔ Maybe ⊥) → (FibStr 2 × FibStr 0)
       -- from (inj₂ nothing) = ([] ∷1 ∷1) , []
       -- from (inj₁ (([] ∷1) , ([] ∷1))) = ([] ∷2) , []
       from (inj₂ nothing) = ([] ∷2) , []
       from (inj₁ (([] ∷1) , ([] ∷1))) = ([] ∷1 ∷1) , []
       from (inj₂ (just ()))
 
-      toFrom : ∀ y → to (from y) P≡ y
-      toFrom (inj₁ (([] ∷1) , ([] ∷1))) = Prefl
-      toFrom (inj₂ (just ()))
-      toFrom (inj₂ nothing) = Prefl
+      to-from : ∀ y → to (from y) P≡ y
+      to-from (inj₁ (([] ∷1) , ([] ∷1))) = Prefl
+      to-from (inj₂ (just ()))
+      to-from (inj₂ nothing) = Prefl
 
-      fromTo : ∀ x → from (to x) P≡ x
-      fromTo ((([] ∷1) ∷1) , []) = Prefl
-      fromTo (([] ∷2) , []) = Prefl
+      from-to : ∀ x → from (to x) P≡ x
+      from-to ((([] ∷1) ∷1) , []) = Prefl
+      from-to (([] ∷2) , []) = Prefl
 
   cassini-odd (ℕsuc k) =
     begin
@@ -178,12 +178,12 @@ cassini-even-direct k rewrite NPS.+-comm (2 ℕ* k) 3 | NPS.+-comm (2 ℕ* k) 2 
     fix : ∀ k → ℕsuc k ℕ+ 1 ℕ* ℕsuc k P≡ ℕsuc (ℕsuc (k ℕ+ k))
     fix k = Ptrans (Pcong (λ x → ℕsuc (k ℕ+ ℕsuc x)) (NPS.+-right-identity k)) (Pcong (λ x → ℕsuc x) (NPS.+-comm k (ℕsuc k)))
 
-    -- to : ∀ k → FibStr (ℕsuc (ℕsuc (2 ℕ* k))) × FibStr (ℕsuc (ℕsuc (2 ℕ* k))) → FibStr (ℕsuc (ℕsuc (ℕsuc (2 ℕ* k)))) × FibStr (ℕsuc (2 ℕ* k)) ⊎ Maybe ⊥
+    -- to : ∀ k → FibStr (ℕsuc (ℕsuc (2 ℕ* k))) × FibStr (ℕsuc (ℕsuc (2 ℕ* k))) → FibStr (ℕsuc (ℕsuc (ℕsuc (2 ℕ* k)))) × FibStr (ℕsuc (2 ℕ* k)) ⊔ Maybe ⊥
     -- λ
     -- { (xs ∷1 ∷2 , ys ∷1) → inj₁ (xs ∷2 ∷1 ∷1 , ys)
     -- ; _ → inj₁ ((units ((ℕsuc (ℕsuc (ℕsuc (ℕsuc (ℕsuc (k ℕ+ k)))))))) , (units ((ℕsuc (ℕsuc (ℕsuc (k ℕ+ k)))))))
     -- }
-    -- to2 : (FibStr (ℕsuc (ℕsuc (ℕsuc (ℕsuc (ℕsuc (k ℕ+ k))))))) × (FibStr (ℕsuc (ℕsuc (ℕsuc (k ℕ+ k))))) ⊎ Maybe ⊥
+    -- to2 : (FibStr (ℕsuc (ℕsuc (ℕsuc (ℕsuc (ℕsuc (k ℕ+ k))))))) × (FibStr (ℕsuc (ℕsuc (ℕsuc (k ℕ+ k))))) ⊔ Maybe ⊥
 
 
     fixit : ∀ {k} → FibStr (ℕsuc (ℕsuc (k ℕ+ k))) → FibStr (ℕsuc (ℕsuc (k ℕ+ (k ℕ+ ℕzero))))
@@ -202,7 +202,7 @@ cassini-even-direct k rewrite NPS.+-comm (2 ℕ* k) 3 | NPS.+-comm (2 ℕ* k) 2 
     fixit3 {k} xs rewrite fixtp2 k = xs
 
     mutual
-      to2 : ∀ k → (FibStr (ℕsuc (ℕsuc (ℕsuc (ℕsuc (k ℕ+ k)))))) × (FibStr (ℕsuc (ℕsuc (ℕsuc (ℕsuc (k ℕ+ k)))))) → (FibStr (ℕsuc (ℕsuc (ℕsuc (ℕsuc (ℕsuc (k ℕ+ k))))))) × (FibStr (ℕsuc (ℕsuc (ℕsuc (k ℕ+ k))))) ⊎ Maybe ⊥
+      to2 : ∀ k → (FibStr (ℕsuc (ℕsuc (ℕsuc (ℕsuc (k ℕ+ k)))))) × (FibStr (ℕsuc (ℕsuc (ℕsuc (ℕsuc (k ℕ+ k)))))) → (FibStr (ℕsuc (ℕsuc (ℕsuc (ℕsuc (ℕsuc (k ℕ+ k))))))) × (FibStr (ℕsuc (ℕsuc (ℕsuc (k ℕ+ k))))) ⊔ Maybe ⊥
       -- to2 k (xs ∷1 ∷2 , ys ∷1) = inj₁ (xs ∷2 ∷1 ∷1 , ys)
       -- to2 k (xs ∷1 ∷1 , ys ∷2) = inj₁ (xs ∷2 ∷1 , ys ∷1)
 
@@ -223,7 +223,7 @@ cassini-even-direct k rewrite NPS.+-comm (2 ℕ* k) 3 | NPS.+-comm (2 ℕ* k) 2 
 
       -- to2 k _ = inj₂ nothing
 
-      to : ∀ k → FibStr (ℕsuc (ℕsuc (2 ℕ* k))) × FibStr (ℕsuc (ℕsuc (2 ℕ* k))) → FibStr (ℕsuc (ℕsuc (ℕsuc (2 ℕ* k)))) × FibStr (ℕsuc (2 ℕ* k)) ⊎ Maybe ⊥
+      to : ∀ k → FibStr (ℕsuc (ℕsuc (2 ℕ* k))) × FibStr (ℕsuc (ℕsuc (2 ℕ* k))) → FibStr (ℕsuc (ℕsuc (ℕsuc (2 ℕ* k)))) × FibStr (ℕsuc (2 ℕ* k)) ⊔ Maybe ⊥
 
       -- (xs ::1 , ys ::1) -> (xs ::2 , ys)
       -- to k (xs ∷1 , ys ∷1) = inj₁ (xs ∷2 , ys)
@@ -257,13 +257,13 @@ cassini-even-direct k rewrite NPS.+-comm (2 ℕ* k) 3 | NPS.+-comm (2 ℕ* k) 2 
 
 -- XXxxXXx|XXx
 --  XXxxXX|xXXx
-tailSwap : ∀ {n} → FibStr (ℕsuc n) → FibStr (ℕsuc n) → FibStr (ℕsuc (ℕsuc n)) × FibStr n ⊎ Maybe ⊥
+tailSwap : ∀ {n} → FibStr (ℕsuc n) → FibStr (ℕsuc n) → FibStr (ℕsuc (ℕsuc n)) × FibStr n ⊔ Maybe ⊥
 tailSwap {n} a₁ b₁ = tsl a₁ b₁
   where
     mutual
     -- XXxxXXx|XXx_
     --  XXxxXX|xXXx
-      tsl : ∀ {k} → FibStr (ℕsuc k) → FibStr (ℕsuc k) → FibStr (ℕsuc (ℕsuc k)) × FibStr k ⊎ Maybe ⊥
+      tsl : ∀ {k} → FibStr (ℕsuc k) → FibStr (ℕsuc k) → FibStr (ℕsuc (ℕsuc k)) × FibStr k ⊔ Maybe ⊥
       tsl a (b ∷1) = inj₁ (a ∷1 , b)
       tsl a (b ∷2) with tsr a b
       tsl a (b ∷2) | inj₁ (p , q) = inj₁ (p ∷2 , q)
@@ -272,7 +272,7 @@ tailSwap {n} a₁ b₁ = tsl a₁ b₁
 
       -- XXxxXXx|XXxx
       --  XXxxXX|xXX_
-      tsr : ∀ {k} → FibStr (ℕsuc (ℕsuc k)) → FibStr k → FibStr (ℕsuc k) × FibStr (ℕsuc k) ⊎ Maybe ⊥
+      tsr : ∀ {k} → FibStr (ℕsuc (ℕsuc k)) → FibStr k → FibStr (ℕsuc k) × FibStr (ℕsuc k) ⊔ Maybe ⊥
       tsr {ℕzero} (a ∷1) b = inj₁ (a , (b ∷1))
       tsr {ℕzero} ([] ∷2) [] = inj₂ nothing
       tsr {ℕsuc k} (a ∷1) b = inj₁ (a , b ∷1)
@@ -281,7 +281,7 @@ tailSwap {n} a₁ b₁ = tsl a₁ b₁
       tsr {ℕsuc k} (a ∷2) b | inj₂ nothing = inj₂ nothing
       tsr {ℕsuc k} (a ∷2) b | inj₂ (just ())
 
-cassini-even-direct-2 : ∀ {n} → FibStr (n ℕ+ (n ℕ+ ℕzero) ℕ+ 2) × FibStr (n ℕ+ (n ℕ+ ℕzero) ℕ+ 2) → FibStr (n ℕ+ (n ℕ+ ℕzero) ℕ+ 3) × FibStr (n ℕ+ (n ℕ+ ℕzero) ℕ+ 1) ⊎ Maybe ⊥
+cassini-even-direct-2 : ∀ {n} → FibStr (n ℕ+ (n ℕ+ ℕzero) ℕ+ 2) × FibStr (n ℕ+ (n ℕ+ ℕzero) ℕ+ 2) → FibStr (n ℕ+ (n ℕ+ ℕzero) ℕ+ 3) × FibStr (n ℕ+ (n ℕ+ ℕzero) ℕ+ 1) ⊔ Maybe ⊥
 cassini-even-direct-2 {n} (a , b) rewrite NPS.+-comm (n ℕ+ (n ℕ+ ℕzero)) 2 | NPS.+-comm (n ℕ+ (n ℕ+ ℕzero)) 3 | NPS.+-comm (n ℕ+ (n ℕ+ ℕzero)) 1 = tailSwap a b
 
 module Runner where

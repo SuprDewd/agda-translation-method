@@ -33,7 +33,7 @@ open import Algebra
   ; _+_ = _+_
   ; _*_ = _*_
   ; 0# = zero
-  ; 1# = suc (zero)
+  ; 1# = suc zero
   ; isCommutativeSemiring = record
     { +-isCommutativeMonoid = record
       { isSemigroup = record

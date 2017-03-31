@@ -21,9 +21,8 @@ infix 4 _≡_
 -- some functionality on top of that to experiment with different base cases.
 -- This may also be useful for the semiring solver (as otherwise it would have
 -- to find base cases by itself).
-data _≡_ : Expr → Expr → Set₂ where
-  proof : ∀ {a b}
-        → value a P≡ value b
+data _≡_ (a b : Expr) : Set₂ where
+  proof : value a P≡ value b
         → lift a B≡ lift b
         → a ≡ b
 

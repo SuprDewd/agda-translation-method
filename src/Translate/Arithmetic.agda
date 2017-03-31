@@ -114,8 +114,8 @@ open import Translate.Types
     to (inj₂ x) = inj₁ x
 
     from : lift (b + a) → lift (a + b)
-    from (inj₁ x) = inj₂ x
-    from (inj₂ x) = inj₁ x
+    from (inj₁ y) = inj₂ y
+    from (inj₂ y) = inj₁ y
 
     toFrom : ∀ y → to (from y) P≡ y
     toFrom (inj₁ x) = Prefl

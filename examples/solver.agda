@@ -95,3 +95,7 @@ lem6 = solve 9 (λ a b c d e f g h i → a :* (b :+ (c :* (d :+ (e :* (f :+ (g :
 
 -- meow' : {!!}
 -- meow' = expand {1} (var F.zero :* (var F.zero :+ var F.zero))
+
+lem7 : ∀ a b → (a + b) * (a + b) ≡ a * a + two * a * b + b * b
+lem7 = solve 2 (λ x y → (x :+ y) :* (x :+ y) := x :* x :+ :two :* x :* y :+ y :* y) refl
+

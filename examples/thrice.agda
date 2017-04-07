@@ -32,8 +32,8 @@ fin-value : ∀ n → n P≡ value (fin n)
 fin-value ℕzero = Prefl
 fin-value (ℕsuc n) rewrite Psym (fin-value n) = Prefl
 
-thrice : ∀ {n} → three * fib (ℕsuc (ℕsuc n)) ≡ fib (ℕsuc (ℕsuc (ℕsuc (ℕsuc n)))) + fib n
-thrice {0} = proof Prefl (from-just (toBij {three * fib (ℕsuc (ℕsuc 0))}
+thrice : ∀ {n} → nat 3 * fib (ℕsuc (ℕsuc n)) ≡ fib (ℕsuc (ℕsuc (ℕsuc (ℕsuc n)))) + fib n
+thrice {0} = proof Prefl (from-just (toBij {nat 3 * fib (ℕsuc (ℕsuc 0))}
                                            {fib (ℕsuc (ℕsuc (ℕsuc (ℕsuc 0)))) + fib 0} (
     ((nothing             , [] ∷1 ∷1) , inj₁ ([] ∷1 ∷1 ∷1 ∷1)) L∷
     ((nothing             , [] ∷2)    , inj₁ ([] ∷1 ∷1 ∷2)) L∷
@@ -42,7 +42,7 @@ thrice {0} = proof Prefl (from-just (toBij {three * fib (ℕsuc (ℕsuc 0))}
     ((just (just nothing) , [] ∷1 ∷1) , inj₁ ([] ∷1 ∷2 ∷1)) L∷
     ((just (just nothing) , [] ∷2)    , inj₂ []) L∷ L[]
   )))
-thrice {1} = proof Prefl (from-just (toBij {three * fib (ℕsuc (ℕsuc 1))}
+thrice {1} = proof Prefl (from-just (toBij {nat 3 * fib (ℕsuc (ℕsuc 1))}
                                            {fib (ℕsuc (ℕsuc (ℕsuc (ℕsuc 1)))) + fib 1} (
     ((nothing             , [] ∷1 ∷1 ∷1) , inj₁ ([] ∷1 ∷1 ∷1 ∷1 ∷1)) L∷
     ((nothing             , [] ∷1 ∷2)    , inj₁ ([] ∷1 ∷1 ∷1 ∷2)) L∷
@@ -56,11 +56,11 @@ thrice {1} = proof Prefl (from-just (toBij {three * fib (ℕsuc (ℕsuc 1))}
   )))
 thrice {ℕsuc (ℕsuc n)} = -- rewrite fin-value n = solve 1 (λ x → :three :* :fib (:suc (:suc (:suc (:suc x)))) := :fib (:suc (:suc (:suc (:suc (:suc (:suc x)))))) :+ :fib (:suc (:suc x))) refl (fin n)
   begin
-    three * fib (4 ℕ+ n)
+    nat 3 * fib (4 ℕ+ n)
   ≡⟨ *-cong refl fib-def ⟩
-    three * (fib (3 ℕ+ n) + fib (2 ℕ+ n))
+    nat 3 * (fib (3 ℕ+ n) + fib (2 ℕ+ n))
   ≡⟨ distribˡ-*-+ ⟩
-    three * fib (3 ℕ+ n) + three * fib (2 ℕ+ n)
+    nat 3 * fib (3 ℕ+ n) + nat 3 * fib (2 ℕ+ n)
   ≡⟨ +-cong thrice thrice ⟩
     (fib (5 ℕ+ n) + fib (1 ℕ+ n)) + (fib (4 ℕ+ n) + fib n)
   ≡⟨ +-assoc ⟩

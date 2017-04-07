@@ -12,11 +12,221 @@ open import Data.Nat
 open import Data.Nat.Properties.Simple
 open ≡-Reasoning
 
+
+n≤n : (n : ℕ) → n ≤ n
+n≤n zero = z≤n
+n≤n (suc n) = s≤s (n≤n n)
+
+incr≤ : ∀ {a b} → a ≤ b → a ≤ suc b
+incr≤ {zero} {b} p = z≤n
+incr≤ {suc a} {zero} ()
+incr≤ {suc a} {suc b} (s≤s p) = s≤s (incr≤ {a} {b} p)
+
 choose : ℕ → ℕ → ℕ
 choose zero zero = 1
 choose zero (suc k) = 0
 choose (suc n) zero = 1
 choose (suc n) (suc k) = choose n (suc k) + choose n k
+
+choose-zero : (n : ℕ) → (k : ℕ) → (n < k) → choose n k ≡ 0
+choose-zero zero (suc k) (s≤s p) = refl
+choose-zero (suc n) (suc k) (s≤s p) =
+  begin
+    choose n (suc k) + choose n k
+  ≡⟨ cong (λ e → choose n (suc k) + e) (choose-zero n k p) ⟩
+    choose n (suc k) + 0
+  ≡⟨ cong (λ e → e + 0) (choose-zero n (suc k) (incr≤ p)) ⟩
+    0 + 0
+  ≡⟨ refl ⟩
+    0
+  ∎
+
+euler : ℕ → ℕ → ℕ
+-- n elements, k ascents
+-- euler zero zero = 1
+euler zero (suc k) = 0
+euler zero zero = 1
+-- euler (suc n) k = (k + 1) * euler n k + (suc n ∸ k) * euler n (k ∸ 1)
+euler (suc n) zero = euler n zero
+euler (suc n) (suc k) = (k + 2) * euler n (suc k) + (n ∸ k) * euler n k
+
+euler-zero₂ : ∀ n k → n < k → euler n k ≡ 0
+euler-zero₂ zero (suc k) (s≤s p) = refl
+euler-zero₂ (suc n) (suc k) (s≤s p) =
+  begin
+    (k + 2) * euler n (suc k) + (n ∸ k) * euler n k
+  ≡⟨ cong (λ e → (k + 2) * euler n (suc k) + (n ∸ k) * e) (euler-zero₂ n k p) ⟩
+    (k + 2) * euler n (suc k) + (n ∸ k) * 0
+  ≡⟨ cong (λ e → (k + 2) * e + (n ∸ k) * 0) (euler-zero₂ n (suc k) (lem n k p)) ⟩
+    (k + 2) * 0 + (n ∸ k) * 0
+  ≡⟨ cong (λ e → e + (n ∸ k) * 0) (*-right-zero (k + suc (suc zero))) ⟩
+    0 + (n ∸ k) * 0
+  ≡⟨ cong (λ e → 0 + e) (*-right-zero (n ∸ k)) ⟩
+    0 + 0
+  ≡⟨⟩
+    0
+  ∎
+  where
+    lem : ∀ n k → suc n ≤ k → n < suc k
+    lem zero (suc k) (s≤s p₁) = s≤s z≤n
+    lem (suc n) (suc k) (s≤s p) = s≤s (lem n k p)
+
+euler-zero : ∀ n → euler (suc n) (suc n) ≡ 0
+euler-zero zero = refl
+euler-zero (suc n) =
+  begin
+    euler (suc (suc n)) (suc (suc n))
+  ≡⟨⟩
+    (suc n + 2) * euler (suc n) (suc (suc n)) + ((suc n) ∸ (suc n)) * euler (suc n) (suc n)
+  ≡⟨ cong (λ e → (suc n + 2) * euler (suc n) (suc (suc n)) + e * euler (suc n) (suc n)) (lem (suc n)) ⟩
+    (suc n + 2) * euler (suc n) (suc (suc n)) + 0 * euler (suc n) (suc n)
+  ≡⟨ cong (λ e → (suc n + 2) * euler (suc n) (suc (suc n)) + e) refl ⟩
+    (suc n + 2) * euler (suc n) (suc (suc n)) + 0
+  ≡⟨ +-right-identity _ ⟩
+    (suc n + 2) * euler (suc n) (suc (suc n))
+  ≡⟨ cong (λ e → (suc n + 2) * e) (euler-zero₂ (suc n) (suc (suc n)) (lem2 n)) ⟩
+    (suc n + 2) * 0
+  ≡⟨ *-right-zero (suc n + 2) ⟩
+    0
+  ∎
+  where
+    lem : ∀ x → x ∸ x ≡ 0
+    lem zero = refl
+    lem (suc x) = lem x
+
+    lem2 : ∀ n → suc n < suc (suc n)
+    lem2 zero = s≤s (s≤s z≤n)
+    lem2 (suc n) = s≤s (lem2 n)
+
+-- Sum : (lo : ℕ) → (hi : ℕ) → lo ≤ hi → ((i : ℕ) → lo ≤ i → i ≤ hi → ℕ) → ℕ
+-- Sum .0 zero z≤n f = f 0 z≤n z≤n
+-- Sum .0 (suc hi) z≤n f = f (suc hi) z≤n (n≤n (suc hi)) + Sum 0 hi z≤n (λ i p1 p2 → f i p1 (incr≤ i hi p2))
+-- Sum (suc lo) (suc hi) (s≤s prf) f = f (suc hi) (s≤s prf) (n≤n (suc hi)) + Sum (suc lo) hi {!!} (λ i p1 p2 → {!!})
+
+-- n<sn : (n : ℕ) → n < suc n
+-- n<sn zero = s≤s z≤n
+-- n<sn (suc n) = {!!}
+
+Sum : (n : ℕ) → ((i : ℕ) → i < n → ℕ) → ℕ
+Sum zero f = 0
+Sum (suc n) f = f n (n≤n (suc n))  + Sum n (λ i p → f i (incr≤ p))
+
+Sum-cong : (n : ℕ) → (f : (i : ℕ) → i < n → ℕ) → (g : (i : ℕ) → i < n → ℕ) → ((i : ℕ) → (p : i < n) → f i p ≡ g i p) → Sum n f ≡ Sum n g
+Sum-cong zero f g p = refl
+Sum-cong (suc n) f g p = begin
+    f n (s≤s (n≤n n)) + Sum n (λ i p₁ → f i (incr≤ p₁))
+  ≡⟨ cong (λ t → t + Sum n (λ i p₁ → f i (incr≤ p₁))) (p n (s≤s (n≤n n))) ⟩
+    g n (s≤s (n≤n n)) + Sum n (λ i p₁ → f i (incr≤ p₁))
+  ≡⟨ cong (λ t → g n (n≤n (suc n)) + t) (Sum-cong n (λ i p2 → f i (incr≤ p2)) (λ i p2 → g i (incr≤ p2)) (λ i p2 → p i (incr≤ p2))) ⟩
+    g n (n≤n (suc n)) + Sum n (λ i p₁ → g i (incr≤ p₁))
+  ∎
+
+Sum-pop : (n : ℕ) → (f : (i : ℕ) → i < suc n → ℕ) → Sum (suc n) f ≡ f 0 (s≤s z≤n) + Sum n (λ i p → f (suc i) (s≤s p))
+Sum-pop zero f = refl
+Sum-pop (suc n) f =
+  begin
+    Sum (suc (suc n)) f
+  ≡⟨⟩
+    f (suc n) (n≤n (suc (suc n))) + Sum ((suc n)) (λ i p → f i (incr≤ p))
+  ≡⟨ cong (λ e → f (suc n) (n≤n (suc (suc n))) + e) (Sum-pop n (λ i p → f i (incr≤ p))) ⟩
+    f (suc n) (n≤n (suc (suc n))) + (f 0 (s≤s z≤n) + Sum n (λ i p → (λ i p → f i (incr≤ p)) (suc i) (s≤s p)))
+  ≡⟨ sym (+-assoc (f (suc n) (n≤n (suc (suc n)))) (f 0 (s≤s z≤n)) (Sum n (λ i p → (λ i p → f i (incr≤ p)) (suc i) (s≤s p)))) ⟩
+    (f (suc n) (n≤n (suc (suc n))) + f 0 (s≤s z≤n)) + Sum n (λ i p → (λ i p → f i (incr≤ p)) (suc i) (s≤s p))
+  ≡⟨ cong (λ e → e + Sum n (λ i p → (λ i p → f i (incr≤ p)) (suc i) (s≤s p))) (+-comm (f (suc n) (s≤s (s≤s (n≤n n)))) (f zero (s≤s z≤n))) ⟩
+    (f 0 (s≤s z≤n) + f (suc n) (n≤n (suc (suc n)))) + Sum n (λ i p → (λ i p → f i (incr≤ p)) (suc i) (s≤s p))
+  ≡⟨ +-assoc (f 0 (s≤s z≤n)) (f (suc n) (n≤n (suc (suc n)))) (Sum n (λ i z → f (suc i) (s≤s (incr≤ z)))) ⟩
+    f 0 (s≤s z≤n) + Sum (suc n) (λ i p → f (suc i) (s≤s p))
+  ∎
+
+Sum-zero : (n : ℕ) → Sum n (λ i p → 0) ≡ 0
+Sum-zero zero = refl
+Sum-zero (suc n) = Sum-zero n
+
+Sum-split : (n : ℕ) → (f : (i : ℕ) → i < n → ℕ) → (g : (i : ℕ) → i < n → ℕ) → Sum n (λ i p → f i p + g i p) ≡ Sum n (λ i p → f i p) + Sum n (λ i p → g i p)
+Sum-split zero f g = refl
+Sum-split (suc n) f g = begin
+    f n (s≤s (n≤n n)) + g n (s≤s (n≤n n)) + Sum n (λ i p → f i (incr≤ p) + g i (incr≤ p))
+  ≡⟨ cong (λ e → f n (s≤s (n≤n n)) + g n (s≤s (n≤n n)) + e) (Sum-split n (λ i p → f i (incr≤ p)) (λ i p → g i (incr≤ p))) ⟩
+    f n (s≤s (n≤n n)) + g n (s≤s (n≤n n)) + (Sum n (λ i p → f i (incr≤ p)) + Sum n (λ i p → g i (incr≤ p)))
+  ≡⟨ {!!} ⟩
+    f n (s≤s (n≤n n)) + g n (s≤s (n≤n n)) + (Sum n (λ i p → f i (incr≤ p)) + Sum n (λ i p → g i (incr≤ p)))
+  ≡⟨ {!!} ⟩
+    f n (s≤s (n≤n n)) + Sum n (λ i p → f i (incr≤ p)) + (g n (s≤s (n≤n n)) + Sum n (λ i p → g i (incr≤ p)))
+  ∎
+
+pow : ℕ → ℕ → ℕ
+pow x zero = 1
+pow x (suc n) = x * pow x n
+
+open import Data.Sum
+case≤ : ∀ a b → a ≤ b → (a ≡ b) ⊎ (a < b)
+case≤ .0 zero z≤n = inj₁ refl
+case≤ .0 (suc b) z≤n = inj₂ (s≤s z≤n)
+case≤ (suc a) (suc b) (s≤s p) with case≤ a b p
+case≤ (suc a) (suc b) (s≤s p) | inj₁ x = inj₁ (cong suc x)
+case≤ (suc a) (suc b) (s≤s p) | inj₂ y = inj₂ (s≤s y)
+
+-- suc-inj : ∀ n m → suc n ≡ suc m → n ≡ m
+-- suc-inj n m = ?
+
+worpitzky : ∀ x n → Sum (suc n) (λ i p → euler n i * choose (x + i) n) ≡ pow x n
+worpitzky zero zero = refl
+worpitzky zero (suc n) =
+  begin
+    Sum (suc (suc n)) (λ i p → euler (suc n) i * choose (zero + i) (suc n))
+  ≡⟨ Sum-cong (suc (suc n)) (λ i p → euler (suc n) i * choose (zero + i) (suc n)) (λ i p → 0) lem ⟩
+    Sum (suc (suc n)) (λ i p → 0)
+  ≡⟨ Sum-zero (suc (suc n)) ⟩
+    0
+  ≡⟨⟩
+    pow zero (suc n)
+  ∎
+  where
+    lem : ∀ i → i < suc (suc n) → euler (suc n) i * choose i (suc n) ≡ 0
+    lem i (s≤s q) with case≤ (i) ((suc n)) q
+    lem i (s≤s q) | inj₁ refl = begin
+        euler (suc n) i * choose i (suc n)
+      ≡⟨ cong (λ e → e * choose i (suc n)) (euler-zero n) ⟩
+        0 * choose i (suc n)
+      ≡⟨⟩
+        0
+      ∎
+    lem i (s≤s q) | inj₂ y =
+      begin
+        euler (suc n) i * choose i (suc n)
+      ≡⟨ cong (λ e → euler (suc n) i * e) (choose-zero i (suc n) y) ⟩
+        euler (suc n) i * 0
+      ≡⟨ *-right-zero (euler (suc n) i) ⟩
+        0
+      ∎
+worpitzky (suc x) zero = refl
+worpitzky x (suc n) =
+  begin
+    Sum (suc (suc n)) (λ i p → euler (suc n) i * choose (x + i) (suc n))
+  ≡⟨ Sum-pop (suc n) (λ i p → euler (suc n) i * choose (x + i) (suc n)) ⟩
+    euler (suc n) 0 * choose (x + 0) (suc n) + Sum (suc n) (λ i p → euler (suc n) (suc i) * choose (x + suc i) (suc n))
+  ≡⟨ cong (λ e → euler (suc n) 0 * choose (x + 0) (suc n) + e) refl ⟩
+    euler (suc n) 0 * choose (x + 0) (suc n) + Sum (suc n) (λ i p → ((i + 2) * euler n (suc i) + (n ∸ i) * euler n i) * choose (x + suc i) (suc n))
+    ≡⟨ cong (λ e → euler (suc n) 0 * choose (x + 0) (suc n) + e) (Sum-cong (suc n) (λ i p → ((i + 2) * euler n (suc i) + (n ∸ i) * euler n i) * choose (x + suc i) (suc n)) (λ i p → (((i + 2) * euler n (suc i)) * choose (x + suc i) (suc n) + ((n ∸ i) * euler n i) * choose (x + suc i) (suc n))) (λ i p → distribʳ-*-+ (choose (x + suc i) (suc n)) ((i + 2) * euler n (suc i)) ((n ∸ i) * euler n i))) ⟩
+    euler (suc n) 0 * choose (x + 0) (suc n) + Sum (suc n) (λ i p → (((i + 2) * euler n (suc i)) * choose (x + suc i) (suc n) + ((n ∸ i) * euler n i) * choose (x + suc i) (suc n)))
+  ≡⟨ cong (λ e → euler (suc n) 0 * choose (x + 0) (suc n) + e) (Sum-split (suc n) ((λ i p → ((i + 2) * euler n (suc i)) * choose (x + suc i) (suc n))) ((λ i p → ((n ∸ i) * euler n i) * choose (x + suc i) (suc n)))) ⟩
+    euler (suc n) 0 * choose (x + 0) (suc n) + (Sum (suc n) (λ i p → ((i + 2) * euler n (suc i)) * choose (x + suc i) (suc n))
+                                             + Sum (suc n) (λ i p → ((n ∸ i) * euler n i) * choose (x + suc i) (suc n)))
+  ≡⟨ {!cong (λ e → e + Sum (suc n) (λ i p → ((n ∸ i) * euler n i) * choose (x + suc i) (suc n))))!} ⟩
+    Sum (suc (suc n)) (λ i p → ((i + 1) * euler n i) * choose (x + i) (suc n)) + Sum (suc n) (λ i p → ((n ∸ i) * euler n i) * choose (x + suc i) (suc n))
+  ≡⟨ {!!} ⟩
+    pow x (suc n)
+  ∎
+
+-- worpitzky zero zero = refl
+-- worpitzky (suc x) zero = refl
+-- worpitzky x (suc n) = begin
+--     Sum (suc n) (λ i p → euler (suc n) i * choose (x + i) (suc n))
+--   ≡⟨ {!!} ⟩
+--     Sum (suc n) (λ i p → euler (suc n) i * choose (x + i) (suc n))
+--   ≡⟨ {!!} ⟩
+--     pow x (suc n)
+--   ∎
 
 choose-lem-1 : ∀ x → choose (suc x) 1 ≡ suc x
 choose-lem-1 zero = refl

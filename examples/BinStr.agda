@@ -9,6 +9,21 @@ open import Translate.EqReasoning
 open import Translate.Tools
 open import Data.Maybe
 
+ex : ∀ {a b c} → a * (b + c) ≡ c * a + a * b
+ex {a} {b} {c} = trans distribˡ-*-+ (trans +-comm (+-cong *-comm refl))
+
+ex2 : ∀ {a b c} → a * (b + c) ≡ c * a + a * b
+ex2 {a} {b} {c} =
+  begin
+    a * (b + c)
+  ≡⟨ distribˡ-*-+ ⟩
+    a * b + a * c
+  ≡⟨ +-comm ⟩
+    a * c + a * b
+  ≡⟨ +-cong *-comm refl ⟩
+    c * a + a * b
+  ∎
+
 two-four : nat 2 * nat 2 ≡ nat 4
 two-four = proof Prefl (from-just (toBij {nat 2 * nat 2} {nat 4} (
          ((nothing , nothing) , nothing) L∷

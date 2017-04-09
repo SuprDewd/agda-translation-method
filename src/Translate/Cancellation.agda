@@ -37,11 +37,11 @@ private
   inj₂-inj Prefl = Prefl
 
   -- Represents a valid iteration sequence produced by the involution principle
-  data [_∧_⊨_⇒_] {A B C D : Set} (b₁ : (A ⊔ B) ≅ (C ⊔ D)) (b₂ : B ≅ D) : (A ⊔ B) → C → Set where
-    step : ∀ {p q r s} → (getTo b₁ p P≡ inj₂ q) → (getFrom b₂ q P≡ r) → [ b₁ ∧ b₂ ⊨ inj₂ r ⇒ s ] → [ b₁ ∧ b₂ ⊨ p ⇒ s ]
-    done : ∀ {p q} → (getTo b₁ p P≡ inj₁ q) → [ b₁ ∧ b₂ ⊨ p ⇒ q ]
+  data [_∧_⊨_⇒_] {A B C D : Set} (f : (A ⊔ B) ≅ (C ⊔ D)) (g : B ≅ D) : A ⊔ B → C → Set where
+    step : ∀ {p q r s} → (getTo f p P≡ inj₂ q) → (getFrom g q P≡ r) → [ f ∧ g ⊨ inj₂ r ⇒ s ] → [ f ∧ g ⊨ p ⇒ s ]
+    done : ∀ {p q} → (getTo f p P≡ inj₁ q) → [ f ∧ g ⊨ p ⇒ q ]
 
-  reverse : ∀ {A B C D} (b₁ : (A ⊔ B) ≅ (C ⊔ D)) (b₂ : B ≅ D) x y → [ b₁ ∧ b₂ ⊨ inj₁ x ⇒ y ] → [ (Bsym b₁) ∧ (Bsym b₂) ⊨ inj₁ y ⇒ x ]
+  reverse : ∀ {A B C D} (f : (A ⊔ B) ≅ (C ⊔ D)) (g : B ≅ D) x y → [ f ∧ g ⊨ inj₁ x ⇒ y ] → [ (Bsym f) ∧ (Bsym g) ⊨ inj₁ y ⇒ x ]
   reverse (mkBij to from to-from from-to) (mkBij to₁ from₁ to-from₁ from-to₁) x y (done p) = done (
       begin
         from (inj₁ y)
@@ -51,8 +51,8 @@ private
         inj₁ x
       ∎
     )
-  reverse b₁@(mkBij to₁ from₁ to-from₁ from-to₁)
-          b₂@(mkBij to₂ from₂ to-from₂ from-to₂)
+  reverse f@(mkBij to₁ from₁ to-from₁ from-to₁)
+          g@(mkBij to₂ from₂ to-from₂ from-to₂)
           x y (step {dp} {dq} {dr} {ds} p₁ p₂ p) = rev dr dq p₂ p (done (begin
             from₁ (inj₂ dq)
           ≡⟨ Pcong from₁ (Psym p₁) ⟩
@@ -62,7 +62,7 @@ private
           ∎))
     where
 
-      rev : ∀ z₁ z₂ → from₂ z₂ P≡ z₁ → [ b₁ ∧ b₂ ⊨ inj₂ z₁ ⇒ y ] → [ (Bsym b₁) ∧ (Bsym b₂) ⊨ inj₂ z₂ ⇒ x ] → [ (Bsym b₁) ∧ (Bsym b₂) ⊨ inj₁ y ⇒ x ]
+      rev : ∀ z₁ z₂ → from₂ z₂ P≡ z₁ → [ f ∧ g ⊨ inj₂ z₁ ⇒ y ] → [ (Bsym f) ∧ (Bsym g) ⊨ inj₂ z₂ ⇒ x ] → [ (Bsym f) ∧ (Bsym g) ⊨ inj₁ y ⇒ x ]
       rev z₁ z₂ zp (done p) q = step
         (begin
           from₁ (inj₁ y)
@@ -97,8 +97,8 @@ private
         ∎)
         q)
 
-  bijective : ∀ {A B C D} (b₁ : (A ⊔ B) ≅ (C ⊔ D)) (b₂ : B ≅ D) x y z → [ b₁ ∧ b₂ ⊨ y ⇒ x ] → [ b₁ ∧ b₂ ⊨ y ⇒ z ] → x P≡ z
-  bijective (mkBij to₁ from₁ to-from₁ from-to₁)
+  injective : ∀ {A B C D} (f : (A ⊔ B) ≅ (C ⊔ D)) (g : B ≅ D) x y z → [ f ∧ g ⊨ y ⇒ x ] → [ f ∧ g ⊨ y ⇒ z ] → x P≡ z
+  injective (mkBij to₁ from₁ to-from₁ from-to₁)
             (mkBij to₂ from₂ to-from₂ from-to₂)
             x y z (done p) (done q) =
     inj₁-inj (begin
@@ -108,13 +108,13 @@ private
       ≡⟨ q ⟩
         inj₁ z
       ∎)
-  bijective b₁@(mkBij to₁ from₁ to-from₁ from-to₁)
-            b₂@(mkBij to₂ from₂ to-from₂ from-to₂)
+  injective f@(mkBij to₁ from₁ to-from₁ from-to₁)
+            g@(mkBij to₂ from₂ to-from₂ from-to₂)
             x y z
             (step {pp} {pq} {pr} {ps} p₁ p₂ p)
-            (step {qp} {qq} {qr} {qs} q₁ q₂ q) = bijective b₁ b₂ x (inj₂ qr) z (fix p) q
+            (step {qp} {qq} {qr} {qs} q₁ q₂ q) = injective f g x (inj₂ qr) z (fix p) q
     where
-      fix : [ b₁ ∧ b₂ ⊨ inj₂ pr ⇒ x ] → [ b₁ ∧ b₂ ⊨ inj₂ qr ⇒ x ]
+      fix : [ f ∧ g ⊨ inj₂ pr ⇒ x ] → [ f ∧ g ⊨ inj₂ qr ⇒ x ]
       fix t rewrite (begin
           qr
         ≡⟨ Psym q₂ ⟩
@@ -131,9 +131,9 @@ private
           pr
         ∎) = t
 
-  bijective (mkBij to₁ from₁ to-from₁ from-to₁) (mkBij to₂ from₂ to-from₂ from-to₂) x y z (done p) (step {dp} {dq} {dr} {ds} q₁ q₂ q) with Ptrans (Psym p) q₁
+  injective (mkBij to₁ from₁ to-from₁ from-to₁) (mkBij to₂ from₂ to-from₂ from-to₂) x y z (done p) (step {dp} {dq} {dr} {ds} q₁ q₂ q) with Ptrans (Psym p) q₁
   ... | ()
-  bijective (mkBij to₁ from₁ to-from₁ from-to₁) (mkBij to₂ from₂ to-from₂ from-to₂) x y z (step p₁ p₂ p) (done q) with Ptrans (Psym p₁) q
+  injective (mkBij to₁ from₁ to-from₁ from-to₁) (mkBij to₂ from₂ to-from₂ from-to₂) x y z (step p₁ p₂ p) (done q) with Ptrans (Psym p₁) q
   ... | ()
 
   module Run2 (A B C D : Expr)
@@ -141,11 +141,11 @@ private
               (≅D : B ≡ D)
               where
 
-    b₁ : lift (A + B) ≅ lift (C + D)
-    b₁ = bijection A+≅C+D
+    f : lift (A + B) ≅ lift (C + D)
+    f = bijection A+≅C+D
 
-    b₂ : lift B ≅ lift D
-    b₂ = bijection ≅D
+    g : lift B ≅ lift D
+    g = bijection ≅D
 
     L : Expr
     L = A + B
@@ -180,18 +180,18 @@ private
             → ∀ x x' xs {y}
             → ¬ x ∈ xs
             → x' ∈ xs
-            → getTo b₁ x P≡ inj₂ y
-            → getTo b₁ x' P≡ inj₂ y
+            → getTo f x P≡ inj₂ y
+            → getTo f x' P≡ inj₂ y
             → W
     y-contr x x' xs x∉xs x'∈xs x↦y x'↦y =
       let x≠x' = lemma x x' xs x∉xs x'∈xs
           x≡x' = (begin
                     x
-                  ≡⟨ Psym (getFromTo b₁ x) ⟩
-                    getFrom b₁ (getTo b₁ x)
-                  ≡⟨ Pcong (getFrom b₁) (Ptrans x↦y (Psym x'↦y)) ⟩
-                    getFrom b₁ (getTo b₁ x')
-                  ≡⟨ getFromTo b₁ x' ⟩
+                  ≡⟨ Psym (getFromTo f x) ⟩
+                    getFrom f (getTo f x)
+                  ≡⟨ Pcong (getFrom f) (Ptrans x↦y (Psym x'↦y)) ⟩
+                    getFrom f (getTo f x')
+                  ≡⟨ getFromTo f x' ⟩
                     x'
                   ∎)
       in ⊥-elim (x≠x' x≡x')
@@ -200,60 +200,60 @@ private
             → ∀ y y' ys
             → ¬ y ∈ ys
             → y' ∈ ys
-            → getFrom b₂ y P≡ x
-            → getFrom b₂ y' P≡ x
+            → getFrom g y P≡ x
+            → getFrom g y' P≡ x
             → W
     x-contr {x} y y' ys y∉ys y'∈ys y↦x y'↦x =
       let y≠y' = lemma y y' ys y∉ys y'∈ys
           y≡y' = (begin
                   y
-                  ≡⟨ Psym (getToFrom b₂ y) ⟩
-                  getTo b₂ (getFrom b₂ y)
-                  ≡⟨ Pcong (getTo b₂) y↦x ⟩
-                  getTo b₂ x
-                  ≡⟨ Pcong (getTo b₂) (Psym y'↦x) ⟩
-                  getTo b₂ (getFrom b₂ y')
-                  ≡⟨ getToFrom b₂ y' ⟩
+                  ≡⟨ Psym (getToFrom g y) ⟩
+                  getTo g (getFrom g y)
+                  ≡⟨ Pcong (getTo g) y↦x ⟩
+                  getTo g x
+                  ≡⟨ Pcong (getTo g) (Psym y'↦x) ⟩
+                  getTo g (getFrom g y')
+                  ≡⟨ getToFrom g y' ⟩
                   y'
                   ∎)
       in ⊥-elim (y≠y' y≡y')
 
     run2 : ∀ {m n} → (xs : List (lift L))
                     → (ys : List (lift D))
-                    → ((x : lift L) → x ∈ xs → (inj₂-p : ∃ (λ x' → x P≡ inj₂ x')) → Σ (lift D) (λ y → getFrom b₂ y P≡ (proj₁ inj₂-p) × y ∈ ys))
-                    → ((y' : lift D) → y' ∈ ys → Σ (lift L) (λ x' → getTo b₁ x' P≡ (inj₂ y') × x' ∈ xs))
+                    → ((x : lift L) → x ∈ xs → (inj₂-p : ∃ (λ x' → x P≡ inj₂ x')) → Σ (lift D) (λ y → getFrom g y P≡ (proj₁ inj₂-p) × y ∈ ys))
+                    → ((y' : lift D) → y' ∈ ys → Σ (lift L) (λ x' → getTo f x' P≡ (inj₂ y') × x' ∈ xs))
                     → xs CntL.⊕ m
                     → ys CntD.⊕ n
                     → (x : lift B)
                     → ¬ (inj₂ x) ∈ xs
-                    → Σ (lift D) (λ y' → getFrom b₂ y' P≡ x × y' ∈ ys)
-                    → Σ (lift C) (λ y → [ b₁ ∧ b₂ ⊨ inj₂ x ⇒ y ])
+                    → Σ (lift D) (λ y' → getFrom g y' P≡ x × y' ∈ ys)
+                    → Σ (lift C) (λ y → [ f ∧ g ⊨ inj₂ x ⇒ y ])
 
     -- All D's seen
-    run2 {m} {ℕzero} xs ys preL preD cntL cntD x x∉xs xPre with getTo b₁ (inj₂ x) | inspect (getTo b₁) (inj₂ x)
+    run2 {m} {ℕzero} xs ys preL preD cntL cntD x x∉xs xPre with getTo f (inj₂ x) | inspect (getTo f) (inj₂ x)
     run2 {m} {ℕzero} xs ys preL preD cntL cntD x x∉xs xPre | inj₁ y | [ x↦y ] = y , done x↦y
     run2 {m} {ℕzero} xs ys preL preD cntL cntD x x∉xs xPre | inj₂ y | [ x↦y ] with CntD.lookup! cntD y
     run2 {m} {ℕzero} xs ys preL preD cntL cntD x x∉xs xPre | inj₂ y | [ x↦y ] | y∈ys with preD y y∈ys
     run2 {m} {ℕzero} xs ys preL preD cntL cntD x x∉xs xPre | inj₂ y | [ x↦y ] | y∈ys | x' , x'↦y , x'∈xs = y-contr (inj₂ x) x' xs x∉xs x'∈xs x↦y x'↦y
 
     -- All B's seen
-    run2 {ℕzero} {ℕsuc n}  xs ys preL preD cntL cntD x x∉xs xPre with getTo b₁ (inj₂ x) | inspect (getTo b₁) (inj₂ x)
+    run2 {ℕzero} {ℕsuc n}  xs ys preL preD cntL cntD x x∉xs xPre with getTo f (inj₂ x) | inspect (getTo f) (inj₂ x)
     run2 {ℕzero} {ℕsuc n} xs ys preL preD cntL cntD x x∉xs xPre | inj₁ y | [ x↦y ] = y , done x↦y
     run2 {ℕzero} {ℕsuc n} xs ys preL preD cntL cntD x x∉xs xPre | inj₂ y | [ x↦y ] with CntD.lookup cntD y
     run2 {ℕzero} {ℕsuc n} xs ys preL preD cntL cntD x x∉xs xPre | inj₂ y | [ x↦y ] | yes y∈ys with preD y y∈ys
     run2 {ℕzero} {ℕsuc n} xs ys preL preD cntL cntD x x∉xs xPre | inj₂ y | [ x↦y ] | yes y∈ys | x' , x'↦y , x'∈xs = y-contr (inj₂ x) x' xs x∉xs x'∈xs x↦y x'↦y
-    run2 {ℕzero} {ℕsuc n} xs ys preL preD cntL cntD x x∉xs xPre | inj₂ y | [ x↦y ] | no  y∉ys with getFrom b₂ y | inspect (getFrom b₂) y
+    run2 {ℕzero} {ℕsuc n} xs ys preL preD cntL cntD x x∉xs xPre | inj₂ y | [ x↦y ] | no  y∉ys with getFrom g y | inspect (getFrom g) y
     run2 {ℕzero} {ℕsuc n} xs ys preL preD cntL cntD x x∉xs xPre | inj₂ y | [ x↦y ] | no  y∉ys | x' | [ y↦x' ] with CntL.lookup! cntL (inj₂ x')
     run2 {ℕzero} {ℕsuc n} xs ys preL preD cntL cntD x x∉xs xPre | inj₂ y | [ x↦y ] | no  y∉ys | x' | [ y↦x' ] | x'∈xs with preL (inj₂ x') x'∈xs (x' , Prefl)
     run2 {ℕzero} {ℕsuc n} xs ys preL preD cntL cntD x x∉xs xPre | inj₂ y | [ x↦y ] | no  y∉ys | x' | [ y↦x' ] | x'∈xs | y' , y'↦x' , y'∈ys = x-contr y y' ys y∉ys y'∈ys y↦x' y'↦x'
 
     -- At least one unseen B and D
-    run2 {ℕsuc m} {ℕsuc n} xs ys preL preD cntL cntD x x∉xs xPre with getTo b₁ (inj₂ x) | inspect (getTo b₁) (inj₂ x)
+    run2 {ℕsuc m} {ℕsuc n} xs ys preL preD cntL cntD x x∉xs xPre with getTo f (inj₂ x) | inspect (getTo f) (inj₂ x)
     run2 {ℕsuc m} {ℕsuc n} xs ys preL preD cntL cntD x x∉xs xPre | inj₁ y | [ x↦y ] = y , done x↦y
     run2 {ℕsuc m} {ℕsuc n} xs ys preL preD cntL cntD x x∉xs xPre | inj₂ y | [ x↦y ] with CntD.lookup cntD y
     run2 {ℕsuc m} {ℕsuc n} xs ys preL preD cntL cntD x x∉xs xPre | inj₂ y | [ x↦y ] | yes y∈ys with preD y y∈ys
     run2 {ℕsuc m} {ℕsuc n} xs ys preL preD cntL cntD x x∉xs xPre | inj₂ y | [ x↦y ] | yes y∈ys | x' , x'↦y , x'∈xs = y-contr (inj₂ x) x' xs x∉xs x'∈xs x↦y x'↦y
-    run2 {ℕsuc m} {ℕsuc n} xs ys preL preD cntL cntD x x∉xs xPre | inj₂ y | [ x↦y ] | no  y∉ys with getFrom b₂ y | inspect (getFrom b₂) y
+    run2 {ℕsuc m} {ℕsuc n} xs ys preL preD cntL cntD x x∉xs xPre | inj₂ y | [ x↦y ] | no  y∉ys with getFrom g y | inspect (getFrom g) y
     run2 {ℕsuc m} {ℕsuc n} xs ys preL preD cntL cntD x x∉xs xPre | inj₂ y | [ x↦y ] | no  y∉ys | x' | [ y↦x' ] with CntL.lookup cntL (inj₂ x')
     run2 {ℕsuc m} {ℕsuc n} xs ys preL preD cntL cntD x x∉xs xPre | inj₂ y | [ x↦y ] | no  y∉ys | x' | [ y↦x' ] | yes x'∈xs with preL (inj₂ x') x'∈xs (x' , Prefl)
     run2 {ℕsuc m} {ℕsuc n} xs ys preL preD cntL cntD x x∉xs xPre | inj₂ y | [ x↦y ] | no  y∉ys | x' | [ y↦x' ] | yes x'∈xs | y' , y'↦x' , y'∈ys = x-contr y y' ys y∉ys y'∈ys y↦x' y'↦x'
@@ -271,15 +271,15 @@ private
                 x'
                 (λ { (here x'≡x) → case xPre of (λ { (y₁ , y₁↦x , y₁∈ys) → lemma y y₁ ys y∉ys y₁∈ys (begin
                                                                                                       y
-                                                                                                    ≡⟨ Psym (getToFrom b₂ y) ⟩
-                                                                                                      getTo b₂ (getFrom b₂ y)
-                                                                                                    ≡⟨ Pcong (getTo b₂) y↦x' ⟩
-                                                                                                      getTo b₂ x'
-                                                                                                    ≡⟨ Pcong (getTo b₂) (inj₂-inj x'≡x) ⟩
-                                                                                                      getTo b₂ x
-                                                                                                    ≡⟨ Pcong (getTo b₂) (Psym y₁↦x) ⟩
-                                                                                                      getTo b₂ (getFrom b₂ y₁)
-                                                                                                    ≡⟨ getToFrom b₂ y₁ ⟩
+                                                                                                    ≡⟨ Psym (getToFrom g y) ⟩
+                                                                                                      getTo g (getFrom g y)
+                                                                                                    ≡⟨ Pcong (getTo g) y↦x' ⟩
+                                                                                                      getTo g x'
+                                                                                                    ≡⟨ Pcong (getTo g) (inj₂-inj x'≡x) ⟩
+                                                                                                      getTo g x
+                                                                                                    ≡⟨ Pcong (getTo g) (Psym y₁↦x) ⟩
+                                                                                                      getTo g (getFrom g y₁)
+                                                                                                    ≡⟨ getToFrom g y₁ ⟩
                                                                                                       y₁
                                                                                                     ∎) })
                     ; (there x'∈xs) → x'∉xs x'∈xs
@@ -336,10 +336,10 @@ private
                         Membership.∈ y) L[] → ⊥
     explicit2 ()
 
-    run : (x : lift A) → Σ (lift C) (λ y → [ b₁ ∧ b₂ ⊨ inj₁ x ⇒ y ])
-    run x with getTo b₁ (inj₁ x) | inspect (getTo b₁) (inj₁ x)
+    run : (x : lift A) → Σ (lift C) (λ y → [ f ∧ g ⊨ inj₁ x ⇒ y ])
+    run x with getTo f (inj₁ x) | inspect (getTo f) (inj₁ x)
     run x | inj₁ y | [ x→y ] = y , (done x→y)
-    run x | inj₂ y | [ x→y ] with getFrom b₂ y | inspect (getFrom b₂) y
+    run x | inj₂ y | [ x→y ] with getFrom g y | inspect (getFrom g) y
     run x | inj₂ y | [ x→y ] | x' | [ y→x' ]
         with run2 (inj₁ x L∷ L[]) (y L∷ L[])
                   (λ { .(inj₁ x) (here Prefl) (_ , ())
@@ -387,7 +387,7 @@ private
     to-from : ∀ y → to (from y) P≡ y
     to-from y with run y where open Run2 C D A B (sym p) (sym q)
     to-from y | x , prf with run x where open Run2 A B C D p q
-    to-from y | x , prf | z , prf2 = bijective (bijection p) (bijection q) z (inj₁ x) y prf2 (fix (reverse (Bsym (bijection p)) (Bsym (bijection q)) y x (symFix p q x y prf)))
+    to-from y | x , prf | z , prf2 = injective (bijection p) (bijection q) z (inj₁ x) y prf2 (fix (reverse (Bsym (bijection p)) (Bsym (bijection q)) y x (symFix p q x y prf)))
       where
         symsym : ∀ {A B} → (t : A ≅ B) → Bsym (Bsym t) P≡ t
         symsym (mkBij to₁ from₁ x₁ x₂) = Prefl
@@ -398,4 +398,4 @@ private
     from-to : ∀ x → from (to x) P≡ x
     from-to x with run x where open Run2 A B C D p q
     from-to x | y , prf with run y where open Run2 C D A B (sym p) (sym q)
-    from-to x | y , prf | z , prf2 = bijective (Bsym (bijection p)) (Bsym (bijection q)) z (inj₁ y) x (symFix p q z y prf2) (reverse (bijection p) (bijection q) x y prf)
+    from-to x | y , prf | z , prf2 = injective (Bsym (bijection p)) (Bsym (bijection q)) z (inj₁ y) x (symFix p q z y prf2) (reverse (bijection p) (bijection q) x y prf)

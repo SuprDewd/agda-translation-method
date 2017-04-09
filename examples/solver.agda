@@ -99,3 +99,15 @@ lem6 = solve 9 (λ a b c d e f g h i → a :* (b :+ (c :* (d :+ (e :* (f :+ (g :
 lem7 : ∀ a b → (a + b) * (a + b) ≡ a * a + two * a * b + b * b
 lem7 = solve 2 (λ x y → (x :+ y) :* (x :+ y) := x :* x :+ :two :* x :* y :+ y :* y) refl
 
+
+meow : ∀ {a b c} → a * (b + c) ≡ a * b + a * c
+meow = begin 3 (λ x y z →
+    x :* (y :+ z)
+  ≈⟨ Prefl ⟩
+    x :* (y :+ z)
+  ≈'⟨ Prefl ⟩
+    x :* (y :+ z)
+  ≈⟨ ? ⟩
+    x :* y :+ x :* z
+  ∎)
+

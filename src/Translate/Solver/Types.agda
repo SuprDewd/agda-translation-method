@@ -64,6 +64,10 @@ mutual
   ⟦ :fun f ⟧ Γ = (⟦ f ⟧F Γ)
 
 
+:nat : ∀ {n} → ℕ → :Expr n
+:nat ℕzero = :zero
+:nat (ℕsuc n) = :suc (:nat n)
+
 data NormalizedConstant : Set where
   :zero : NormalizedConstant
   :suc : NormalizedConstant → NormalizedConstant

@@ -96,18 +96,31 @@ lem6 = solve 9 (λ a b c d e f g h i → a :* (b :+ (c :* (d :+ (e :* (f :+ (g :
 -- meow' : {!!}
 -- meow' = expand {1} (var F.zero :* (var F.zero :+ var F.zero))
 
-lem7 : ∀ a b → (a + b) * (a + b) ≡ a * a + two * a * b + b * b
-lem7 = solve 2 (λ x y → (x :+ y) :* (x :+ y) := x :* x :+ :two :* x :* y :+ y :* y) refl
+lem7 : ∀ a b → (a + b) * (a + b) ≡ a * a + nat 2 * a * b + b * b
+lem7 = solve 2 (λ x y → (x :+ y) :* (x :+ y) := x :* x :+ :nat 2 :* x :* y :+ y :* y) refl
 
+import Data.List as L
 
-meow : ∀ {a b c} → a * (b + c) ≡ a * b + a * c
-meow = begin 3 (λ x y z →
-    x :* (y :+ z)
-  ≈⟨ Prefl ⟩
-    x :* (y :+ z)
-  ≈'⟨ Prefl ⟩
-    x :* (y :+ z)
-  ≈⟨ ? ⟩
-    x :* y :+ x :* z
-  ∎)
+inps : List (lift ((nat 1 + nat 2) * (nat 1 + nat 2)))
+inps = (inj₁ nothing , inj₁ nothing) L∷
+       (inj₁ nothing , inj₂ nothing) L∷
+       (inj₁ nothing , inj₂ (just nothing)) L∷
+       (inj₂ nothing , inj₁ nothing) L∷
+       (inj₂ nothing , inj₂ nothing) L∷
+       (inj₂ nothing , inj₂ (just nothing)) L∷
+       (inj₂ (just nothing) , inj₁ nothing) L∷
+       (inj₂ (just nothing) , inj₂ nothing) L∷
+       (inj₂ (just nothing) , inj₂ (just nothing)) L∷
+       L[]
+
+-- meow : ∀ {a b c} → a * (b + c) ≡ a * b + a * c
+-- meow = begin 3 (λ x y z →
+--     x :* (y :+ z)
+--   ≈⟨ Prefl ⟩
+--     x :* (y :+ z)
+--   ≈'⟨ Prefl ⟩
+--     x :* (y :+ z)
+--   ≈⟨ ? ⟩
+--     x :* y :+ x :* z
+--   ∎)
 

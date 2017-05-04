@@ -8,58 +8,115 @@ open import Translate.Combinatorics
 open import Translate.Arithmetic
 open import Translate.Tools
 import Data.List as L
+import Data.Nat.Properties.Simple as NPS
 
-party : ∀ {l r} → S₂ l r ≡ CS₂ (ℕsuc l) r
-party {ℕzero} {ℕzero} = proof Prefl (mkBij to from to-from from-to)
+part : ∀ {n k} → S' (ℕsuc n) (ℕsuc k) ≡ S n k
+
+part {ℕzero} {ℕzero} = proof Prefl (mkBij to from to-from from-to)
   where
-    to : SetPartitionK ℕzero ℕzero → CSetPartitionK (ℕsuc ℕzero) ℕzero
-    to empty = add empty
+    to : lift (S' (ℕsuc ℕzero) (ℕsuc ℕzero)) → lift (S ℕzero ℕzero)
+    to (add empty) = empty
+    to (insert () _)
 
-    from : CSetPartitionK (ℕsuc ℕzero) ℕzero → SetPartitionK ℕzero ℕzero
-    from (add empty) = empty
+    from : lift (S ℕzero ℕzero) → lift (S' (ℕsuc ℕzero) (ℕsuc ℕzero))
+    from empty = add empty
 
-    to-from : ∀ y → to (from y) P≡ y
-    to-from (add empty) = Prefl
+    to-from : ∀ x → to (from x) P≡ x
+    to-from empty = Prefl
 
-    from-to : ∀ x → from (to x) P≡ x
-    from-to empty = Prefl
+    from-to : ∀ y → from (to y) P≡ y
+    from-to (add empty) = Prefl
+    from-to (insert () _)
 
-party {ℕzero} {ℕsuc r} = proof Prefl (mkBij to from to-from from-to)
+part {ℕzero} {ℕsuc k} = proof (Ptrans (NPS.+-right-identity (k ℕ* 0))
+                                       (NPS.*-right-zero k))
+                                (mkBij to from to-from from-to)
   where
-    to : SetPartitionK ℕzero (ℕsuc r) → CSetPartitionK (ℕsuc ℕzero) (ℕsuc r)
-    to (insert () x₁)
+    to : lift (S' (ℕsuc ℕzero) (ℕsuc (ℕsuc k))) → lift (S ℕzero (ℕsuc k))
+    to (add ())
+    to (insert _ ())
 
-    from : CSetPartitionK (ℕsuc ℕzero) (ℕsuc r) → SetPartitionK ℕzero (ℕsuc r)
-    from (add ())
-    from (insert () x₁)
+    from : lift (S ℕzero (ℕsuc k)) → lift (S' (ℕsuc ℕzero) (ℕsuc (ℕsuc k)))
+    from ()
 
-    to-from : ∀ y → to (from y) P≡ y
-    to-from (add ())
-    to-from (insert () y)
+    to-from : ∀ x → to (from x) P≡ x
+    to-from ()
 
-    from-to : ∀ x → from (to x) P≡ x
-    from-to (insert () x₁)
+    from-to : ∀ y → from (to y) P≡ y
+    from-to (add ())
+    from-to (insert _ ())
 
-party {ℕsuc l} {ℕzero} =
+part {ℕsuc n} {ℕzero} =
   begin
-    S₂ (ℕsuc l) ℕzero
-  ≡⟨ S₂-def₂ ⟩
-    S₂ l ℕzero
-  ≡⟨ party ⟩
-    CS₂ (ℕsuc l) ℕzero
-  ≡⟨ sym CS₂-def₂ ⟩
-    CS₂ (ℕsuc (ℕsuc l)) ℕzero
+    S' (ℕsuc (ℕsuc n)) (ℕsuc ℕzero)
+  ≡⟨ S'-def₂ ⟩
+    zero
+  ≡⟨ sym S-def₂ ⟩
+    S (ℕsuc n) ℕzero
   ∎
-party {ℕsuc l} {ℕsuc r} =
+
+part {ℕsuc n} {ℕsuc k} =
   begin
-    S₂ (ℕsuc l) (ℕsuc r)
-  ≡⟨ S₂-def₁ ⟩
-    (nat (ℕsuc l)) * S₂ (ℕsuc l) r + S₂ l (ℕsuc r)
-  ≡⟨ +-cong (*-cong refl party) party ⟩
-    (nat (ℕsuc l)) * CS₂ (ℕsuc (ℕsuc l)) r + CS₂ (ℕsuc l) (ℕsuc r)
-  ≡⟨ sym CS₂-def₁ ⟩
-    CS₂ (ℕsuc (ℕsuc l)) (ℕsuc r)
+    S' (ℕsuc (ℕsuc n)) (ℕsuc (ℕsuc k))
+  ≡⟨ S'-def₁ ⟩
+    (nat (ℕsuc k)) * S' (ℕsuc n) (ℕsuc (ℕsuc k)) + S' (ℕsuc n) (ℕsuc k)
+  ≡⟨ +-cong (*-cong refl part) part ⟩
+    (nat (ℕsuc k)) * S n (ℕsuc k) + S n k
+  ≡⟨ sym S-def₁ ⟩
+    S (ℕsuc n) (ℕsuc k)
   ∎
+
+-- party : ∀ {l r} → S l r ≡ S' (ℕsuc l) r
+-- party {ℕzero} {ℕzero} = proof Prefl (mkBij to from to-from from-to)
+--   where
+--     to : SetPartitionK ℕzero ℕzero → SetPartitionK' (ℕsuc ℕzero) ℕzero
+--     to empty = add empty
+
+--     from : SetPartitionK' (ℕsuc ℕzero) ℕzero → SetPartitionK ℕzero ℕzero
+--     from (add empty) = empty
+
+--     to-from : ∀ y → to (from y) P≡ y
+--     to-from (add empty) = Prefl
+
+--     from-to : ∀ x → from (to x) P≡ x
+--     from-to empty = Prefl
+
+-- party {ℕzero} {ℕsuc r} = proof Prefl (mkBij to from to-from from-to)
+--   where
+--     to : SetPartitionK ℕzero (ℕsuc r) → SetPartitionK' (ℕsuc ℕzero) (ℕsuc r)
+--     to (insert () x₁)
+
+--     from : SetPartitionK' (ℕsuc ℕzero) (ℕsuc r) → SetPartitionK ℕzero (ℕsuc r)
+--     from (add ())
+--     from (insert () x₁)
+
+--     to-from : ∀ y → to (from y) P≡ y
+--     to-from (add ())
+--     to-from (insert () y)
+
+--     from-to : ∀ x → from (to x) P≡ x
+--     from-to (insert () x₁)
+
+-- party {ℕsuc l} {ℕzero} =
+--   begin
+--     S (ℕsuc l) ℕzero
+--   ≡⟨ S-def₂ ⟩
+--     S l ℕzero
+--   ≡⟨ party ⟩
+--     S' (ℕsuc l) ℕzero
+--   ≡⟨ sym S'-def₂ ⟩
+--     S' (ℕsuc (ℕsuc l)) ℕzero
+--   ∎
+-- party {ℕsuc l} {ℕsuc r} =
+--   begin
+--     S (ℕsuc l) (ℕsuc r)
+--   ≡⟨ S-def₁ ⟩
+--     (nat (ℕsuc l)) * S (ℕsuc l) r + S l (ℕsuc r)
+--   ≡⟨ +-cong (*-cong refl party) party ⟩
+--     (nat (ℕsuc l)) * S' (ℕsuc (ℕsuc l)) r + S' (ℕsuc l) (ℕsuc r)
+--   ≡⟨ sym S'-def₁ ⟩
+--     S' (ℕsuc (ℕsuc l)) (ℕsuc r)
+--   ∎
 
 module Runner where
   open import IO
@@ -84,7 +141,7 @@ module Runner where
 
   main : BIO.IO ⊤
   main = run $ mapM′ (λ x → mapM′ (λ { (l , r) → putStrLn (ℕshow l ++ " " ++ ℕshow r)
-                                              >>' show≡ (party {l} {r})
+                                              >>' show≡ (part {l} {r})
                                               >>' putStrLn ""
                                      })
                                   (CL.fromList $ splits x)) (count 0) >>'

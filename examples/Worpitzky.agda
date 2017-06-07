@@ -109,7 +109,7 @@ euler-zero (suc n) =
 
 Sum : (n : ℕ) → ((i : ℕ) → i < n → ℕ) → ℕ
 Sum zero f = 0
-Sum (suc n) f = f n (n≤n (suc n))  + Sum n (λ i p → f i (incr≤ p))
+Sum (suc n) f = f n (n≤n (suc n)) + Sum n (λ i p → f i (incr≤ p))
 
 Sum-cong : (n : ℕ) → (f : (i : ℕ) → i < n → ℕ) → (g : (i : ℕ) → i < n → ℕ) → ((i : ℕ) → (p : i < n) → f i p ≡ g i p) → Sum n f ≡ Sum n g
 Sum-cong zero f g p = refl
@@ -147,10 +147,16 @@ Sum-split zero f g = refl
 Sum-split (suc n) f g = begin
     f n (s≤s (n≤n n)) + g n (s≤s (n≤n n)) + Sum n (λ i p → f i (incr≤ p) + g i (incr≤ p))
   ≡⟨ cong (λ e → f n (s≤s (n≤n n)) + g n (s≤s (n≤n n)) + e) (Sum-split n (λ i p → f i (incr≤ p)) (λ i p → g i (incr≤ p))) ⟩
-    f n (s≤s (n≤n n)) + g n (s≤s (n≤n n)) + (Sum n (λ i p → f i (incr≤ p)) + Sum n (λ i p → g i (incr≤ p)))
-  ≡⟨ {!!} ⟩
-    f n (s≤s (n≤n n)) + g n (s≤s (n≤n n)) + (Sum n (λ i p → f i (incr≤ p)) + Sum n (λ i p → g i (incr≤ p)))
-  ≡⟨ {!!} ⟩
+    (f n (s≤s (n≤n n)) + g n (s≤s (n≤n n))) + (Sum n (λ i p → f i (incr≤ p)) + Sum n (λ i p → g i (incr≤ p)))
+  ≡⟨ +-assoc (f n (s≤s (n≤n n))) (g n (s≤s (n≤n n))) (Sum n (λ i p → f i (incr≤ p)) + Sum n (λ i p → g i (incr≤ p))) ⟩
+    f n (s≤s (n≤n n)) + (g n (s≤s (n≤n n)) + (Sum n (λ i p → f i (incr≤ p)) + Sum n (λ i p → g i (incr≤ p))))
+  ≡⟨ cong (λ x → f n (s≤s (n≤n n)) + x) (+-comm (g n (s≤s (n≤n n))) (Sum n (λ i p → f i (incr≤ p)) + Sum n (λ i p → g i (incr≤ p)))) ⟩
+    f n (s≤s (n≤n n)) + ((Sum n (λ i p → f i (incr≤ p)) + Sum n (λ i p → g i (incr≤ p))) + g n (s≤s (n≤n n)))
+  ≡⟨ cong (λ x → f n (s≤s (n≤n n)) + x) (+-assoc (Sum n (λ i p → f i (incr≤ p))) (Sum n (λ i p → g i (incr≤ p))) (g n (s≤s (n≤n n)))) ⟩
+    f n (s≤s (n≤n n)) + (Sum n (λ i p → f i (incr≤ p)) + (Sum n (λ i p → g i (incr≤ p)) + g n (s≤s (n≤n n))))
+  ≡⟨ sym (+-assoc (f n (s≤s (n≤n n))) (Sum n (λ i p → f i (incr≤ p))) (Sum n (λ i p → g i (incr≤ p)) + g n (s≤s (n≤n n)))) ⟩
+    (f n (s≤s (n≤n n)) + Sum n (λ i p → f i (incr≤ p))) + (Sum n (λ i p → g i (incr≤ p)) + g n (s≤s (n≤n n)))
+  ≡⟨ cong (λ x → (f n (s≤s (n≤n n)) + Sum n (λ i p → f i (incr≤ p))) + x) (+-comm (Sum n (λ i p → g i (incr≤ p))) (g n (s≤s (n≤n n)))) ⟩
     f n (s≤s (n≤n n)) + Sum n (λ i p → f i (incr≤ p)) + (g n (s≤s (n≤n n)) + Sum n (λ i p → g i (incr≤ p)))
   ∎
 
